@@ -7,7 +7,7 @@ type WatchesContextValue = {
   selectedWatch: Watch | null;
   selectWatch: (w: Watch) => void;
   closeWatch: () => void;
-  updatePhotos: (id: number, photos: WatchPhoto[]) => void;
+  updatePhotos: (id: string, photos: WatchPhoto[]) => void;
 };
 
 const WatchesContext = createContext<WatchesContextValue | null>(null);
@@ -23,13 +23,15 @@ export function WatchesProvider({ children }: { children: ReactNode }) {
 
   const closeWatch = () => setSelectedWatch(null);
 
-  const updatePhotos = (id: number, photos: WatchPhoto[]) => {
+  const updatePhotos = (id: string, photos: WatchPhoto[]) => {
     setWatches((ws) => ws.map((w) => (w.id === id ? { ...w, photos } : w)));
     setSelectedWatch((sw) => (sw?.id === id ? { ...sw, photos } : sw));
   };
 
   return (
-    <WatchesContext.Provider value={{ watches, selectedWatch, selectWatch, closeWatch, updatePhotos }}>
+    <WatchesContext.Provider
+      value={{ watches, selectedWatch, selectWatch, closeWatch, updatePhotos }}
+    >
       {children}
     </WatchesContext.Provider>
   );

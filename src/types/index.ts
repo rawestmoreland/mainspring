@@ -1,17 +1,22 @@
 export type WatchStage = 'before' | 'during' | 'after' | 'listing';
 export type WatchStatus = 'sold' | 'in_progress' | 'listed' | 'acquired';
 export type WatchCondition = 'worn' | 'parts_only' | 'good' | 'fair' | 'poor';
-export type InventoryCategory = 'movement' | 'crystal' | 'strap' | 'tool' | 'gasket';
+export type InventoryCategory =
+  | 'movement'
+  | 'crystal'
+  | 'strap'
+  | 'tool'
+  | 'gasket';
 
 export type WatchPhoto = {
-  id: number;
+  id: string;
   stage: WatchStage;
   caption: string;
   url: string;
 };
 
 export type Watch = {
-  id: number;
+  id: string;
   make: string;
   model: string;
   reference: string;
@@ -28,17 +33,33 @@ export type Watch = {
   photos: WatchPhoto[];
 };
 
+export type CreateWatch = Omit<Watch, 'id' | 'photos'>;
+
 export type InventoryItem = {
-  id: number;
+  id: string;
   name: string;
   qty: number;
   unit_cost: number;
   category: InventoryCategory;
 };
 
+export type CreateInventoryItem = Omit<InventoryItem, 'id'>;
+
 export type Equipment = {
-  id: number;
+  id: string;
   name: string;
   cost: number;
   date: string;
 };
+
+export type CreateEquipment = Omit<Equipment, 'id'>;
+
+export type Inventory = {
+  id: string;
+  name: string;
+  qty: number;
+  unit_cost: number;
+  category: InventoryCategory;
+};
+
+export type CreateInventory = Omit<Inventory, 'id'>;
