@@ -1,23 +1,23 @@
 import { cn } from '#/lib/helpers';
 
-export function Btn({
-  children,
-  onClick,
-  ghost,
-  sm,
-  className,
-}: {
+type BtnProps = {
   children: React.ReactNode;
-  onClick: () => void;
-  ghost: boolean;
-  sm: boolean;
-  className: string;
-}) {
+  onClick?: () => void;
+  ghost?: boolean;
+  sm?: boolean;
+  className?: string;
+  type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
+};
+
+export function Btn({ children, onClick, ghost, sm, className, type = 'button', disabled }: BtnProps) {
   return (
     <button
+      type={type}
       onClick={onClick}
+      disabled={disabled}
       className={cn(
-        'rounded font-semibold tracking-wide transition-opacity hover:opacity-80 cursor-pointer',
+        'rounded font-semibold tracking-wide transition-opacity hover:opacity-80 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed',
         ghost
           ? 'bg-transparent text-zinc-400 border border-zinc-700 hover:text-zinc-200 hover:border-zinc-500'
           : 'bg-amber-600 text-zinc-950',
