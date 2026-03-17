@@ -3,7 +3,7 @@ import type { CreateWatch, Watch } from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useWatches = () => {
-  return useQuery({
+  return useQuery<Watch[]>({
     queryKey: ['watches'],
     queryFn: () => WatchesApi.getWatches(),
   });
@@ -49,7 +49,7 @@ export const useDeleteWatch = () => {
 };
 
 export const useGetWatchById = (id: string) => {
-  return useQuery({
+  return useQuery<Watch>({
     queryKey: ['watches', id],
     queryFn: () => WatchesApi.getWatchById(id),
   });

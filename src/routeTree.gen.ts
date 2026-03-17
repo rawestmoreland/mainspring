@@ -9,17 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WatchesRouteImport } from './routes/watches'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as EquipmentRouteImport } from './routes/equipment'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WatchesIndexRouteImport } from './routes/watches/index'
+import { Route as WatchesWatchIdIndexRouteImport } from './routes/watches/$watchId/index'
 
-const WatchesRoute = WatchesRouteImport.update({
-  id: '/watches',
-  path: '/watches',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const InventoryRoute = InventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -40,20 +36,32 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WatchesIndexRoute = WatchesIndexRouteImport.update({
+  id: '/watches/',
+  path: '/watches/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WatchesWatchIdIndexRoute = WatchesWatchIdIndexRouteImport.update({
+  id: '/watches/$watchId/',
+  path: '/watches/$watchId/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/equipment': typeof EquipmentRoute
   '/inventory': typeof InventoryRoute
-  '/watches': typeof WatchesRoute
+  '/watches/': typeof WatchesIndexRoute
+  '/watches/$watchId/': typeof WatchesWatchIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/equipment': typeof EquipmentRoute
   '/inventory': typeof InventoryRoute
-  '/watches': typeof WatchesRoute
+  '/watches': typeof WatchesIndexRoute
+  '/watches/$watchId': typeof WatchesWatchIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,14 +69,34 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/equipment': typeof EquipmentRoute
   '/inventory': typeof InventoryRoute
-  '/watches': typeof WatchesRoute
+  '/watches/': typeof WatchesIndexRoute
+  '/watches/$watchId/': typeof WatchesWatchIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/equipment' | '/inventory' | '/watches'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/equipment'
+    | '/inventory'
+    | '/watches/'
+    | '/watches/$watchId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/equipment' | '/inventory' | '/watches'
-  id: '__root__' | '/' | '/about' | '/equipment' | '/inventory' | '/watches'
+  to:
+    | '/'
+    | '/about'
+    | '/equipment'
+    | '/inventory'
+    | '/watches'
+    | '/watches/$watchId'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/equipment'
+    | '/inventory'
+    | '/watches/'
+    | '/watches/$watchId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,18 +104,12 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   EquipmentRoute: typeof EquipmentRoute
   InventoryRoute: typeof InventoryRoute
-  WatchesRoute: typeof WatchesRoute
+  WatchesIndexRoute: typeof WatchesIndexRoute
+  WatchesWatchIdIndexRoute: typeof WatchesWatchIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/watches': {
-      id: '/watches'
-      path: '/watches'
-      fullPath: '/watches'
-      preLoaderRoute: typeof WatchesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/inventory': {
       id: '/inventory'
       path: '/inventory'
@@ -116,6 +138,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/watches/': {
+      id: '/watches/'
+      path: '/watches'
+      fullPath: '/watches/'
+      preLoaderRoute: typeof WatchesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watches/$watchId/': {
+      id: '/watches/$watchId/'
+      path: '/watches/$watchId'
+      fullPath: '/watches/$watchId/'
+      preLoaderRoute: typeof WatchesWatchIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -124,7 +160,8 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   EquipmentRoute: EquipmentRoute,
   InventoryRoute: InventoryRoute,
-  WatchesRoute: WatchesRoute,
+  WatchesIndexRoute: WatchesIndexRoute,
+  WatchesWatchIdIndexRoute: WatchesWatchIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
