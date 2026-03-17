@@ -14,6 +14,7 @@ import { Route as EquipmentRouteImport } from './routes/equipment'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WatchesIndexRouteImport } from './routes/watches/index'
+import { Route as WatchesNewRouteImport } from './routes/watches/new'
 import { Route as WatchesWatchIdIndexRouteImport } from './routes/watches/$watchId/index'
 
 const InventoryRoute = InventoryRouteImport.update({
@@ -41,6 +42,11 @@ const WatchesIndexRoute = WatchesIndexRouteImport.update({
   path: '/watches/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WatchesNewRoute = WatchesNewRouteImport.update({
+  id: '/watches/new',
+  path: '/watches/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WatchesWatchIdIndexRoute = WatchesWatchIdIndexRouteImport.update({
   id: '/watches/$watchId/',
   path: '/watches/$watchId/',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/equipment': typeof EquipmentRoute
   '/inventory': typeof InventoryRoute
+  '/watches/new': typeof WatchesNewRoute
   '/watches/': typeof WatchesIndexRoute
   '/watches/$watchId/': typeof WatchesWatchIdIndexRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/equipment': typeof EquipmentRoute
   '/inventory': typeof InventoryRoute
+  '/watches/new': typeof WatchesNewRoute
   '/watches': typeof WatchesIndexRoute
   '/watches/$watchId': typeof WatchesWatchIdIndexRoute
 }
@@ -69,6 +77,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/equipment': typeof EquipmentRoute
   '/inventory': typeof InventoryRoute
+  '/watches/new': typeof WatchesNewRoute
   '/watches/': typeof WatchesIndexRoute
   '/watches/$watchId/': typeof WatchesWatchIdIndexRoute
 }
@@ -79,6 +88,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/equipment'
     | '/inventory'
+    | '/watches/new'
     | '/watches/'
     | '/watches/$watchId/'
   fileRoutesByTo: FileRoutesByTo
@@ -87,6 +97,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/equipment'
     | '/inventory'
+    | '/watches/new'
     | '/watches'
     | '/watches/$watchId'
   id:
@@ -95,6 +106,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/equipment'
     | '/inventory'
+    | '/watches/new'
     | '/watches/'
     | '/watches/$watchId/'
   fileRoutesById: FileRoutesById
@@ -104,6 +116,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   EquipmentRoute: typeof EquipmentRoute
   InventoryRoute: typeof InventoryRoute
+  WatchesNewRoute: typeof WatchesNewRoute
   WatchesIndexRoute: typeof WatchesIndexRoute
   WatchesWatchIdIndexRoute: typeof WatchesWatchIdIndexRoute
 }
@@ -145,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WatchesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/watches/new': {
+      id: '/watches/new'
+      path: '/watches/new'
+      fullPath: '/watches/new'
+      preLoaderRoute: typeof WatchesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/watches/$watchId/': {
       id: '/watches/$watchId/'
       path: '/watches/$watchId'
@@ -160,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   EquipmentRoute: EquipmentRoute,
   InventoryRoute: InventoryRoute,
+  WatchesNewRoute: WatchesNewRoute,
   WatchesIndexRoute: WatchesIndexRoute,
   WatchesWatchIdIndexRoute: WatchesWatchIdIndexRoute,
 }
