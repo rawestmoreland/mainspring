@@ -16,7 +16,9 @@ export function StagePill({
       onClick={onClick}
       className={cn(
         'px-2.5 py-1 rounded-full font-mono text-[10px] border tracking-wide transition-opacity hover:opacity-80',
-        active ? m.className : 'bg-transparent text-zinc-500 border-zinc-700',
+        active
+          ? m.className
+          : 'bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-ring',
       )}
     >
       {m.label}

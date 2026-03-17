@@ -17,6 +17,7 @@ export function roi(w: Watch): string | null {
 
 export function fmt(n: number | null | undefined, d = 0): string {
   if (n === null || n === undefined) return '—';
+  if (n === 0) return '$0';
   return (
     '$' +
     Number(n).toLocaleString('en-US', {

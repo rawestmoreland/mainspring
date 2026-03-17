@@ -2,7 +2,7 @@ import { cn } from '#/lib/helpers';
 
 export function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th className="bg-zinc-900 px-3.5 py-2.5 text-left font-mono text-[9.5px] uppercase tracking-widest text-zinc-500 font-normal border-b border-zinc-800">
+    <th className="bg-muted/40 px-3.5 py-2.5 text-left font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground font-normal border-b border-border">
       {children}
     </th>
   );
@@ -27,8 +27,8 @@ export function TableRow({
     <tr
       onClick={onClick}
       className={cn(
-        'border-b border-zinc-800 last:border-0 transition-colors',
-        onClick && 'hover:bg-white/[0.025] cursor-pointer',
+        'border-b border-border last:border-0 transition-colors',
+        onClick && 'hover:bg-muted/50 cursor-pointer',
       )}
     >
       {children}
@@ -44,7 +44,7 @@ export function TableWrap({
   className?: string;
 }) {
   return (
-    <div className={cn('bg-zinc-900 border border-zinc-800 rounded overflow-hidden', className)}>
+    <div className={cn('bg-card border border-border rounded overflow-hidden', className)}>
       <table className="w-full border-collapse">{children}</table>
     </div>
   );
