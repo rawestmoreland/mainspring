@@ -44,7 +44,7 @@ export function UploadZone({ onUpload }: UploadZoneProps) {
   const stageMeta = STAGE_META[stage];
   const stageTextClass = stageMeta.className
     .split(' ')
-    .find((c) => c.startsWith('text-')) ?? 'text-zinc-400';
+    .find((c) => c.startsWith('text-')) ?? 'text-muted-foreground';
 
   return (
     <div className="mt-4">
@@ -60,7 +60,7 @@ export function UploadZone({ onUpload }: UploadZoneProps) {
                 'px-2.5 py-1 rounded-full font-mono text-[10px] border tracking-wide transition-all cursor-pointer',
                 stage === k
                   ? cn(v.className, 'opacity-100')
-                  : 'bg-transparent text-zinc-500 border-zinc-700 hover:text-zinc-300',
+                  : 'bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-ring',
               )}
             >
               {v.label}
@@ -78,15 +78,15 @@ export function UploadZone({ onUpload }: UploadZoneProps) {
         className={cn(
           'border-2 border-dashed rounded-lg p-5 text-center cursor-pointer transition-all',
           dragOver
-            ? 'border-amber-600/60 bg-amber-500/10'
-            : 'border-zinc-700 hover:border-amber-700/50 hover:bg-amber-500/5',
+            ? 'border-ring bg-accent/30'
+            : 'border-border hover:border-ring/70 hover:bg-accent/20',
         )}
       >
         <div className="text-2xl mb-1.5">📷</div>
-        <div className="text-xs text-zinc-400">
-          <span className="text-amber-500 font-medium">Click to upload</span> or drag &amp; drop
+        <div className="text-xs text-muted-foreground">
+          <span className="text-primary font-medium">Click to upload</span> or drag &amp; drop
         </div>
-        <div className="text-[11px] text-zinc-600 mt-1">
+        <div className="text-[11px] text-muted-foreground/80 mt-1">
           Tagging as{' '}
           <span className={stageTextClass}>{stageMeta.label}</span>
           {' '}· JPG, PNG, HEIC, WEBP
@@ -108,7 +108,7 @@ export function UploadZone({ onUpload }: UploadZoneProps) {
             {pending.map((f) => (
               <div
                 key={f.id}
-                className="relative w-14 h-14 rounded overflow-hidden border border-zinc-700 shrink-0"
+                className="relative w-14 h-14 rounded overflow-hidden border border-border shrink-0"
               >
                 <img src={f.url} alt={f.caption} className="w-full h-full object-cover" />
                 <button

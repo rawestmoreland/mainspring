@@ -4,7 +4,7 @@ import { STATUS_META } from '#/lib/mocks/meta';
 export function StatusBadge({ status }: { status: string }) {
   const m = STATUS_META[status] || {
     label: status,
-    className: 'bg-zinc-500/10 text-zinc-400',
+    className: 'bg-muted text-muted-foreground',
   };
   return (
     <span

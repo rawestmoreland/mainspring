@@ -6,7 +6,7 @@ export const STAGE_META: Record<string, { label: string; className: string }> =
     },
     during: {
       label: 'During',
-      className: 'bg-amber-500/15 text-amber-400 border-amber-400/30',
+      className: 'bg-primary/15 text-primary border-primary/30',
     },
     after: {
       label: 'After',
@@ -23,7 +23,7 @@ export const STATUS_META: Record<string, { label: string; className: string }> =
     sold: { label: 'Sold', className: 'bg-green-500/10 text-green-400' },
     in_progress: {
       label: 'In Progress',
-      className: 'bg-amber-500/10 text-amber-400',
+      className: 'bg-primary/10 text-primary',
     },
     listed: { label: 'Listed', className: 'bg-blue-400/10 text-blue-400' },
     acquired: {

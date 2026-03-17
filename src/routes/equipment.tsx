@@ -31,7 +31,7 @@ function EquipmentPage() {
           highlight
           label='Total Invested'
           value={fmt(total)}
-          valueClass='text-amber-400'
+          valueClass='text-primary'
           sub='one-time capex'
         />
       </div>
@@ -53,20 +53,20 @@ function EquipmentPage() {
           {equipment.map((e) => (
             <TableRow key={e.id}>
               <Td className='font-medium text-sm'>{e.name}</Td>
-              <Td className='font-mono text-xs text-zinc-500'>
+              <Td className='font-mono text-xs text-muted-foreground'>
                 {format(e.date_acquired, 'MM/dd/yyyy')}
               </Td>
               <Td className='font-mono text-xs'>{fmt(e.cost)}</Td>
             </TableRow>
           ))}
-          <tr className='border-t-2 border-zinc-700'>
+          <tr className='border-t-2 border-border'>
             <td
               colSpan={2}
-              className='px-3.5 py-2.5 font-semibold text-sm text-zinc-100'
+              className='px-3.5 py-2.5 font-semibold text-sm text-foreground'
             >
               Total
             </td>
-            <td className='px-3.5 py-2.5 font-mono text-xs text-amber-400 font-semibold'>
+            <td className='px-3.5 py-2.5 font-mono text-xs text-primary font-semibold'>
               {fmt(total)}
             </td>
           </tr>

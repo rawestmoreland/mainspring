@@ -1,38 +1,35 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
-type ThemeMode = 'light' | 'dark' | 'auto'
+type ThemeMode = 'light' | 'dark' | 'system'
 
 function getInitialMode(): ThemeMode {
-  if (typeof window === 'undefined') {
-    return 'auto'
-  }
+  if (typeof window === 'undefined') return 'system'
 
   const stored = window.localStorage.getItem('theme')
-  if (stored === 'light' || stored === 'dark' || stored === 'auto') {
+  if (stored === 'light' || stored === 'dark' || stored === 'system') {
     return stored
   }
+  // Back-compat: prior versions stored "auto"
+  if (stored === 'auto') return 'system'
 
-  return 'auto'
+  return 'system'
+}
+
+function resolveMode(mode: ThemeMode) {
+  if (mode !== 'system') return mode
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
 }
 
 function applyThemeMode(mode: ThemeMode) {
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const resolved = mode === 'auto' ? (prefersDark ? 'dark' : 'light') : mode
-
-  document.documentElement.classList.remove('light', 'dark')
-  document.documentElement.classList.add(resolved)
-
-  if (mode === 'auto') {
-    document.documentElement.removeAttribute('data-theme')
-  } else {
-    document.documentElement.setAttribute('data-theme', mode)
-  }
-
+  const resolved = resolveMode(mode)
+  document.documentElement.classList.toggle('dark', resolved === 'dark')
   document.documentElement.style.colorScheme = resolved
 }
 
 export default function ThemeToggle() {
-  const [mode, setMode] = useState<ThemeMode>('auto')
+  const [mode, setMode] = useState<ThemeMode>('system')
 
   useEffect(() => {
     const initialMode = getInitialMode()
@@ -41,31 +38,35 @@ export default function ThemeToggle() {
   }, [])
 
   useEffect(() => {
-    if (mode !== 'auto') {
-      return
-    }
+    if (mode !== 'system') return
 
     const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const onChange = () => applyThemeMode('auto')
-
+    const onChange = () => applyThemeMode('system')
     media.addEventListener('change', onChange)
-    return () => {
-      media.removeEventListener('change', onChange)
-    }
+    return () => media.removeEventListener('change', onChange)
   }, [mode])
 
   function toggleMode() {
     const nextMode: ThemeMode =
-      mode === 'light' ? 'dark' : mode === 'dark' ? 'auto' : 'light'
+      mode === 'light' ? 'dark' : mode === 'dark' ? 'system' : 'light'
     setMode(nextMode)
     applyThemeMode(nextMode)
     window.localStorage.setItem('theme', nextMode)
   }
 
-  const label =
-    mode === 'auto'
-      ? 'Theme mode: auto (system). Click to switch to light mode.'
-      : `Theme mode: ${mode}. Click to switch mode.`
+  const { label, short } = useMemo(() => {
+    if (mode === 'system') {
+      const resolved = resolveMode('system')
+      return {
+        label: `Theme: system (${resolved}). Click to switch to light.`,
+        short: 'System',
+      }
+    }
+    return {
+      label: `Theme: ${mode}. Click to switch theme.`,
+      short: mode === 'dark' ? 'Dark' : 'Light',
+    }
+  }, [mode])
 
   return (
     <button
@@ -73,9 +74,9 @@ export default function ThemeToggle() {
       onClick={toggleMode}
       aria-label={label}
       title={label}
-      className="rounded-full border border-[var(--chip-line)] bg-[var(--chip-bg)] px-3 py-1.5 text-sm font-semibold text-[var(--sea-ink)] shadow-[0_8px_22px_rgba(30,90,72,0.08)] transition hover:-translate-y-0.5"
+      className="rounded-full border border-(--chip-line) bg-(--chip-bg) px-3 py-1.5 text-sm font-semibold text-(--sea-ink) shadow-[0_8px_22px_rgba(30,90,72,0.08)] transition hover:-translate-y-0.5"
     >
-      {mode === 'auto' ? 'Auto' : mode === 'dark' ? 'Dark' : 'Light'}
+      {short}
     </button>
   )
 }

@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { fmt } from '#/lib/helpers';
-import { MOCK_INVENTORY } from '#/lib/mocks/mock_inventory';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
 import { Btn } from '#/components/primitives/Button';
@@ -33,7 +32,7 @@ function InventoryPage() {
           highlight
           label='Inventory Value'
           value={fmt(totalValue)}
-          valueClass='text-amber-400'
+          valueClass='text-primary'
         />
       </div>
 
@@ -57,12 +56,12 @@ function InventoryPage() {
             <TableRow key={i.id}>
               <Td className='font-medium text-sm'>{i.name}</Td>
               <Td>
-                <span className='font-mono text-[9px] uppercase tracking-widest text-zinc-500 px-1.5 py-0.5 border border-zinc-700 rounded'>
+                <span className='font-mono text-[9px] uppercase tracking-widest text-muted-foreground px-1.5 py-0.5 border border-border rounded'>
                   {i.category}
                 </span>
               </Td>
               <Td className='font-mono text-xs'>{i.qty}</Td>
-              <Td className='font-mono text-xs text-zinc-400'>
+              <Td className='font-mono text-xs text-muted-foreground'>
                 {fmt(i.unit_cost, 2)}
               </Td>
               <Td className='font-mono text-xs'>

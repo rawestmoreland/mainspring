@@ -13,7 +13,7 @@ import { UploadZone, type PendingPhoto } from '#/components/watches/UploadZone';
 type WatchModalProps = {
   watch: Watch;
   onClose: () => void;
-  onUpdatePhotos?: (id: number, photos: WatchPhoto[]) => void;
+  onUpdatePhotos?: (id: string, photos: WatchPhoto[]) => void;
 };
 
 export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalProps) {
@@ -31,7 +31,7 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
 
   const handleUpload = (files: PendingPhoto[]) => {
     const added: WatchPhoto[] = files.map((f, i) => ({
-      id: Date.now() + i,
+      id: `${Date.now()}-${i}`,
       stage: f.stage,
       caption: f.caption,
       url: f.url,
@@ -65,50 +65,50 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[1000]"
+      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-1000"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-zinc-900 border border-zinc-700 rounded-xl w-[840px] max-w-[96vw] max-h-[90vh] overflow-y-auto flex flex-col"
+        className="bg-card border border-border rounded-xl w-[840px] max-w-[96vw] max-h-[90vh] overflow-y-auto flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-7 pt-6 pb-5 border-b border-zinc-800 shrink-0">
+        <div className="flex items-start justify-between px-7 pt-6 pb-5 border-b border-border shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-zinc-100">{watch.make} {watch.model}</h2>
+            <h2 className="text-xl font-bold text-foreground">{watch.make} {watch.model}</h2>
             <div className="flex items-center gap-2 mt-1">
-              <span className="font-mono text-[11px] text-zinc-500">{watch.reference}</span>
-              <span className="text-zinc-700">·</span>
-              <span className="font-mono text-[11px] text-zinc-500">{watch.year}</span>
-              <span className="text-zinc-700">·</span>
+              <span className="font-mono text-[11px] text-muted-foreground">{watch.reference}</span>
+              <span className="text-muted-foreground/60">·</span>
+              <span className="font-mono text-[11px] text-muted-foreground">{watch.year}</span>
+              <span className="text-muted-foreground/60">·</span>
               <StatusBadge status={watch.status} />
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-zinc-500 hover:text-zinc-100 text-2xl leading-none bg-transparent border-none cursor-pointer mt-0.5"
+            className="text-muted-foreground hover:text-foreground text-2xl leading-none bg-transparent border-none cursor-pointer mt-0.5"
           >
             ×
           </button>
         </div>
 
         {/* Stats grid */}
-        <div className="grid grid-cols-2 border-b border-zinc-800">
+        <div className="grid grid-cols-2 border-b border-border">
           {statRows.map(([k, v], i) => (
             <div
               key={k}
               className={cn(
-                'flex justify-between items-center px-7 py-2 border-b border-zinc-800 last:border-0',
-                i % 2 === 0 ? 'border-r border-zinc-800' : '',
+                'flex justify-between items-center px-7 py-2 border-b border-border last:border-0',
+                i % 2 === 0 ? 'border-r border-border' : '',
               )}
             >
-              <span className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-500">{k}</span>
-              <span className="font-mono text-[11.5px] text-zinc-200">{v}</span>
+              <span className="font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground">{k}</span>
+              <span className="font-mono text-[11.5px] text-foreground">{v}</span>
             </div>
           ))}
           {watch.notes && (
-            <div className="col-span-2 px-7 py-3 border-t border-zinc-800">
-              <p className="text-sm text-zinc-400 italic leading-relaxed">"{watch.notes}"</p>
+            <div className="col-span-2 px-7 py-3 border-t border-border">
+              <p className="text-sm text-muted-foreground italic leading-relaxed">"{watch.notes}"</p>
             </div>
           )}
         </div>
@@ -137,7 +137,7 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
                 <div
                   key={ph.id}
                   onClick={() => setLightbox({ photos: displayedPhotos, index: i })}
-                  className="relative rounded-md overflow-hidden cursor-pointer aspect-[4/3] bg-zinc-800 border border-zinc-800 group"
+                  className="relative rounded-md overflow-hidden cursor-pointer aspect-4/3 bg-muted/40 border border-border group"
                 >
                   <img
                     src={ph.url}
@@ -148,14 +148,14 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
                   <div className="absolute top-2 left-2">
                     <StageTag stage={ph.stage} />
                   </div>
-                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2.5 pb-2 pt-5 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
+                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-2.5 pb-2 pt-5 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
                     {ph.caption}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-7 text-zinc-600 font-mono text-xs mb-5">
+            <div className="text-center py-7 text-muted-foreground font-mono text-xs mb-5">
               No photos for this stage yet
             </div>
           )}

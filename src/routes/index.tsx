@@ -62,7 +62,7 @@ function Dashboard() {
         <KpiCard
           label='Avg ROI (sold)'
           value={fmtPct(avgRoi)}
-          valueClass='text-amber-400'
+          valueClass='text-primary'
           sub='per sold watch'
         />
         <KpiCard
@@ -75,7 +75,16 @@ function Dashboard() {
       {/* Watch ledger */}
       <div className='flex items-center justify-between mb-3.5'>
         <SectionLabel>Watch Ledger</SectionLabel>
-        <Btn sm>+ Add Watch</Btn>
+        <Btn
+          sm
+          onClick={() =>
+            navigate({
+              to: '/watches/new',
+            })
+          }
+        >
+          + Add Watch
+        </Btn>
       </div>
       <TableWrap className='mb-7'>
         <thead>
@@ -117,10 +126,10 @@ function Dashboard() {
                   />
                 </Td>
                 <Td>
-                  <div className='font-medium text-zinc-100'>
+                  <div className='font-medium text-foreground'>
                     {w.make} {w.model}
                   </div>
-                  <div className='font-mono text-[11px] text-zinc-500 mt-0.5'>
+                  <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
                     {w.reference} · {w.year}
                   </div>
                 </Td>
@@ -128,7 +137,7 @@ function Dashboard() {
                   <StatusBadge status={w.status} />
                 </Td>
                 <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
-                <Td className='font-mono text-xs text-zinc-500'>
+                <Td className='font-mono text-xs text-muted-foreground'>
                   {fmt(w.parts_cost)}
                 </Td>
                 <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
@@ -156,7 +165,7 @@ function Dashboard() {
                 >
                   {fmtPct(r)}
                 </Td>
-                <Td className='font-mono text-xs text-zinc-500'>
+                <Td className='font-mono text-xs text-muted-foreground'>
                   {w.hours_spent}h
                 </Td>
               </TableRow>
@@ -172,7 +181,7 @@ function Dashboard() {
           <div className='flex items-center justify-between mb-3.5'>
             <SectionLabel>Parts Inventory</SectionLabel>
             <div className='flex items-center gap-2'>
-              <span className='font-mono text-[10px] text-zinc-500'>
+              <span className='font-mono text-[10px] text-muted-foreground'>
                 {fmt(inventoryValue)} value
               </span>
               <Btn ghost sm>
@@ -194,11 +203,11 @@ function Dashboard() {
                 <TableRow key={i.id}>
                   <Td className='text-xs'>{i.name}</Td>
                   <Td>
-                    <span className='font-mono text-[9px] uppercase tracking-widest text-zinc-500 px-1.5 py-0.5 border border-zinc-700 rounded'>
+                    <span className='font-mono text-[9px] uppercase tracking-widest text-muted-foreground px-1.5 py-0.5 border border-border rounded'>
                       {i.category}
                     </span>
                   </Td>
-                  <Td className='font-mono text-xs text-zinc-400'>{i.qty}</Td>
+                  <Td className='font-mono text-xs text-muted-foreground'>{i.qty}</Td>
                   <Td className='font-mono text-xs'>
                     {fmt(i.qty * i.unit_cost)}
                   </Td>
@@ -216,21 +225,21 @@ function Dashboard() {
               + Add Tool
             </Btn>
           </div>
-          <div className='bg-zinc-900 border border-zinc-800 rounded overflow-hidden'>
+          <div className='bg-card border border-border rounded overflow-hidden'>
             {equipment?.map((e) => (
               <div
                 key={e.id}
-                className='flex justify-between items-center px-3.5 py-2.5 border-b border-zinc-800 last:border-0 text-sm'
+                className='flex justify-between items-center px-3.5 py-2.5 border-b border-border last:border-0 text-sm'
               >
-                <span className='text-zinc-200'>{e.name}</span>
-                <span className='font-mono text-xs text-zinc-500'>
+                <span className='text-foreground'>{e.name}</span>
+                <span className='font-mono text-xs text-muted-foreground'>
                   {fmt(e.cost)}
                 </span>
               </div>
             ))}
-            <div className='flex justify-between items-center px-3.5 py-2.5 border-t-2 border-zinc-700 text-sm'>
-              <span className='font-medium text-zinc-100'>Total</span>
-              <span className='font-mono text-xs text-amber-400 font-semibold'>
+            <div className='flex justify-between items-center px-3.5 py-2.5 border-t-2 border-border text-sm'>
+              <span className='font-medium text-foreground'>Total</span>
+              <span className='font-mono text-xs text-primary font-semibold'>
                 {fmt(equipCost)}
               </span>
             </div>

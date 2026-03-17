@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { cn, fmt, profit } from '#/lib/helpers';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
-import { Btn } from '#/components/primitives/Button';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { ThumbStrip } from '#/components/watches/ThumbStrip';
 import type { WatchStatus } from '#/types';
@@ -43,15 +42,20 @@ function WatchesPage() {
             className={cn(
               'px-3.5 py-1.5 text-xs font-mono rounded tracking-wide transition-all cursor-pointer border-none',
               filter === v
-                ? 'text-amber-400 bg-amber-500/10'
-                : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 bg-transparent',
+                ? 'text-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/60 bg-transparent',
             )}
           >
             {l}
           </button>
         ))}
         <div className='ml-auto'>
-          <Btn sm>+ Add Watch</Btn>
+          <Link
+            to='/watches/new'
+            className='rounded font-semibold tracking-wide transition-opacity hover:opacity-90 cursor-pointer bg-primary text-primary-foreground px-2.5 py-1 text-[11px] inline-block'
+          >
+            + Add Watch
+          </Link>
         </div>
       </div>
 
@@ -90,23 +94,23 @@ function WatchesPage() {
                     params={{ watchId: String(w.id) }}
                     className='block no-underline'
                   >
-                    <div className='font-medium text-zinc-100'>
+                    <div className='font-medium text-foreground'>
                       {w.make} {w.model}
                     </div>
-                    <div className='font-mono text-[11px] text-zinc-500 mt-0.5'>
+                    <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
                       {w.reference}
                     </div>
                   </Link>
                 </Td>
-                <Td className='font-mono text-xs text-zinc-500'>{w.year}</Td>
+                <Td className='font-mono text-xs text-muted-foreground'>{w.year}</Td>
                 <Td>
                   <StatusBadge status={w.status} />
                 </Td>
-                <Td className='text-xs text-zinc-400 capitalize'>
+                <Td className='text-xs text-muted-foreground capitalize'>
                   {w.condition_bought.replace('_', ' ')}
                 </Td>
                 <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
-                <Td className='font-mono text-xs text-zinc-500'>
+                <Td className='font-mono text-xs text-muted-foreground'>
                   {fmt(w.parts_cost)}
                 </Td>
                 <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
@@ -122,7 +126,7 @@ function WatchesPage() {
                 >
                   {fmt(p)}
                 </Td>
-                <Td className='font-mono text-xs text-zinc-500'>
+                <Td className='font-mono text-xs text-muted-foreground'>
                   {w.hours_spent}h
                 </Td>
               </TableRow>
@@ -132,7 +136,7 @@ function WatchesPage() {
       </TableWrap>
 
       {filtered.length === 0 && (
-        <div className='text-center py-12 text-zinc-600 font-mono text-xs'>
+        <div className='text-center py-12 text-muted-foreground font-mono text-xs'>
           No watches match this filter
         </div>
       )}
