@@ -12,7 +12,7 @@ export type WatchPhoto = {
   id: string;
   stage: WatchStage;
   caption: string;
-  url: string;
+  image: string;
 };
 
 export type Watch = {
@@ -31,6 +31,9 @@ export type Watch = {
   sold_date: string | null;
   notes: string;
   photos: WatchPhoto[];
+  expand?: {
+    watch_photos_via_watch?: WatchPhoto[];
+  };
 };
 
 export type CreateWatch = Omit<Watch, 'id' | 'photos'>;

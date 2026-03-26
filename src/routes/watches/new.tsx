@@ -42,11 +42,16 @@ const numberField = (opts?: { min?: number; message?: string }) =>
 const formSchema = z.object({
   make: z.string().trim().min(1, 'Make is required'),
   model: z.string().trim().min(1, 'Model is required'),
-  reference: z.string().trim().min(1, 'Reference is required'),
-  year: numberField({ min: 1, message: 'Year is required' }).pipe(z.number().int()),
+  reference: z.string().trim().optional(),
+  year: numberField({ min: 1, message: 'Year is required' }).pipe(
+    z.number().int(),
+  ),
   status: z.enum(WATCH_STATUSES),
   condition_bought: z.enum(WATCH_CONDITIONS),
-  bought_price: numberField({ min: 0, message: 'Bought price must be 0 or more' }),
+  bought_price: numberField({
+    min: 0,
+    message: 'Bought price must be 0 or more',
+  }),
   parts_cost: numberField({ min: 0, message: 'Parts cost must be 0 or more' }),
   hours_spent: numberField({ min: 0, message: 'Hours must be 0 or more' }),
   bought_date: z.string().trim().min(1, 'Bought date is required'),
@@ -246,7 +251,10 @@ function NewWatchRoute() {
             </label>
             <select
               id='condition_bought'
-              className={cn(inputBase, errors.condition_bought && 'border-red-800')}
+              className={cn(
+                inputBase,
+                errors.condition_bought && 'border-red-800',
+              )}
               {...register('condition_bought')}
             >
               {WATCH_CONDITIONS.map((c) => (
@@ -272,6 +280,7 @@ function NewWatchRoute() {
               id='bought_price'
               type='number'
               inputMode='decimal'
+              step='any'
               className={cn(inputBase, errors.bought_price && 'border-red-800')}
               {...register('bought_price', { valueAsNumber: true })}
             />
@@ -290,6 +299,7 @@ function NewWatchRoute() {
               id='parts_cost'
               type='number'
               inputMode='decimal'
+              step='any'
               className={cn(inputBase, errors.parts_cost && 'border-red-800')}
               {...register('parts_cost', { valueAsNumber: true })}
             />
@@ -347,7 +357,8 @@ function NewWatchRoute() {
               type='date'
               className={cn(inputBase, errors.sold_date && 'border-red-800')}
               {...register('sold_date', {
-                setValueAs: (v) => (typeof v === 'string' && v.trim() ? v : null),
+                setValueAs: (v) =>
+                  typeof v === 'string' && v.trim() ? v : null,
               })}
             />
             {errors.sold_date && (
@@ -367,9 +378,13 @@ function NewWatchRoute() {
               id='sold_price'
               type='number'
               inputMode='decimal'
+              step='any'
               className={cn(inputBase, errors.sold_price && 'border-red-800')}
               {...register('sold_price', {
-                setValueAs: (v) => (v === '' || v === null || typeof v === 'undefined' ? null : Number(v)),
+                setValueAs: (v) =>
+                  v === '' || v === null || typeof v === 'undefined'
+                    ? null
+                    : Number(v),
               })}
             />
             {errors.sold_price && (
@@ -386,7 +401,11 @@ function NewWatchRoute() {
             <textarea
               id='notes'
               rows={4}
-              className={cn(inputBase, 'resize-y', errors.notes && 'border-red-800')}
+              className={cn(
+                inputBase,
+                'resize-y',
+                errors.notes && 'border-red-800',
+              )}
               {...register('notes')}
               placeholder='Anything worth remembering…'
             />
@@ -413,4 +432,3 @@ function NewWatchRoute() {
     </div>
   );
 }
-

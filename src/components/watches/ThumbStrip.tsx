@@ -24,7 +24,7 @@ export function ThumbStrip({ photos, onClick }: ThumbStripProps) {
       {visible.map((ph) => (
         <img
           key={ph.id}
-          src={ph.url}
+          src={ph.image}
           alt=''
           className='w-9 h-9 rounded object-cover border border-border shrink-0'
         />

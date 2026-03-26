@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useGetWatchById } from '#/hooks/watches';
+import { useGetWatchById, useDeleteWatchPhoto } from '#/hooks/watches';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { fmt, profit } from '#/lib/helpers';
 import type { WatchPhoto } from '#/types';
+import { format } from 'date-fns/format';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
@@ -11,10 +12,13 @@ export const Route = createFileRoute('/watches/$watchId/')({
 function RouteComponent() {
   const { watchId } = Route.useParams();
   const { data: watch, isLoading } = useGetWatchById(watchId);
+  const deletePhoto = useDeleteWatchPhoto(watchId);
 
   if (isLoading) {
     return (
-      <div className='text-sm text-muted-foreground font-mono'>Loading watch…</div>
+      <div className='text-sm text-muted-foreground font-mono'>
+        Loading watch…
+      </div>
     );
   }
 
@@ -113,7 +117,7 @@ function RouteComponent() {
           <div className='text-[10px] uppercase tracking-widest text-muted-foreground/80'>
             Acquired
           </div>
-          <div>{watch.bought_date}</div>
+          <div>{format(watch.bought_date, 'MMM d, yyyy')}</div>
         </div>
         <div className='space-y-1 text-xs font-mono text-muted-foreground'>
           <div className='text-[10px] uppercase tracking-widest text-muted-foreground/80'>
@@ -145,14 +149,22 @@ function RouteComponent() {
             {watch.photos.map((ph: WatchPhoto) => (
               <figure
                 key={ph.id}
-                className='relative overflow-hidden rounded-md border border-border bg-card aspect-4/3'
+                className='group relative overflow-hidden rounded-md border border-border bg-card aspect-4/3'
               >
                 <img
-                  src={ph.url}
+                  src={ph.image}
                   alt={ph.caption}
                   className='h-full w-full object-cover'
                   loading='lazy'
                 />
+                <button
+                  onClick={() => deletePhoto.mutate(ph.id)}
+                  disabled={deletePhoto.isPending}
+                  className='absolute top-1.5 right-1.5 hidden group-hover:flex items-center justify-center w-6 h-6 rounded bg-black/70 text-white/80 hover:text-red-400 hover:bg-black/90 transition-colors'
+                  aria-label='Delete photo'
+                >
+                  ×
+                </button>
                 <figcaption className='absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 to-transparent px-2.5 pb-2 pt-5 text-[11px] text-white/90'>
                   <span className='mr-2 uppercase tracking-widest text-[9px] text-primary-foreground/90'>
                     {ph.stage}

@@ -6,6 +6,7 @@ import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { ThumbStrip } from '#/components/watches/ThumbStrip';
 import type { WatchStatus } from '#/types';
 import { useWatches } from '#/hooks/watches';
+import { Button } from '#/components/ui/button';
 
 export const Route = createFileRoute('/watches/')({ component: WatchesPage });
 
@@ -50,12 +51,15 @@ function WatchesPage() {
           </button>
         ))}
         <div className='ml-auto'>
-          <Link
+          {/* <Link
             to='/watches/new'
             className='rounded font-semibold tracking-wide transition-opacity hover:opacity-90 cursor-pointer bg-primary text-primary-foreground px-2.5 py-1 text-[11px] inline-block'
           >
             + Add Watch
-          </Link>
+          </Link> */}
+          <Button asChild>
+            <Link to='/watches/new'>+ Add Watch</Link>
+          </Button>
         </div>
       </div>
 
@@ -77,6 +81,7 @@ function WatchesPage() {
         <tbody>
           {filtered.map((w) => {
             const p = profit(w);
+            console.log(w);
             return (
               <TableRow key={w.id}>
                 <Td>
@@ -102,7 +107,9 @@ function WatchesPage() {
                     </div>
                   </Link>
                 </Td>
-                <Td className='font-mono text-xs text-muted-foreground'>{w.year}</Td>
+                <Td className='font-mono text-xs text-muted-foreground'>
+                  {w.year}
+                </Td>
                 <Td>
                   <StatusBadge status={w.status} />
                 </Td>

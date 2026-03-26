@@ -48,6 +48,19 @@ export const useDeleteWatch = () => {
   });
 };
 
+export const useDeleteWatchPhoto = (watchId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (photoId: string) => WatchesApi.deleteWatchPhoto(photoId),
+    onError: (error) => {
+      console.error(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['watches', watchId] });
+    },
+  });
+};
+
 export const useGetWatchById = (id: string) => {
   return useQuery<Watch>({
     queryKey: ['watches', id],

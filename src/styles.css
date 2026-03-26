@@ -39,7 +39,7 @@
   --card-foreground: oklch(0.205 0.03 215);
   --popover: oklch(0.995 0.008 190);
   --popover-foreground: oklch(0.205 0.03 215);
-  --primary: oklch(0.62 0.12 195);
+  --primary: oklch(0.45 0.12 195);
   --primary-foreground: oklch(0.99 0.01 190);
   --secondary: oklch(0.965 0.015 190);
   --secondary-foreground: oklch(0.25 0.03 215);
@@ -50,7 +50,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.9 0.02 195);
   --input: oklch(0.9 0.02 195);
-  --ring: oklch(0.68 0.12 195);
+  --ring: oklch(0.52 0.12 195);
   --chart-1: oklch(0.66 0.14 195);
   --chart-2: oklch(0.72 0.11 165);
   --chart-3: oklch(0.66 0.12 225);
@@ -59,7 +59,7 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.992 0.01 190);
   --sidebar-foreground: oklch(0.205 0.03 215);
-  --sidebar-primary: oklch(0.62 0.12 195);
+  --sidebar-primary: oklch(0.45 0.12 195);
   --sidebar-primary-foreground: oklch(0.99 0.01 190);
   --sidebar-accent: oklch(0.955 0.04 185);
   --sidebar-accent-foreground: oklch(0.24 0.03 215);
@@ -158,15 +158,17 @@ body::after {
   mask-image: radial-gradient(circle at 50% 30%, black, transparent 78%);
 }
 
-a {
-  color: var(--lagoon-deep);
-  text-decoration-color: rgba(50, 143, 151, 0.4);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 2px;
-}
+@layer base {
+  a {
+    color: var(--lagoon-deep);
+    text-decoration-color: rgba(50, 143, 151, 0.4);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+  }
 
-a:hover {
-  color: #246f76;
+  a:hover {
+    color: #246f76;
+  }
 }
 
 code {
