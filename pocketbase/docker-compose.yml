@@ -10,10 +10,10 @@ services:
     ports:
       - 8080:8080
     networks:
-      - mainspring-network
+      - tunnel-network
     volumes:
       - "./base/pb_data:/pb/pb_data" # Attaches pb_data to a volume named 'pocketbase-data' on your current directory
 
 networks:
-  mainspring-network:
+  tunnel-network:
     external: true
