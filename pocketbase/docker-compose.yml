@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   pocketbase:
-    image: pocketbase:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: mainspring_pocketbase_backend
     restart: unless-stopped
     ports:
