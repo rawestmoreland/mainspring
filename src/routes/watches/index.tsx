@@ -81,7 +81,6 @@ function WatchesPage() {
         <tbody>
           {filtered.map((w) => {
             const p = profit(w);
-            console.log(w);
             return (
               <TableRow key={w.id}>
                 <Td>
