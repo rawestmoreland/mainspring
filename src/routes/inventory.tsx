@@ -5,6 +5,7 @@ import { SectionLabel } from '#/components/primitives/SectionLabel';
 import { Btn } from '#/components/primitives/Button';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { useInventory } from '#/hooks/inventory';
+import { useUser } from '#/hooks/user';
 
 export const Route = createFileRoute('/inventory')({
   component: InventoryPage,
@@ -13,7 +14,9 @@ export const Route = createFileRoute('/inventory')({
 function InventoryPage() {
   const { data: inventory, isLoading } = useInventory();
 
-  if (isLoading) {
+  const { data: user, isLoading: isUserLoading } = useUser();
+
+  if (isLoading || isUserLoading) {
     return <div>Loading...</div>;
   }
   if (!inventory) {
@@ -38,7 +41,7 @@ function InventoryPage() {
 
       <div className='flex items-center justify-between mb-3.5'>
         <SectionLabel>Spare Parts</SectionLabel>
-        <Btn sm>+ Add Part</Btn>
+        {user && <Btn sm>+ Add Part</Btn>}
       </div>
 
       <TableWrap>

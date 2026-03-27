@@ -10,6 +10,7 @@ import { ThumbStrip } from '#/components/watches/ThumbStrip';
 import { useWatches } from '#/hooks/watches';
 import { useEquipment } from '#/hooks/equipment';
 import { useInventory } from '#/hooks/inventory';
+import { useUser } from '#/hooks/user';
 
 export const Route = createFileRoute('/')({ component: Dashboard });
 
@@ -19,7 +20,14 @@ function Dashboard() {
   const { data: equipment, isLoading: isEquipmentLoading } = useEquipment();
   const { data: inventory, isLoading: isInventoryLoading } = useInventory();
 
-  if (isWatchesLoading || isEquipmentLoading || isInventoryLoading) {
+  const { data: user, isLoading: isUserLoading } = useUser();
+
+  if (
+    isWatchesLoading ||
+    isEquipmentLoading ||
+    isInventoryLoading ||
+    isUserLoading
+  ) {
     return <div>Loading...</div>;
   }
 
@@ -75,16 +83,18 @@ function Dashboard() {
       {/* Watch ledger */}
       <div className='flex items-center justify-between mb-3.5'>
         <SectionLabel>Watch Ledger</SectionLabel>
-        <Btn
-          sm
-          onClick={() =>
-            navigate({
-              to: '/watches/new',
-            })
-          }
-        >
-          + Add Watch
-        </Btn>
+        {user && (
+          <Btn
+            sm
+            onClick={() =>
+              navigate({
+                to: '/watches/new',
+              })
+            }
+          >
+            + Add Watch
+          </Btn>
+        )}
       </div>
       <TableWrap className='mb-7'>
         <thead>
@@ -184,9 +194,11 @@ function Dashboard() {
               <span className='font-mono text-[10px] text-muted-foreground'>
                 {fmt(inventoryValue)} value
               </span>
-              <Btn ghost sm>
-                + Add Part
-              </Btn>
+              {user && (
+                <Btn ghost sm>
+                  + Add Part
+                </Btn>
+              )}
             </div>
           </div>
           <TableWrap>
@@ -207,7 +219,9 @@ function Dashboard() {
                       {i.category}
                     </span>
                   </Td>
-                  <Td className='font-mono text-xs text-muted-foreground'>{i.qty}</Td>
+                  <Td className='font-mono text-xs text-muted-foreground'>
+                    {i.qty}
+                  </Td>
                   <Td className='font-mono text-xs'>
                     {fmt(i.qty * i.unit_cost)}
                   </Td>
@@ -221,9 +235,11 @@ function Dashboard() {
         <div>
           <div className='flex items-center justify-between mb-3.5'>
             <SectionLabel>Tools &amp; Equipment</SectionLabel>
-            <Btn ghost sm>
-              + Add Tool
-            </Btn>
+            {user && (
+              <Btn ghost sm>
+                + Add Tool
+              </Btn>
+            )}
           </div>
           <div className='bg-card border border-border rounded overflow-hidden'>
             {equipment?.map((e) => (

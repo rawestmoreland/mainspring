@@ -7,6 +7,7 @@ import { ThumbStrip } from '#/components/watches/ThumbStrip';
 import type { WatchStatus } from '#/types';
 import { useWatches } from '#/hooks/watches';
 import { Button } from '#/components/ui/button';
+import { useUser } from '#/hooks/user';
 
 export const Route = createFileRoute('/watches/')({ component: WatchesPage });
 
@@ -22,7 +23,9 @@ function WatchesPage() {
   const { data: watches, isLoading } = useWatches();
   const [filter, setFilter] = useState<FilterValue>('all');
 
-  if (isLoading) {
+  const { data: user, isLoading: isUserLoading } = useUser();
+
+  if (isLoading || isUserLoading) {
     return <div>Loading...</div>;
   }
   if (!watches) {
@@ -51,15 +54,11 @@ function WatchesPage() {
           </button>
         ))}
         <div className='ml-auto'>
-          {/* <Link
-            to='/watches/new'
-            className='rounded font-semibold tracking-wide transition-opacity hover:opacity-90 cursor-pointer bg-primary text-primary-foreground px-2.5 py-1 text-[11px] inline-block'
-          >
-            + Add Watch
-          </Link> */}
-          <Button asChild>
-            <Link to='/watches/new'>+ Add Watch</Link>
-          </Button>
+          {user && (
+            <Button asChild>
+              <Link to='/watches/new'>+ Add Watch</Link>
+            </Button>
+          )}
         </div>
       </div>
 

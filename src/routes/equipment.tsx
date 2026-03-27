@@ -6,6 +6,7 @@ import { Btn } from '#/components/primitives/Button';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { useEquipment } from '#/hooks/equipment';
 import { format } from 'date-fns';
+import { useUser } from '#/hooks/user';
 
 export const Route = createFileRoute('/equipment')({
   component: EquipmentPage,
@@ -14,7 +15,9 @@ export const Route = createFileRoute('/equipment')({
 function EquipmentPage() {
   const { data: equipment, isLoading } = useEquipment();
 
-  if (isLoading) {
+  const { data: user, isLoading: isUserLoading } = useUser();
+
+  if (isLoading || isUserLoading) {
     return <div>Loading...</div>;
   }
   if (!equipment) {
@@ -38,7 +41,7 @@ function EquipmentPage() {
 
       <div className='flex items-center justify-between mb-3.5'>
         <SectionLabel>Tools &amp; Equipment</SectionLabel>
-        <Btn sm>+ Add Tool</Btn>
+        {user && <Btn sm>+ Add Tool</Btn>}
       </div>
 
       <TableWrap>

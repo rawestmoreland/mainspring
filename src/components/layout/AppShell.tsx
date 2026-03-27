@@ -3,6 +3,24 @@ import type { ReactNode } from 'react';
 import { cn, fmt, profit } from '#/lib/helpers';
 import { GOAL, GOAL_LABEL, NAV_PAGES } from '#/lib/constants';
 import { useWatches } from '#/hooks/watches';
+import { useLogin, useLogout, useUser } from '#/hooks/user';
+import { Button } from '../ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../ui/dialog';
+import { Field, FieldError, FieldGroup } from '../ui/field';
+import { Label } from '../ui/label';
+import { Input } from '../ui/input';
+import z from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 
 const PAGE_SUBTITLES: Record<string, string> = {
   '/': 'PROFIT & LOSS OVERVIEW',
@@ -11,11 +29,34 @@ const PAGE_SUBTITLES: Record<string, string> = {
   '/equipment': 'TOOLS & CAPITAL EXPENDITURE',
 };
 
+const loginSchema = z.object({
+  email: z.email(),
+  password: z.string().min(8),
+});
+
+type LoginType = z.infer<typeof loginSchema>;
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: watches, isLoading: isWatchesLoading } = useWatches();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  if (isWatchesLoading || !watches) {
+  const { data: user, isLoading: isUserLoading } = useUser();
+  const { mutateAsync: loginMutation, isPending: loginPending } = useLogin();
+  const { mutateAsync: logoutMutation } = useLogout();
+
+  const loginForm = useForm<LoginType>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (data: LoginType) => {
+    await loginMutation(data);
+  };
+
+  if (isWatchesLoading || !watches || isUserLoading) {
     return null;
   }
 
@@ -61,6 +102,84 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
+        {!user ? (
+          <div className='px-6 pb-7'>
+            <Dialog>
+              <form id='login-form' onSubmit={loginForm.handleSubmit(onSubmit)}>
+                <DialogTrigger asChild>
+                  <Button disabled={loginPending}>🔒</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Login</DialogTitle>
+                    <DialogDescription>
+                      Login to your account to continue.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <FieldGroup>
+                    <Controller
+                      name='email'
+                      control={loginForm.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <Label htmlFor='email'>Email</Label>
+                          <Input
+                            id='email'
+                            {...field}
+                            aria-invalid={fieldState.invalid}
+                            placeholder='Enter your email'
+                            autoComplete='off'
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+                    <Controller
+                      name='password'
+                      control={loginForm.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <Label htmlFor='password'>Password</Label>
+                          <Input
+                            id='password'
+                            {...field}
+                            aria-invalid={fieldState.invalid}
+                            placeholder='Enter your password'
+                            autoComplete='off'
+                          />
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+                  </FieldGroup>
+
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button variant='outline' disabled={loginPending}>
+                        Cancel
+                      </Button>
+                    </DialogClose>
+                    <Field>
+                      <Button type='submit' form='login-form'>
+                        Login
+                      </Button>
+                    </Field>
+                  </DialogFooter>
+                </DialogContent>
+              </form>
+            </Dialog>
+          </div>
+        ) : (
+          <div className='px-6 pb-7'>
+            <Button variant='outline' onClick={() => logoutMutation()}>
+              Logout
+            </Button>
+          </div>
+        )}
 
         {/* Goal card */}
         <div className='px-5 pt-5 border-t border-border'>

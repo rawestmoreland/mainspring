@@ -7,6 +7,7 @@ import type { CreateWatch, WatchCondition, WatchStatus } from '#/types';
 import { Btn } from '#/components/primitives/Button';
 import { cn } from '#/lib/helpers';
 import { useCreateWatch } from '#/hooks/watches';
+import { useUser } from '#/hooks/user';
 
 export const Route = createFileRoute('/watches/new')({
   component: NewWatchRoute,
@@ -71,6 +72,16 @@ function NewWatchRoute() {
   const createWatch = useCreateWatch();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const { data: user, isLoading: isUserLoading } = useUser();
+
+  if (isUserLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <div>Unauthorized</div>;
+  }
+
   const defaultValues = useMemo<FormValues>(
     () => ({
       make: '',
@@ -107,6 +118,7 @@ function NewWatchRoute() {
 
     const payload: CreateWatch = {
       ...parsed.data,
+      reference: parsed.data.reference?.trim() ?? '',
       sold_date: parsed.data.sold_date?.trim() ? parsed.data.sold_date : null,
       notes: parsed.data.notes ?? '',
     };
