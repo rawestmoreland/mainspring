@@ -2,6 +2,7 @@ version: "3.8"
 
 services:
   pocketbase:
+    image: mainspring/pocketbase:latest
     build:
       context: .
       dockerfile: Dockerfile
