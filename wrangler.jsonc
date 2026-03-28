@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mainspring",
+  "compatibility_date": "2025-09-27",
+  "observability": {
+    "enabled": true,
+  },
+  "assets": {
+    "directory": "dist",
+  },
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "VITE_ASSET_URL": "https://ms-assets.westmorelandcreative.com/pbc_414079043",
+    "VITE_POCKETBASE_URL": "https://ms-api.westmorelandcreative.com",
+  },
+}
