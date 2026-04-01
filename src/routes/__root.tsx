@@ -5,6 +5,7 @@ import { AppShell } from '#/components/layout/AppShell';
 import { WatchesProvider } from '#/context/watches';
 import '../styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { TooltipProvider } from '#/components/ui/tooltip';
 
 export const Route = createRootRoute({ component: RootComponent });
 
@@ -13,6 +14,7 @@ const queryClient = new QueryClient();
 function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
       <WatchesProvider>
         <AppShell>
           <Outlet />
@@ -27,6 +29,7 @@ function RootComponent() {
           ]}
         />
       </WatchesProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
