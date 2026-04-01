@@ -1,3 +1,4 @@
+import { useState, useRef, useCallback } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import { cn, fmt, profit } from '#/lib/helpers';
 import { GOAL, GOAL_LABEL, NAV_PAGES } from '#/lib/constants';
@@ -58,6 +59,15 @@ export function AppSidebar() {
     await loginMutation(data);
   };
 
+  const goalClickCount = useRef(0);
+  const [unlocked, setUnlocked] = useState(false);
+
+  const handleGoalClick = useCallback(() => {
+    if (unlocked) return;
+    goalClickCount.current += 1;
+    if (goalClickCount.current >= 5) setUnlocked(true);
+  }, [unlocked]);
+
   const sold = (watches ?? []).filter((w) => w.status === 'sold');
   const totalProfit = sold.reduce((s, w) => s + (profit(w) ?? 0), 0);
   const goalPct = Math.min(100, (totalProfit / GOAL) * 100).toFixed(1);
@@ -112,8 +122,11 @@ export function AppSidebar() {
 
       {/* Footer: goal card + auth */}
       <SidebarFooter className='gap-3 px-4 py-4 border-t border-sidebar-border'>
-        {/* Goal card */}
-        <div className='bg-primary/10 border border-primary/25 rounded-md p-3'>
+        {/* Goal card — click 5× to unlock login */}
+        <div
+          className='bg-primary/10 border border-primary/25 rounded-md p-3 select-none cursor-default'
+          onClick={handleGoalClick}
+        >
           <div className='font-mono text-[9px] uppercase tracking-widest text-primary/90 mb-1.5'>
             Next Watch Goal
           </div>
@@ -132,7 +145,16 @@ export function AppSidebar() {
         </div>
 
         {/* Auth */}
-        {!user ? (
+        {user ? (
+          <Button
+            variant='outline'
+            size='sm'
+            className='w-full'
+            onClick={() => logoutMutation()}
+          >
+            Logout
+          </Button>
+        ) : unlocked ? (
           <Dialog>
             <form id='login-form' onSubmit={loginForm.handleSubmit(onSubmit)}>
               <DialogTrigger asChild>
@@ -181,6 +203,7 @@ export function AppSidebar() {
                         <Input
                           id='password'
                           {...field}
+                          type='password'
                           aria-invalid={fieldState.invalid}
                           placeholder='Enter your password'
                           autoComplete='off'
@@ -198,25 +221,14 @@ export function AppSidebar() {
                       Cancel
                     </Button>
                   </DialogClose>
-                  <Field>
-                    <Button type='submit' form='login-form'>
-                      Login
-                    </Button>
-                  </Field>
+                  <Button type='submit' form='login-form'>
+                    Login
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </form>
           </Dialog>
-        ) : (
-          <Button
-            variant='outline'
-            size='sm'
-            className='w-full'
-            onClick={() => logoutMutation()}
-          >
-            Logout
-          </Button>
-        )}
+        ) : null}
       </SidebarFooter>
     </Sidebar>
   );
