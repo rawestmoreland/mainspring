@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useGetWatchById, useDeleteWatchPhoto } from '#/hooks/watches';
+import { useGetWatchById, useDeleteWatchPhoto, useUploadWatchPhotos } from '#/hooks/watches';
+import { useUser } from '#/hooks/user';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { fmt, profit } from '#/lib/helpers';
 import type { WatchPhoto } from '#/types';
 import { format } from 'date-fns/format';
+import { UploadZone } from '#/components/watches/UploadZone';
+import type { PendingPhoto } from '#/components/watches/UploadZone';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
@@ -12,7 +15,15 @@ export const Route = createFileRoute('/watches/$watchId/')({
 function RouteComponent() {
   const { watchId } = Route.useParams();
   const { data: watch, isLoading } = useGetWatchById(watchId);
+  const { data: user } = useUser();
   const deletePhoto = useDeleteWatchPhoto(watchId);
+  const uploadPhotos = useUploadWatchPhotos(watchId);
+
+  const handleUpload = (pending: PendingPhoto[]) => {
+    uploadPhotos.mutate(
+      pending.map((p) => ({ file: p.file, stage: p.stage, caption: p.caption })),
+    );
+  };
 
   if (isLoading) {
     return (
@@ -144,6 +155,8 @@ function RouteComponent() {
             Photos ({watch.photos?.length ?? 0})
           </div>
         </div>
+        {user && <UploadZone onUpload={handleUpload} />}
+
         {watch.photos && watch.photos.length > 0 ? (
           <div className='grid grid-cols-3 gap-3'>
             {watch.photos.map((ph: WatchPhoto) => (

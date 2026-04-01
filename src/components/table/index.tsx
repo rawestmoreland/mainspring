@@ -1,8 +1,8 @@
 import { cn } from '#/lib/helpers';
 
-export function Th({ children }: { children: React.ReactNode }) {
+export function Th({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <th className="bg-muted/40 px-3.5 py-2.5 text-left font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground font-normal border-b border-border">
+    <th className={cn("bg-muted/40 px-3.5 py-2.5 text-left font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground font-normal border-b border-border", className)}>
       {children}
     </th>
   );
@@ -44,8 +44,8 @@ export function TableWrap({
   className?: string;
 }) {
   return (
-    <div className={cn('bg-card border border-border rounded overflow-hidden', className)}>
-      <table className="w-full border-collapse">{children}</table>
+    <div className={cn('overflow-x-auto bg-card border border-border rounded', className)}>
+      <table className="w-full border-collapse min-w-max">{children}</table>
     </div>
   );
 }

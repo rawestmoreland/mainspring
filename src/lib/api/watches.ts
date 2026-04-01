@@ -36,6 +36,39 @@ export const WatchesApi = {
   deleteWatchPhoto: async (photoId: string): Promise<void> => {
     await pb.collection('watch_photos').delete(photoId);
   },
+  uploadWatchPhoto: async (
+    watchId: string,
+    file: File,
+    stage: string,
+    caption: string,
+  ): Promise<void> => {
+    const fd = new FormData();
+    fd.append('watch', watchId);
+    fd.append('stage', stage);
+    fd.append('caption', caption);
+    fd.append('image', file);
+    await pb.collection('watch_photos').create(fd);
+  },
+  uploadWatchPhotoBatch: async (
+    watchId: string,
+    photos: { file: File; stage: string; caption: string }[],
+  ): Promise<void> => {
+    const batch = pb.createBatch();
+    photos.forEach((p) => {
+      const fd = new FormData();
+      fd.append('watch', watchId);
+      fd.append('stage', p.stage);
+      fd.append('caption', p.caption);
+      fd.append('image', p.file);
+      batch.collection('watch_photos').create({
+        watch: watchId,
+        stage: p.stage,
+        caption: p.caption,
+        image: p.file,
+      });
+    });
+    await batch.send();
+  },
   getWatchById: async (id: string): Promise<Watch> => {
     const watch = await pb
       .collection('watches')

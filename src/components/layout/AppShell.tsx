@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </BreadcrumbList>
           </Breadcrumb>
         </header>
-        <div className='flex flex-1 flex-col px-9 py-7'>{children}</div>
+        <div className='flex flex-1 flex-col px-4 py-5 md:px-9 md:py-7'>{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -48,6 +48,21 @@ export const useDeleteWatch = () => {
   });
 };
 
+export const useUploadWatchPhotos = (watchId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (photos: { file: File; stage: string; caption: string }[]) => {
+      return WatchesApi.uploadWatchPhotoBatch(watchId, photos);
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['watches', watchId] });
+    },
+  });
+};
+
 export const useDeleteWatchPhoto = (watchId: string) => {
   const queryClient = useQueryClient();
   return useMutation({

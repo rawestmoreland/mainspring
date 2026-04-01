@@ -54,7 +54,7 @@ function Dashboard() {
   return (
     <>
       {/* KPIs */}
-      <div className='grid grid-cols-4 gap-4 mb-7'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7'>
         <KpiCard
           highlight
           label='Total Profit (sold)'
@@ -99,15 +99,15 @@ function Dashboard() {
       <TableWrap className='mb-7'>
         <thead>
           <tr>
-            <Th>Photos</Th>
+            <Th className='hidden sm:table-cell'>Photos</Th>
             <Th>Watch</Th>
             <Th>Status</Th>
             <Th>Paid</Th>
-            <Th>Parts</Th>
+            <Th className='hidden sm:table-cell'>Parts</Th>
             <Th>Sold</Th>
             <Th>Profit</Th>
             <Th>ROI</Th>
-            <Th>Hrs</Th>
+            <Th className='hidden sm:table-cell'>Hrs</Th>
           </tr>
         </thead>
         <tbody>
@@ -124,7 +124,7 @@ function Dashboard() {
                   })
                 }
               >
-                <Td>
+                <Td className='hidden sm:table-cell'>
                   <ThumbStrip
                     photos={w.photos}
                     onClick={() =>
@@ -147,7 +147,7 @@ function Dashboard() {
                   <StatusBadge status={w.status} />
                 </Td>
                 <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
-                <Td className='font-mono text-xs text-muted-foreground'>
+                <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
                   {fmt(w.parts_cost)}
                 </Td>
                 <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
@@ -175,7 +175,7 @@ function Dashboard() {
                 >
                   {fmtPct(r)}
                 </Td>
-                <Td className='font-mono text-xs text-muted-foreground'>
+                <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
                   {w.hours_spent}h
                 </Td>
               </TableRow>
@@ -185,7 +185,7 @@ function Dashboard() {
       </TableWrap>
 
       {/* Bottom grid */}
-      <div className='grid grid-cols-2 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         {/* Inventory */}
         <div>
           <div className='flex items-center justify-between mb-3.5'>
