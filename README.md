@@ -1,6 +1,6 @@
 # Mainspring
 
-A dark-UI watch-flipping tracker for hobbyists who buy, restore, and resell vintage watches. Track your purchases, restoration photos, parts inventory, and tools — with a live profit/ROI ledger.
+A watch-flipping tracker for hobbyists who buy, restore, and resell vintage watches. Track your purchases, restoration photos, parts inventory, and tools — with a live profit/ROI ledger.
 
 ---
 
@@ -26,6 +26,7 @@ A dark-UI watch-flipping tracker for hobbyists who buy, restore, and resell vint
 | Tables | TanStack Table |
 | Build | Vite 7 |
 | Types | TypeScript 5 (strict) |
+| Backend / DB | [PocketBase](https://pocketbase.io) (Go, SQLite) |
 
 ---
 
@@ -55,14 +56,63 @@ src/
 
 ---
 
-## Getting Started
+## Running with Docker (recommended for local use)
 
+**Requirements:** Docker Desktop (or Docker Engine + Compose plugin)
+
+```bash
+git clone <repo-url>
+cd mainspring
+docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| App | http://localhost:3000 |
+| PocketBase admin | http://localhost:8080/_/ |
+
+On first boot, PocketBase runs all migrations and creates a fresh database. Before logging in to the app, visit the admin panel and create a superuser account.
+
+Data persists in a named Docker volume (`pb_data`) between restarts. To wipe everything and start fresh:
+
+```bash
+docker compose down -v
+```
+
+---
+
+## Running without Docker
+
+**Requirements:** Node 22+, Go 1.24+
+
+**Backend** — start PocketBase:
+```bash
+cd pocketbase/base
+go run . serve
+# Runs on http://127.0.0.1:8080
+# Admin panel: http://127.0.0.1:8080/_/
+```
+
+**Frontend** — in a separate terminal:
 ```bash
 npm install
 npm run dev        # dev server on :3000
 npm run build      # production build
 npm run test       # vitest
 ```
+
+The frontend defaults to `http://127.0.0.1:8080` for the PocketBase URL, so no `.env` file is needed for local development.
+
+---
+
+## Environment Variables
+
+Vite env vars are baked in at build time. For `npm run dev` the defaults work without any configuration.
+
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_POCKETBASE_URL` | `http://127.0.0.1:8080` | PocketBase API base URL |
+| `VITE_ASSET_URL` | — | CDN base URL for watch photos (production only) |
 
 ---
 

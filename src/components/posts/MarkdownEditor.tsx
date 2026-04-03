@@ -11,7 +11,7 @@ type Props = {
 export function MarkdownEditor({ value, onChange, minHeight = 320 }: Props) {
   const [tab, setTab] = useState<'write' | 'preview'>('write');
 
-  const html = marked(value) as string;
+  const html = marked.parse(value) as string;
 
   return (
     <div className='space-y-2'>
@@ -57,7 +57,7 @@ export function MarkdownEditor({ value, onChange, minHeight = 320 }: Props) {
         >
           {value.trim() ? (
             <div
-              className='prose prose-invert max-w-none text-sm'
+              className='prose max-w-none text-sm'
               dangerouslySetInnerHTML={{ __html: html }}
             />
           ) : (

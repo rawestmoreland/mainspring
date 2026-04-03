@@ -5,7 +5,11 @@ import { z } from 'zod';
 import { useState } from 'react';
 import { marked } from 'marked';
 import { format } from 'date-fns/format';
-import { useGetPostById, useUpdatePost, useDeletePostImage } from '#/hooks/posts';
+import {
+  useGetPostById,
+  useUpdatePost,
+  useDeletePostImage,
+} from '#/hooks/posts';
 import { useUser } from '#/hooks/user';
 import { MarkdownEditor } from '#/components/posts/MarkdownEditor';
 
@@ -30,9 +34,17 @@ function PostPage() {
   const [newImages, setNewImages] = useState<File[]>([]);
   const [copied, setCopied] = useState<string | null>(null);
 
-  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
-    values: post ? { title: post.title, session_date: post.session_date, body: post.body } : undefined,
+    values: post
+      ? { title: post.title, session_date: post.session_date, body: post.body }
+      : undefined,
   });
 
   const onSubmit = async (data: FormData) => {
@@ -60,7 +72,9 @@ function PostPage() {
   };
 
   if (isLoading) {
-    return <div className='text-sm font-mono text-muted-foreground'>Loading…</div>;
+    return (
+      <div className='text-sm font-mono text-muted-foreground'>Loading…</div>
+    );
   }
 
   if (!post) {
@@ -105,7 +119,9 @@ function PostPage() {
                 className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring'
               />
               {errors.title && (
-                <p className='text-[11px] text-red-400'>{errors.title.message}</p>
+                <p className='text-[11px] text-red-400'>
+                  {errors.title.message}
+                </p>
               )}
             </div>
             <div className='space-y-1.5'>
@@ -185,7 +201,9 @@ function PostPage() {
                     />
                     <button
                       type='button'
-                      onClick={() => setNewImages((prev) => prev.filter((_, j) => j !== i))}
+                      onClick={() =>
+                        setNewImages((prev) => prev.filter((_, j) => j !== i))
+                      }
                       className='absolute -top-1 -right-1 hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-black/80 text-white/90 text-xs hover:text-red-400'
                     >
                       ×
@@ -240,11 +258,13 @@ function PostPage() {
           {/* Body */}
           {post.body ? (
             <div
-              className='prose prose-invert max-w-none'
+              className='prose max-w-none'
               dangerouslySetInnerHTML={{ __html: marked(post.body) as string }}
             />
           ) : (
-            <p className='text-sm text-muted-foreground italic'>No notes written yet.</p>
+            <p className='text-sm text-muted-foreground italic'>
+              No notes written yet.
+            </p>
           )}
 
           {/* Image gallery */}
