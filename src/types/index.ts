@@ -66,3 +66,17 @@ export type Inventory = {
 };
 
 export type CreateInventory = Omit<Inventory, 'id'>;
+
+export type RepairPost = {
+  id: string;
+  watch: string;
+  title: string;
+  body: string;
+  session_date: string;
+  images: string[];
+  imageUrls: string[];
+  created: string;
+  updated: string;
+};
+
+export type CreateRepairPost = Omit<RepairPost, 'id' | 'images' | 'imageUrls' | 'created' | 'updated'>;

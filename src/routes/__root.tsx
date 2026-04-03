@@ -6,6 +6,7 @@ import { WatchesProvider } from '#/context/watches';
 import '../styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '#/components/ui/tooltip';
+import { GoogleAnalytics } from 'tanstack-router-ga4';
 
 export const Route = createRootRoute({ component: RootComponent });
 
@@ -18,6 +19,7 @@ function RootComponent() {
         <WatchesProvider>
           <AppShell>
             <HeadContent />
+            <GoogleAnalytics measurementId='G-7TWPVSWCR2' />
             <Outlet />
           </AppShell>
           <TanStackDevtools

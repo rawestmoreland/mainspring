@@ -16,6 +16,9 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WatchesIndexRouteImport } from './routes/watches/index'
 import { Route as WatchesNewRouteImport } from './routes/watches/new'
 import { Route as WatchesWatchIdIndexRouteImport } from './routes/watches/$watchId/index'
+import { Route as WatchesWatchIdPostsIndexRouteImport } from './routes/watches/$watchId/posts/index'
+import { Route as WatchesWatchIdPostsNewRouteImport } from './routes/watches/$watchId/posts/new'
+import { Route as WatchesWatchIdPostsPostIdRouteImport } from './routes/watches/$watchId/posts/$postId'
 
 const InventoryRoute = InventoryRouteImport.update({
   id: '/inventory',
@@ -52,6 +55,23 @@ const WatchesWatchIdIndexRoute = WatchesWatchIdIndexRouteImport.update({
   path: '/watches/$watchId/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WatchesWatchIdPostsIndexRoute =
+  WatchesWatchIdPostsIndexRouteImport.update({
+    id: '/watches/$watchId/posts/',
+    path: '/watches/$watchId/posts/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const WatchesWatchIdPostsNewRoute = WatchesWatchIdPostsNewRouteImport.update({
+  id: '/watches/$watchId/posts/new',
+  path: '/watches/$watchId/posts/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WatchesWatchIdPostsPostIdRoute =
+  WatchesWatchIdPostsPostIdRouteImport.update({
+    id: '/watches/$watchId/posts/$postId',
+    path: '/watches/$watchId/posts/$postId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -61,6 +81,9 @@ export interface FileRoutesByFullPath {
   '/watches/new': typeof WatchesNewRoute
   '/watches/': typeof WatchesIndexRoute
   '/watches/$watchId/': typeof WatchesWatchIdIndexRoute
+  '/watches/$watchId/posts/$postId': typeof WatchesWatchIdPostsPostIdRoute
+  '/watches/$watchId/posts/new': typeof WatchesWatchIdPostsNewRoute
+  '/watches/$watchId/posts/': typeof WatchesWatchIdPostsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -70,6 +93,9 @@ export interface FileRoutesByTo {
   '/watches/new': typeof WatchesNewRoute
   '/watches': typeof WatchesIndexRoute
   '/watches/$watchId': typeof WatchesWatchIdIndexRoute
+  '/watches/$watchId/posts/$postId': typeof WatchesWatchIdPostsPostIdRoute
+  '/watches/$watchId/posts/new': typeof WatchesWatchIdPostsNewRoute
+  '/watches/$watchId/posts': typeof WatchesWatchIdPostsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -80,6 +106,9 @@ export interface FileRoutesById {
   '/watches/new': typeof WatchesNewRoute
   '/watches/': typeof WatchesIndexRoute
   '/watches/$watchId/': typeof WatchesWatchIdIndexRoute
+  '/watches/$watchId/posts/$postId': typeof WatchesWatchIdPostsPostIdRoute
+  '/watches/$watchId/posts/new': typeof WatchesWatchIdPostsNewRoute
+  '/watches/$watchId/posts/': typeof WatchesWatchIdPostsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -91,6 +120,9 @@ export interface FileRouteTypes {
     | '/watches/new'
     | '/watches/'
     | '/watches/$watchId/'
+    | '/watches/$watchId/posts/$postId'
+    | '/watches/$watchId/posts/new'
+    | '/watches/$watchId/posts/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -100,6 +132,9 @@ export interface FileRouteTypes {
     | '/watches/new'
     | '/watches'
     | '/watches/$watchId'
+    | '/watches/$watchId/posts/$postId'
+    | '/watches/$watchId/posts/new'
+    | '/watches/$watchId/posts'
   id:
     | '__root__'
     | '/'
@@ -109,6 +144,9 @@ export interface FileRouteTypes {
     | '/watches/new'
     | '/watches/'
     | '/watches/$watchId/'
+    | '/watches/$watchId/posts/$postId'
+    | '/watches/$watchId/posts/new'
+    | '/watches/$watchId/posts/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -119,6 +157,9 @@ export interface RootRouteChildren {
   WatchesNewRoute: typeof WatchesNewRoute
   WatchesIndexRoute: typeof WatchesIndexRoute
   WatchesWatchIdIndexRoute: typeof WatchesWatchIdIndexRoute
+  WatchesWatchIdPostsPostIdRoute: typeof WatchesWatchIdPostsPostIdRoute
+  WatchesWatchIdPostsNewRoute: typeof WatchesWatchIdPostsNewRoute
+  WatchesWatchIdPostsIndexRoute: typeof WatchesWatchIdPostsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -172,6 +213,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WatchesWatchIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/watches/$watchId/posts/': {
+      id: '/watches/$watchId/posts/'
+      path: '/watches/$watchId/posts'
+      fullPath: '/watches/$watchId/posts/'
+      preLoaderRoute: typeof WatchesWatchIdPostsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watches/$watchId/posts/new': {
+      id: '/watches/$watchId/posts/new'
+      path: '/watches/$watchId/posts/new'
+      fullPath: '/watches/$watchId/posts/new'
+      preLoaderRoute: typeof WatchesWatchIdPostsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/watches/$watchId/posts/$postId': {
+      id: '/watches/$watchId/posts/$postId'
+      path: '/watches/$watchId/posts/$postId'
+      fullPath: '/watches/$watchId/posts/$postId'
+      preLoaderRoute: typeof WatchesWatchIdPostsPostIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -183,6 +245,9 @@ const rootRouteChildren: RootRouteChildren = {
   WatchesNewRoute: WatchesNewRoute,
   WatchesIndexRoute: WatchesIndexRoute,
   WatchesWatchIdIndexRoute: WatchesWatchIdIndexRoute,
+  WatchesWatchIdPostsPostIdRoute: WatchesWatchIdPostsPostIdRoute,
+  WatchesWatchIdPostsNewRoute: WatchesWatchIdPostsNewRoute,
+  WatchesWatchIdPostsIndexRoute: WatchesWatchIdPostsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

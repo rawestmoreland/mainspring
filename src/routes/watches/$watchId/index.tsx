@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useGetWatchById, useDeleteWatchPhoto, useUploadWatchPhotos } from '#/hooks/watches';
+import { useGetPostsByWatch } from '#/hooks/posts';
 import { useUser } from '#/hooks/user';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { fmt, profit } from '#/lib/helpers';
@@ -16,6 +17,8 @@ function RouteComponent() {
   const { watchId } = Route.useParams();
   const { data: watch, isLoading } = useGetWatchById(watchId);
   const { data: user } = useUser();
+  const { data: posts } = useGetPostsByWatch(watchId);
+  const postCount = posts?.length ?? 0;
   const deletePhoto = useDeleteWatchPhoto(watchId);
   const uploadPhotos = useUploadWatchPhotos(watchId);
 
@@ -164,12 +167,14 @@ function RouteComponent() {
                 key={ph.id}
                 className='group relative overflow-hidden rounded-md border border-border bg-card aspect-4/3'
               >
-                <img
-                  src={ph.image}
-                  alt={ph.caption}
-                  className='h-full w-full object-cover'
-                  loading='lazy'
-                />
+                <a href={ph.image} target='_blank' rel='noopener noreferrer' className='block h-full w-full'>
+                  <img
+                    src={ph.image}
+                    alt={ph.caption}
+                    className='h-full w-full object-cover cursor-zoom-in'
+                    loading='lazy'
+                  />
+                </a>
                 <button
                   onClick={() => deletePhoto.mutate(ph.id)}
                   disabled={deletePhoto.isPending}
@@ -191,6 +196,62 @@ function RouteComponent() {
           <div className='text-center py-8 text-xs font-mono text-muted-foreground border border-dashed border-border rounded-md'>
             No photos for this watch yet.
           </div>
+        )}
+      </section>
+
+      {/* Repair Log */}
+      <section className='space-y-3'>
+        <div className='flex items-center justify-between'>
+          <div className='text-[11px] font-mono uppercase tracking-widest text-muted-foreground/80'>
+            Repair Log
+          </div>
+          <Link
+            to='/watches/$watchId/posts'
+            params={{ watchId }}
+            className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
+          >
+            View all sessions ({postCount})
+          </Link>
+        </div>
+        {postCount === 0 ? (
+          <div className='text-center py-6 text-xs font-mono text-muted-foreground border border-dashed border-border rounded-md'>
+            No repair sessions yet.{' '}
+            {user && (
+              <Link
+                to='/watches/$watchId/posts/new'
+                params={{ watchId }}
+                className='text-primary'
+              >
+                Log the first one →
+              </Link>
+            )}
+          </div>
+        ) : (
+          <ul className='space-y-1.5'>
+            {posts!.slice(0, 3).map((p) => (
+              <li key={p.id}>
+                <Link
+                  to='/watches/$watchId/posts/$postId'
+                  params={{ watchId, postId: p.id }}
+                  className='flex items-center justify-between rounded-md px-3 py-2 border border-border bg-card hover:bg-accent/10 transition-colors no-underline'
+                >
+                  <span className='text-sm text-foreground'>{p.title}</span>
+                  <span className='text-[11px] font-mono text-muted-foreground'>{p.session_date}</span>
+                </Link>
+              </li>
+            ))}
+            {postCount > 3 && (
+              <li>
+                <Link
+                  to='/watches/$watchId/posts'
+                  params={{ watchId }}
+                  className='block text-center text-xs font-mono text-muted-foreground hover:text-primary py-1 no-underline'
+                >
+                  + {postCount - 3} more
+                </Link>
+              </li>
+            )}
+          </ul>
         )}
       </section>
     </div>
