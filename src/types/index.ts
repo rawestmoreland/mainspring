@@ -10,6 +10,7 @@ export type InventoryCategory =
 
 export type WatchPhoto = {
   id: string;
+  collectionId: string;
   stage: WatchStage;
   caption: string;
   image: string;
@@ -79,4 +80,7 @@ export type RepairPost = {
   updated: string;
 };
 
-export type CreateRepairPost = Omit<RepairPost, 'id' | 'images' | 'imageUrls' | 'created' | 'updated'>;
+export type CreateRepairPost = Omit<
+  RepairPost,
+  'id' | 'images' | 'imageUrls' | 'created' | 'updated'
+>;

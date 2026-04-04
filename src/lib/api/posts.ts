@@ -15,7 +15,8 @@ function toRepairPost(r: Record<string, unknown>): RepairPost {
     updated: r.updated as string,
     images,
     imageUrls: images.map(
-      (filename) => `${import.meta.env.VITE_ASSET_URL}/${r.id}/${filename}`,
+      (filename) =>
+        `${import.meta.env.VITE_ASSET_URL}/${r.collectionId}/${r.id}/${filename}`,
     ),
   };
 }
@@ -31,10 +32,14 @@ export const PostsApi = {
 
   getPostById: async (postId: string): Promise<RepairPost> => {
     const record = await pb.collection(COLLECTION).getOne(postId);
+    console.log(record);
     return toRepairPost(record);
   },
 
-  createPost: async (data: CreateRepairPost, images: File[]): Promise<RepairPost> => {
+  createPost: async (
+    data: CreateRepairPost,
+    images: File[],
+  ): Promise<RepairPost> => {
     const fd = new FormData();
     fd.append('watch', data.watch);
     fd.append('title', data.title);
@@ -53,7 +58,8 @@ export const PostsApi = {
     const fd = new FormData();
     if (data.title !== undefined) fd.append('title', data.title);
     if (data.body !== undefined) fd.append('body', data.body);
-    if (data.session_date !== undefined) fd.append('session_date', data.session_date);
+    if (data.session_date !== undefined)
+      fd.append('session_date', data.session_date);
     newImages.forEach((f) => fd.append('images', f));
     const record = await pb.collection(COLLECTION).update(postId, fd);
     return toRepairPost(record);
@@ -63,7 +69,10 @@ export const PostsApi = {
     await pb.collection(COLLECTION).delete(postId);
   },
 
-  deleteImage: async (postId: string, filename: string): Promise<RepairPost> => {
+  deleteImage: async (
+    postId: string,
+    filename: string,
+  ): Promise<RepairPost> => {
     const record = await pb.collection(COLLECTION).update(postId, {
       'images-': [filename],
     });

@@ -286,7 +286,7 @@ function PostPage() {
                       className='block h-full w-full'
                     >
                       <img
-                        src={post.imageUrls[i]}
+                        src={`${post.imageUrls[i]}?thumb=600x450`}
                         alt={filename}
                         className='h-full w-full object-cover cursor-zoom-in'
                         loading='lazy'

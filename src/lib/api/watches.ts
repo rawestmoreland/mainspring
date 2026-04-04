@@ -14,9 +14,10 @@ export const WatchesApi = {
       photos:
         w.expand?.watch_photos_via_watch?.map((p: WatchPhoto) => ({
           id: p.id,
+          collectionId: p.collectionId,
           stage: p.stage,
           caption: p.caption,
-          image: `${import.meta.env.VITE_ASSET_URL}/${p.id}/${`thumbs_`}${p.image}/${`100x100_`}${p.image}`,
+          image: `${import.meta.env.VITE_ASSET_URL}/${p.collectionId}/${p.id}/${`thumbs_`}${p.image}/${`100x100_`}${p.image}`,
         })) ?? [],
     }));
   },
@@ -78,9 +79,10 @@ export const WatchesApi = {
       photos:
         watch.expand?.watch_photos_via_watch?.map((p: WatchPhoto) => ({
           id: p.id,
+          collectionId: p.collectionId,
           stage: p.stage,
           caption: p.caption,
-          image: `${import.meta.env.VITE_ASSET_URL}/${p.id}/${p.image}`,
+          image: `${import.meta.env.VITE_ASSET_URL}/${p.collectionId}/${p.id}/${p.image}`,
         })) ?? [],
     };
   },

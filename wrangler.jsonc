@@ -11,7 +11,7 @@
   },
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "VITE_ASSET_URL": "https://ms-assets.westmorelandcreative.com/pbc_414079043",
+    "VITE_ASSET_URL": "https://ms-assets.westmorelandcreative.com",
     "VITE_POCKETBASE_URL": "https://ms-api.westmorelandcreative.com",
   },
 }
