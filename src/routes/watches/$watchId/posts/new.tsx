@@ -5,7 +5,9 @@ import { z } from 'zod';
 import { useState } from 'react';
 import { useCreatePost } from '#/hooks/posts';
 import { useUser } from '#/hooks/user';
+import { PostsApi } from '#/lib/api/posts';
 import { MarkdownEditor } from '#/components/posts/MarkdownEditor';
+import { WatchPhotoPicker } from '#/components/posts/WatchPhotoPicker';
 
 export const Route = createFileRoute('/watches/$watchId/posts/new')({
   component: NewPostPage,
@@ -23,12 +25,14 @@ function NewPostPage() {
   const { data: user } = useUser();
   const navigate = useNavigate();
   const createPost = useCreatePost(watchId);
-  const [images, setImages] = useState<File[]>([]);
+  const [stagedImages, setStagedImages] = useState<{ file: File; blobUrl: string }[]>([]);
 
   const {
     register,
     control,
     handleSubmit,
+    getValues,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -38,8 +42,20 @@ function NewPostPage() {
   const onSubmit = async (data: FormData) => {
     const post = await createPost.mutateAsync({
       data: { watch: watchId, ...data },
-      images,
+      images: stagedImages.map((s) => s.file),
     });
+
+    // Replace blob URLs with real server URLs in the body
+    let finalBody = data.body;
+    stagedImages.forEach((staged, i) => {
+      if (post.imageUrls[i]) {
+        finalBody = finalBody.split(staged.blobUrl).join(post.imageUrls[i]);
+      }
+    });
+    if (finalBody !== data.body) {
+      await PostsApi.updatePost(post.id, { body: finalBody }, []);
+    }
+
     navigate({
       to: '/watches/$watchId/posts/$postId',
       params: { watchId, postId: post.id },
@@ -48,12 +64,22 @@ function NewPostPage() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    setImages((prev) => [...prev, ...files]);
+    const newStaged = files.map((file) => ({ file, blobUrl: URL.createObjectURL(file) }));
+    setStagedImages((prev) => [...prev, ...newStaged]);
     e.target.value = '';
   };
 
   const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+    setStagedImages((prev) => {
+      URL.revokeObjectURL(prev[index].blobUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  };
+
+  const insertImage = (staged: { file: File; blobUrl: string }) => {
+    const current = getValues('body');
+    const embed = `![${staged.file.name}](${staged.blobUrl})`;
+    setValue('body', current ? `${current}\n\n${embed}` : embed);
   };
 
   if (!user) {
@@ -127,14 +153,20 @@ function NewPostPage() {
           />
         </div>
 
+        {/* Watch photo picker */}
+        <WatchPhotoPicker
+          watchId={watchId}
+          onInsert={(embed) => {
+            const current = getValues('body');
+            setValue('body', current ? `${current}\n\n${embed}` : embed);
+          }}
+        />
+
         {/* Images */}
         <div className='space-y-2'>
           <label className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
             Attach Images
           </label>
-          <p className='text-[11px] font-mono text-muted-foreground'>
-            Images upload when you save. You can embed them in the body after saving.
-          </p>
           <label className='inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border bg-card px-4 py-2 text-xs font-mono text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors'>
             + Add images
             <input
@@ -145,24 +177,36 @@ function NewPostPage() {
               className='sr-only'
             />
           </label>
-          {images.length > 0 && (
+          {stagedImages.length > 0 && (
             <div className='flex flex-wrap gap-2 mt-2'>
-              {images.map((f, i) => (
-                <div key={i} className='relative group'>
-                  <img
-                    src={URL.createObjectURL(f)}
-                    alt={f.name}
-                    className='h-16 w-16 rounded-md object-cover border border-border'
-                  />
-                  <button
-                    type='button'
-                    onClick={() => removeImage(i)}
-                    className='absolute -top-1 -right-1 hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-black/80 text-white/90 text-xs hover:text-red-400'
-                  >
-                    ×
-                  </button>
+              {stagedImages.map((staged, i) => (
+                <div key={i} className='relative group flex flex-col items-center'>
+                  <div className='relative'>
+                    <img
+                      src={staged.blobUrl}
+                      alt={staged.file.name}
+                      className='h-16 w-16 rounded-md object-cover border border-border'
+                    />
+                    {/* Insert button */}
+                    <button
+                      type='button'
+                      onClick={() => insertImage(staged)}
+                      title='Insert into body'
+                      className='absolute inset-0 hidden group-hover:flex items-center justify-center rounded-md bg-black/60 text-white text-[10px] font-mono'
+                    >
+                      Insert
+                    </button>
+                    {/* Remove button */}
+                    <button
+                      type='button'
+                      onClick={() => removeImage(i)}
+                      className='absolute -top-1 -right-1 hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-black/80 text-white/90 text-xs hover:text-red-400'
+                    >
+                      ×
+                    </button>
+                  </div>
                   <span className='mt-0.5 block text-[10px] font-mono text-muted-foreground truncate max-w-[64px]'>
-                    {f.name}
+                    {staged.file.name}
                   </span>
                 </div>
               ))}

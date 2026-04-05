@@ -12,6 +12,7 @@ import {
 } from '#/hooks/posts';
 import { useUser } from '#/hooks/user';
 import { MarkdownEditor } from '#/components/posts/MarkdownEditor';
+import { WatchPhotoPicker } from '#/components/posts/WatchPhotoPicker';
 
 export const Route = createFileRoute('/watches/$watchId/posts/$postId')({
   component: PostPage,
@@ -39,6 +40,8 @@ function PostPage() {
     control,
     handleSubmit,
     reset,
+    getValues,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -174,6 +177,15 @@ function PostPage() {
               )}
             />
           </div>
+
+          {/* Watch photo picker */}
+          <WatchPhotoPicker
+            watchId={watchId}
+            onInsert={(embed) => {
+              const current = getValues('body');
+              setValue('body', current ? `${current}\n\n${embed}` : embed);
+            }}
+          />
 
           {/* Add more images */}
           <div className='space-y-2'>

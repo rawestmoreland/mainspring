@@ -32,7 +32,6 @@ export const PostsApi = {
 
   getPostById: async (postId: string): Promise<RepairPost> => {
     const record = await pb.collection(COLLECTION).getOne(postId);
-    console.log(record);
     return toRepairPost(record);
   },
 
