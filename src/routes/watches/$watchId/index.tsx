@@ -14,6 +14,7 @@ import type { WatchStage } from '#/types';
 import { format } from 'date-fns/format';
 import { UploadZone } from '#/components/watches/UploadZone';
 import type { PendingPhoto } from '#/components/watches/UploadZone';
+import Tiptap from '#/components/TipTap';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
@@ -164,38 +165,24 @@ function RouteComponent() {
               )}
             </div>
             {editingNotes ? (
-              <div className='space-y-2'>
-                <textarea
-                  value={draftNotes}
-                  onChange={(e) => setDraftNotes(e.target.value)}
-                  rows={4}
-                  autoFocus
-                  placeholder='Add general notes about this watch…'
-                  className='w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary'
-                />
-                <div className='flex gap-3'>
-                  <button
-                    onClick={() => {
-                      updateWatch.mutate({ ...watch, notes: draftNotes });
-                      setEditingNotes(false);
-                    }}
-                    disabled={updateWatch.isPending}
-                    className='text-xs font-mono text-primary hover:text-primary/80 disabled:opacity-50'
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setEditingNotes(false)}
-                    className='text-xs font-mono text-muted-foreground hover:text-foreground'
-                  >
-                    Cancel
-                  </button>
-                </div>
+              <div>
+                <Tiptap value={draftNotes} onChange={setDraftNotes} />
+                <button
+                  onClick={() => {
+                    updateWatch.mutate({ ...watch, notes: draftNotes });
+                    setEditingNotes(false);
+                  }}
+                  disabled={updateWatch.isPending}
+                  className='text-xs font-mono text-primary hover:text-primary/80 disabled:opacity-50'
+                >
+                  Save
+                </button>
               </div>
-            ) : watch.notes ? (
-              <p className='text-sm leading-relaxed text-foreground/85'>
-                {watch.notes}
-              </p>
+            ) : !watch.notes ? (
+              <div
+                className='prose max-w-none'
+                dangerouslySetInnerHTML={{ __html: watch.notes }}
+              />
             ) : (
               <p className='font-mono text-xs italic text-muted-foreground/50'>
                 No notes yet.
