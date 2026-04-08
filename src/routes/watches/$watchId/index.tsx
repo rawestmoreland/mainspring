@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import {
   useGetWatchById,
   useDeleteWatchPhoto,
+  useUpdateWatch,
   useUploadWatchPhotos,
 } from '#/hooks/watches';
 import { useGetPostsByWatch } from '#/hooks/posts';
@@ -25,6 +27,10 @@ function RouteComponent() {
   const postCount = posts?.length ?? 0;
   const deletePhoto = useDeleteWatchPhoto(watchId);
   const uploadPhotos = useUploadWatchPhotos(watchId);
+  const updateWatch = useUpdateWatch();
+
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [draftNotes, setDraftNotes] = useState('');
 
   const handleUpload = (pending: PendingPhoto[]) => {
     uploadPhotos.mutate(
@@ -123,8 +129,8 @@ function RouteComponent() {
             </div>
           </section>
 
-          {/* Dates & notes */}
-          <section className='grid grid-cols-3 gap-6'>
+          {/* Dates */}
+          <section className='grid grid-cols-2 gap-6'>
             <div className='space-y-1 text-xs font-mono text-muted-foreground'>
               <div className='text-[10px] uppercase tracking-widest text-muted-foreground/80'>
                 Acquired
@@ -137,15 +143,63 @@ function RouteComponent() {
               </div>
               <div>{watch.sold_date ?? '—'}</div>
             </div>
-            {watch.notes && (
-              <div className='space-y-1 text-sm text-foreground/90'>
-                <div className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-                  Notes
-                </div>
-                <p className='leading-relaxed text-muted-foreground italic'>
-                  "{watch.notes}"
-                </p>
+          </section>
+
+          {/* Notes */}
+          <section className='space-y-2'>
+            <div className='flex items-center justify-between'>
+              <div className='text-[11px] font-mono uppercase tracking-widest text-muted-foreground/80'>
+                Notes
               </div>
+              {user && !editingNotes && (
+                <button
+                  onClick={() => {
+                    setDraftNotes(watch.notes ?? '');
+                    setEditingNotes(true);
+                  }}
+                  className='text-xs font-mono text-primary hover:text-primary/80'
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+            {editingNotes ? (
+              <div className='space-y-2'>
+                <textarea
+                  value={draftNotes}
+                  onChange={(e) => setDraftNotes(e.target.value)}
+                  rows={4}
+                  autoFocus
+                  placeholder='Add general notes about this watch…'
+                  className='w-full resize-none rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary'
+                />
+                <div className='flex gap-3'>
+                  <button
+                    onClick={() => {
+                      updateWatch.mutate({ ...watch, notes: draftNotes });
+                      setEditingNotes(false);
+                    }}
+                    disabled={updateWatch.isPending}
+                    className='text-xs font-mono text-primary hover:text-primary/80 disabled:opacity-50'
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditingNotes(false)}
+                    className='text-xs font-mono text-muted-foreground hover:text-foreground'
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : watch.notes ? (
+              <p className='text-sm leading-relaxed text-foreground/85'>
+                {watch.notes}
+              </p>
+            ) : (
+              <p className='font-mono text-xs italic text-muted-foreground/50'>
+                No notes yet.
+              </p>
             )}
           </section>
 
