@@ -82,7 +82,7 @@ export const WatchesApi = {
           collectionId: p.collectionId,
           stage: p.stage,
           caption: p.caption,
-          image: `${import.meta.env.VITE_POCKETBASE_URL}/api/files/${p.collectionId}/${p.id}/${p.image}?thumb=150x150`,
+          image: `${import.meta.env.VITE_ASSET_URL}/${p.collectionId}/${p.id}/${p.image}`,
         })) ?? [],
     };
   },
