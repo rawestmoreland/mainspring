@@ -1,14 +1,14 @@
 import pb from '#/lib/pocketbase';
-import type { CreateWatch, Watch, WatchPhoto } from '#/types';
+import type { CreateWatch, PartUsed, Watch, WatchPhoto } from '#/types';
 
 export const WatchesApi = {
   getWatches: async (
     page: number = 1,
     limit: number = 100,
   ): Promise<Watch[]> => {
-    const watches = await pb
-      .collection('watches')
-      .getList<Watch>(page, limit, { expand: 'watch_photos_via_watch' });
+    const watches = await pb.collection('watches').getList<Watch>(page, limit, {
+      expand: 'watch_photos_via_watch,parts_used_via_watch',
+    });
     return watches.items.map((w) => ({
       ...w,
       photos:
@@ -19,6 +19,11 @@ export const WatchesApi = {
           caption: p.caption,
           image: `${import.meta.env.VITE_POCKETBASE_URL}/api/files/${p.collectionId}/${p.id}/${p.image}?thumb=100x100`,
         })) ?? [],
+      parts_cost:
+        w.expand?.parts_used_via_watch?.reduce(
+          (sum, p: PartUsed) => sum + (p.qty_used ?? 0) * (p.unit_cost ?? 0),
+          0,
+        ) ?? 0,
     }));
   },
   createWatch: async (watch: CreateWatch): Promise<Watch> => {
@@ -71,9 +76,9 @@ export const WatchesApi = {
     await batch.send();
   },
   getWatchById: async (id: string): Promise<Watch> => {
-    const watch = await pb
-      .collection('watches')
-      .getOne<Watch>(id, { expand: 'watch_photos_via_watch ' });
+    const watch = await pb.collection('watches').getOne<Watch>(id, {
+      expand: 'watch_photos_via_watch,parts_used_via_watch',
+    });
     return {
       ...watch,
       photos:
@@ -84,6 +89,11 @@ export const WatchesApi = {
           caption: p.caption,
           image: `${import.meta.env.VITE_ASSET_URL}/${p.collectionId}/${p.id}/${p.image}`,
         })) ?? [],
+      parts_cost:
+        watch.expand?.parts_used_via_watch?.reduce(
+          (sum, p: PartUsed) => sum + (p.qty_used ?? 0) * (p.unit_cost ?? 0),
+          0,
+        ) ?? 0,
     };
   },
 };

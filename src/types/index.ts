@@ -16,6 +16,17 @@ export type WatchPhoto = {
   image: string;
 };
 
+export type PartUsed = {
+  id: string;
+  watch: string;
+  inventory_item?: string;
+  part_name: string;
+  qty_used: number;
+  unit_cost: number;
+  date_used?: string;
+  notes?: string;
+};
+
 export type Watch = {
   id: string;
   make: string;
@@ -34,6 +45,7 @@ export type Watch = {
   photos: WatchPhoto[];
   expand?: {
     watch_photos_via_watch?: WatchPhoto[];
+    parts_used_via_watch?: PartUsed[];
   };
 };
 
