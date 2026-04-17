@@ -17,7 +17,7 @@ export const WatchesApi = {
           collectionId: p.collectionId,
           stage: p.stage,
           caption: p.caption,
-          image: `${import.meta.env.VITE_ASSET_URL}/${p.collectionId}/${p.id}/${`thumbs_`}${p.image}/${`100x100_`}${p.image}`,
+          image: `${import.meta.env.VITE_POCKETBASE_URL}/api/files/${p.collectionId}/${p.id}/${p.image}?thumb=100x100`,
         })) ?? [],
     }));
   },
@@ -82,7 +82,7 @@ export const WatchesApi = {
           collectionId: p.collectionId,
           stage: p.stage,
           caption: p.caption,
-          image: `${import.meta.env.VITE_ASSET_URL}/${p.collectionId}/${p.id}/${p.image}`,
+          image: `${import.meta.env.VITE_POCKETBASE_URL}/api/files/${p.collectionId}/${p.id}/${p.image}?thumb=150x150`,
         })) ?? [],
     };
   },
