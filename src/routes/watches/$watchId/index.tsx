@@ -146,50 +146,6 @@ function RouteComponent() {
             </div>
           </section>
 
-          {/* Notes */}
-          <section className='space-y-2'>
-            <div className='flex items-center justify-between'>
-              <div className='text-[11px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-                Notes
-              </div>
-              {user && !editingNotes && (
-                <button
-                  onClick={() => {
-                    setDraftNotes(watch.notes ?? '');
-                    setEditingNotes(true);
-                  }}
-                  className='text-xs font-mono text-primary hover:text-primary/80'
-                >
-                  Edit
-                </button>
-              )}
-            </div>
-            {editingNotes ? (
-              <div>
-                <Tiptap value={draftNotes} onChange={setDraftNotes} />
-                <button
-                  onClick={() => {
-                    updateWatch.mutate({ ...watch, notes: draftNotes });
-                    setEditingNotes(false);
-                  }}
-                  disabled={updateWatch.isPending}
-                  className='text-xs font-mono text-primary hover:text-primary/80 disabled:opacity-50'
-                >
-                  Save
-                </button>
-              </div>
-            ) : !watch.notes ? (
-              <div
-                className='prose max-w-none'
-                dangerouslySetInnerHTML={{ __html: watch.notes }}
-              />
-            ) : (
-              <p className='font-mono text-xs italic text-muted-foreground/50'>
-                No notes yet.
-              </p>
-            )}
-          </section>
-
           {/* Repair Log */}
           <section className='space-y-3'>
             <div className='flex items-center justify-between'>
@@ -258,6 +214,50 @@ function RouteComponent() {
               >
                 + New session
               </Link>
+            )}
+          </section>
+
+          {/* Notes */}
+          <section className='space-y-2'>
+            <div className='flex items-center justify-between'>
+              <div className='text-[11px] font-mono uppercase tracking-widest text-muted-foreground/80'>
+                Notes
+              </div>
+              {user && !editingNotes && (
+                <button
+                  onClick={() => {
+                    setDraftNotes(watch.notes ?? '');
+                    setEditingNotes(true);
+                  }}
+                  className='text-xs font-mono text-primary hover:text-primary/80'
+                >
+                  Edit
+                </button>
+              )}
+            </div>
+            {editingNotes ? (
+              <div>
+                <Tiptap value={draftNotes} onChange={setDraftNotes} />
+                <button
+                  onClick={() => {
+                    updateWatch.mutate({ ...watch, notes: draftNotes });
+                    setEditingNotes(false);
+                  }}
+                  disabled={updateWatch.isPending}
+                  className='text-xs font-mono text-primary hover:text-primary/80 disabled:opacity-50'
+                >
+                  Save
+                </button>
+              </div>
+            ) : !!watch.notes ? (
+              <div
+                className='prose max-w-none'
+                dangerouslySetInnerHTML={{ __html: watch.notes }}
+              />
+            ) : (
+              <p className='font-mono text-xs italic text-muted-foreground/50'>
+                No notes yet.
+              </p>
             )}
           </section>
         </div>
