@@ -1,5 +1,10 @@
 export type WatchStage = 'before' | 'during' | 'after' | 'listing';
-export type WatchStatus = 'sold' | 'in_progress' | 'listed' | 'acquired';
+export type WatchStatus =
+  | 'sold'
+  | 'in_progress'
+  | 'listed'
+  | 'acquired'
+  | 'paused';
 export type WatchCondition = 'worn' | 'parts_only' | 'good' | 'fair' | 'poor';
 export type InventoryCategory =
   | 'movement'

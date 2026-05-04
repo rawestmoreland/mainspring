@@ -15,6 +15,7 @@ type FilterValue = 'all' | WatchStatus;
 const FILTERS: [FilterValue, string][] = [
   ['all', 'All'],
   ['in_progress', 'In Progress'],
+  ['paused', 'Paused'],
   ['listed', 'Listed'],
   ['sold', 'Sold'],
 ];

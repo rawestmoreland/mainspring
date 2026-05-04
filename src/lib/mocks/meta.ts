@@ -30,4 +30,5 @@ export const STATUS_META: Record<string, { label: string; className: string }> =
       label: 'Acquired',
       className: 'bg-violet-400/10 text-violet-400',
     },
+    paused: { label: 'Paused', className: 'bg-violet-400/10 text-violet-400' },
   };
