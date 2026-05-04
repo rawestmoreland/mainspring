@@ -19,6 +19,7 @@ type WatchModalProps = {
 export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalProps) {
   const [watch, setWatch] = useState(init);
   const [stageFilter, setStageFilter] = useState<string>('all');
+  const [activeIdx, setActiveIdx] = useState(0);
   const [lightbox, setLightbox] = useState<{ photos: WatchPhoto[]; index: number } | null>(null);
 
   const p = profit(watch);
@@ -28,6 +29,23 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
     stageFilter === 'all'
       ? watch.photos
       : watch.photos.filter((ph) => ph.stage === stageFilter);
+
+  const activePhoto = displayedPhotos[activeIdx] ?? null;
+
+  const handleStageFilter = (s: string) => {
+    setStageFilter((f) => (f === s ? 'all' : s));
+    setActiveIdx(0);
+  };
+
+  const prevPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIdx((i) => (i - 1 + displayedPhotos.length) % displayedPhotos.length);
+  };
+
+  const nextPhoto = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIdx((i) => (i + 1) % displayedPhotos.length);
+  };
 
   const handleUpload = (files: PendingPhoto[]) => {
     const added: WatchPhoto[] = files.map((f, i) => ({
@@ -66,15 +84,15 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-1000"
+      className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-1000 p-4"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-card border border-border rounded-xl w-[840px] max-w-[96vw] max-h-[90vh] overflow-y-auto flex flex-col"
+        className="bg-card border border-border rounded-xl w-[980px] max-w-full max-h-[92vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
-        <div className="flex items-start justify-between px-7 pt-6 pb-5 border-b border-border shrink-0">
+        <div className="flex items-start justify-between px-6 pt-5 pb-4 border-b border-border shrink-0">
           <div>
             <h2 className="text-xl font-bold text-foreground">{watch.make} {watch.model}</h2>
             <div className="flex items-center gap-2 mt-1">
@@ -93,75 +111,128 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
           </button>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 border-b border-border">
-          {statRows.map(([k, v], i) => (
-            <div
-              key={k}
-              className={cn(
-                'flex justify-between items-center px-7 py-2 border-b border-border last:border-0',
-                i % 2 === 0 ? 'border-r border-border' : '',
-              )}
-            >
-              <span className="font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground">{k}</span>
-              <span className="font-mono text-[11.5px] text-foreground">{v}</span>
-            </div>
-          ))}
-          {watch.notes && (
-            <div className="col-span-2 px-7 py-3 border-t border-border">
-              <p className="text-sm text-muted-foreground italic leading-relaxed">"{watch.notes}"</p>
-            </div>
-          )}
-        </div>
+        {/* Body: two-column on md+, stacked on mobile */}
+        <div className="flex-1 min-h-0 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden">
 
-        {/* Gallery */}
-        <div className="px-7 py-5">
-          {/* Toolbar */}
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <SectionLabel>Restoration Photos ({watch.photos.length})</SectionLabel>
-            <div className="flex gap-1.5 flex-wrap">
+          {/* LEFT: Photo panel */}
+          <div className="md:w-[46%] shrink-0 flex flex-col border-b md:border-b-0 md:border-r border-border md:overflow-y-auto">
+
+            {/* Stage filter */}
+            <div className="px-5 pt-3.5 pb-3 border-b border-border flex flex-wrap gap-1.5 shrink-0">
               {Object.keys(STAGE_META).map((s) => (
                 <StagePill
                   key={s}
                   stage={s}
                   active={stageFilter === s}
-                  onClick={() => setStageFilter((f) => (f === s ? 'all' : s))}
+                  onClick={() => handleStageFilter(s)}
                 />
               ))}
             </div>
+
+            {/* Main photo viewer */}
+            {activePhoto ? (
+              <div className="relative w-full aspect-[4/3] bg-zinc-950 overflow-hidden group shrink-0">
+                <img
+                  src={activePhoto.image}
+                  alt={activePhoto.caption}
+                  className="w-full h-full object-contain cursor-zoom-in"
+                  onClick={() => setLightbox({ photos: displayedPhotos, index: activeIdx })}
+                />
+
+                {displayedPhotos.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevPhoto}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={nextPhoto}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                      ›
+                    </button>
+                    <div className="absolute bottom-2 right-2 bg-black/60 text-white/70 font-mono text-[10px] px-2 py-0.5 rounded-full">
+                      {activeIdx + 1} / {displayedPhotos.length}
+                    </div>
+                  </>
+                )}
+
+                <div className="absolute top-2 left-2">
+                  <StageTag stage={activePhoto.stage} />
+                </div>
+
+                {activePhoto.caption && (
+                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-3 pb-2.5 pt-6 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
+                    {activePhoto.caption}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="w-full aspect-[4/3] flex items-center justify-center text-muted-foreground font-mono text-xs bg-zinc-950 shrink-0">
+                No photos for this stage
+              </div>
+            )}
+
+            {/* Thumbnail strip */}
+            {displayedPhotos.length > 1 && (
+              <div className="shrink-0 flex gap-1.5 px-4 py-3 border-t border-border overflow-x-auto">
+                {displayedPhotos.map((ph, i) => (
+                  <button
+                    key={ph.id}
+                    onClick={() => setActiveIdx(i)}
+                    className={cn(
+                      'shrink-0 w-14 h-14 rounded-md overflow-hidden border-2 transition-all cursor-pointer bg-transparent p-0',
+                      i === activeIdx
+                        ? 'border-amber-500 opacity-100'
+                        : 'border-border opacity-60 hover:opacity-100 hover:border-border/80',
+                    )}
+                  >
+                    <img src={ph.image} alt={ph.caption} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Upload zone */}
+            <div className="shrink-0 px-5 pt-4 pb-5 border-t border-border">
+              <div className="flex items-center justify-between mb-3">
+                <SectionLabel>Restoration Photos ({watch.photos.length})</SectionLabel>
+              </div>
+              <UploadZone onUpload={handleUpload} />
+            </div>
           </div>
 
-          {/* Photo grid */}
-          {displayedPhotos.length > 0 ? (
-            <div className="grid grid-cols-3 gap-2.5 mb-5">
-              {displayedPhotos.map((ph, i) => (
-                <div
-                  key={ph.id}
-                  onClick={() => setLightbox({ photos: displayedPhotos, index: i })}
-                  className="relative rounded-md overflow-hidden cursor-pointer aspect-4/3 bg-muted/40 border border-border group"
-                >
-                  <img
-                    src={ph.image}
-                    alt={ph.caption}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div className="absolute top-2 left-2">
-                    <StageTag stage={ph.stage} />
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-2.5 pb-2 pt-5 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
-                    {ph.caption}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-7 text-muted-foreground font-mono text-xs mb-5">
-              No photos for this stage yet
-            </div>
-          )}
+          {/* RIGHT: Details panel */}
+          <div className="flex-1 flex flex-col md:overflow-y-auto">
 
-          <UploadZone onUpload={handleUpload} />
+            {/* Stats table */}
+            <div className="px-6 pt-5 pb-4">
+              <SectionLabel>Details</SectionLabel>
+              <div className="mt-3 border border-border rounded-lg overflow-hidden">
+                {statRows.map(([k, v]) => (
+                  <div
+                    key={k}
+                    className="flex justify-between items-center px-4 py-2.5 border-b border-border last:border-0 hover:bg-white/[0.02] transition-colors"
+                  >
+                    <span className="font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground">{k}</span>
+                    <span className="font-mono text-[11.5px] text-foreground">{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Notes */}
+            {watch.notes && (
+              <div className="px-6 pb-5">
+                <SectionLabel>Notes</SectionLabel>
+                <div className="mt-3 bg-white/[0.025] rounded-lg border border-border px-4 py-3">
+                  <p className="text-sm text-muted-foreground italic leading-relaxed">"{watch.notes}"</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
