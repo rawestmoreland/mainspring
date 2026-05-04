@@ -285,8 +285,19 @@ function RouteComponent() {
           return (
             <div className='space-y-4'>
               <div className='flex items-center justify-between'>
-                <div className='text-[11px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-                  Photos ({photos.length})
+                <div className='flex items-center gap-2.5'>
+                  <div className='text-[11px] font-mono uppercase tracking-widest text-muted-foreground/80'>
+                    Photos ({photos.length})
+                  </div>
+                  {photos.length > 0 && (
+                    <Link
+                      to='/watches/$watchId/gallery'
+                      params={{ watchId }}
+                      className='text-[11px] font-mono text-primary hover:text-primary/80 no-underline'
+                    >
+                      View Gallery →
+                    </Link>
+                  )}
                 </div>
                 {user && <UploadZone onUpload={handleUpload} />}
               </div>

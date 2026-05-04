@@ -46,7 +46,7 @@ export function Lightbox({ photos, startIndex, onClose }: LightboxProps) {
         )}
 
         <img
-          src={ph.url}
+          src={ph.image}
           alt={ph.caption}
           className="max-w-[88vw] max-h-[80vh] object-contain rounded block"
         />

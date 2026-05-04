@@ -32,9 +32,10 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
   const handleUpload = (files: PendingPhoto[]) => {
     const added: WatchPhoto[] = files.map((f, i) => ({
       id: `${Date.now()}-${i}`,
+      collectionId: '',
       stage: f.stage,
       caption: f.caption,
-      url: f.url,
+      image: f.url,
     }));
     const updated = { ...watch, photos: [...watch.photos, ...added] };
     setWatch(updated);
@@ -140,7 +141,7 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
                   className="relative rounded-md overflow-hidden cursor-pointer aspect-4/3 bg-muted/40 border border-border group"
                 >
                   <img
-                    src={ph.url}
+                    src={ph.image}
                     alt={ph.caption}
                     loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
