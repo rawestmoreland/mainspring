@@ -10,7 +10,7 @@
     "build": "vite build",
     "preview": "npm run build && wrangler dev",
     "test": "vitest run",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy --keep-vars"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.8",
