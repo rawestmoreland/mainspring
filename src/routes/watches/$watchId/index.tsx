@@ -85,7 +85,7 @@ function RouteComponent() {
   const r = roi(watch);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 min-w-0">
       {/* Back link */}
       <Link to="/watches" className="inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground">
         ← Back to Watches
@@ -258,7 +258,7 @@ function RouteComponent() {
             ].map(([k, v]) => (
               <div
                 key={String(k)}
-                className="flex justify-between items-center px-4 py-2.5 border-b border-border last:border-0 hover:bg-white/2 transition-colors"
+                className="flex justify-between items-center gap-4 px-4 py-2.5 border-b border-border last:border-0 hover:bg-white/2 transition-colors"
               >
                 <span className="font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground">{k}</span>
                 <span className="font-mono text-[11.5px] text-foreground">{v}</span>
