@@ -10,7 +10,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "VITE_ASSET_URL": "https://ms-assets.westmorelandcreative.com",
-    "VITE_POCKETBASE_URL": "https://ms-api.westmorelandcreative.com",
+    "VITE_POCKETBASE_URL": "https://api.hairspring.app",
   },
   "routes": [
     { "pattern": "hairspring.app/*", "zone_name": "hairspring.app" },
