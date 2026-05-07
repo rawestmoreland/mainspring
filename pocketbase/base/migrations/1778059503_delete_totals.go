@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/pocketbase/pocketbase/core"
 	m "github.com/pocketbase/pocketbase/migrations"
@@ -20,15 +19,6 @@ import (
 //   const equipmentValue = eq.reduce((s, r) => s + r.cost, 0)
 func init() {
 	m.Register(func(app core.App) error {
-		record, err := app.FindFirstRecordByData("users", "email", "richard@westmorelandcreative.com")
-
-		fmt.Println(record)
-
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-
 		collection, err := app.FindCollectionByNameOrId("pbc_2131023766")
 		if err != nil {
 			return err

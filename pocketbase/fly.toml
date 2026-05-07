@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for uben-pocketbase-backend on 2026-02-15T15:12:58+01:00
+# fly.toml app configuration file generated for hairspring-pocketbase-backend on 2026-05-07T12:57:22+02:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -21,6 +21,6 @@ primary_region = 'ord'
   processes = ['app']
 
 [[vm]]
-  memory = '512mb'
+  memory = '256mb'
   cpus = 1
-  memory_mb = 512
+  memory_mb = 256
