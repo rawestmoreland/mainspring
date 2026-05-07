@@ -32,7 +32,7 @@ export function AppSidebar() {
       {/* Logo */}
       <SidebarHeader className='px-4 py-5 border-b border-sidebar-border'>
         <h1 className='font-serif text-lg font-bold text-primary leading-tight'>
-          Mainspring
+          Hairspring
         </h1>
         <p className='font-mono text-[10px] text-muted-foreground tracking-widest uppercase mt-0.5'>
           Watch Flip Tracker

@@ -41,7 +41,7 @@ function LoginPage() {
       <div className='w-full max-w-sm'>
         <div className='mb-8 text-center'>
           <h1 className='font-serif text-2xl font-bold text-primary mb-1'>
-            Mainspring
+            Hairspring
           </h1>
           <p className='font-mono text-xs text-muted-foreground tracking-widest uppercase'>
             Sign in to your account

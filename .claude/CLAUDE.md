@@ -1,4 +1,4 @@
-# Mainspring — Claude Project Rules
+# Hairspring — Claude Project Rules
 
 ## Project Overview
 Watch flip tracker app. Dark-UI, data-dense. Stack: React 19, TanStack Start (SSR, file-based routing), Tailwind CSS v4, React Hook Form + Zod, TanStack Table, TypeScript strict.

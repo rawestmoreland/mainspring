@@ -5,6 +5,7 @@ import {
   HeadContent,
   Scripts,
   redirect,
+  useRouterState,
 } from '@tanstack/react-router'
 import { createIsomorphicFn } from '@tanstack/react-start'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
@@ -21,7 +22,7 @@ import '../styles.css'
 
 type RouterContext = { queryClient: QueryClient }
 
-const PUBLIC_PATHS = new Set(['/login', '/signup'])
+const PUBLIC_PATHS = new Set(['/', '/login', '/signup'])
 
 const getHost = createIsomorphicFn()
   .client(() => window.location.host)
@@ -54,7 +55,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Mainspring' },
+      { title: 'Hairspring' },
     ],
   }),
   component: RootComponent,
@@ -65,6 +66,8 @@ function RootComponent() {
     queryClient: QueryClient
     tenant: UserProfile | null
   }
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const isPublicRoute = PUBLIC_PATHS.has(pathname)
 
   if (tenant) {
     // Public subdomain: render without sidebar/auth shell
@@ -84,6 +87,16 @@ function RootComponent() {
               <Outlet />
             </main>
           </div>
+        </QueryClientProvider>
+      </RootDocument>
+    )
+  }
+
+  if (isPublicRoute) {
+    return (
+      <RootDocument>
+        <QueryClientProvider client={queryClient}>
+          <Outlet />
         </QueryClientProvider>
       </RootDocument>
     )
@@ -116,7 +129,7 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang='en'>
+    <html lang='en' className='dark'>
       <head>
         <HeadContent />
       </head>

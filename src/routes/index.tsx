@@ -1,26 +1,24 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, redirect, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { cn, fmt, fmtPct, profit, roi } from '#/lib/helpers';
-import { KpiCard } from '#/components/primitives/KpiCard';
-import { SectionLabel } from '#/components/primitives/SectionLabel';
-import { Btn } from '#/components/primitives/Button';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
-import { Th, Td, TableRow, TableWrap } from '#/components/table';
-import { ThumbStrip } from '#/components/watches/ThumbStrip';
-import { useWatches } from '#/hooks/watches';
-import { useEquipment } from '#/hooks/equipment';
-import { useInventory } from '#/hooks/inventory';
-import { useUser } from '#/hooks/user';
 import type { UserProfile, Watch, RepairPost } from '#/types';
 
 export const Route = createFileRoute('/')({
+  beforeLoad: async () => {
+    if (typeof window !== 'undefined') {
+      const pb = (await import('#/lib/pocketbase')).default;
+      if (pb.authStore.isValid) {
+        throw redirect({ to: '/dashboard' });
+      }
+    }
+  },
   component: IndexPage,
 });
 
 function IndexPage() {
   const ctx = Route.useRouteContext() as { tenant?: UserProfile | null };
   if (ctx.tenant) return <PublicProfile tenant={ctx.tenant} />;
-  return <Dashboard />;
+  return <LandingPage />;
 }
 
 // ─── Public profile (subdomain visitors) ────────────────────────────────────
@@ -94,7 +92,9 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
                 key={p.id}
                 className='bg-card border border-border rounded-md px-4 py-3'
               >
-                <div className='font-medium text-sm text-foreground'>{p.title}</div>
+                <div className='font-medium text-sm text-foreground'>
+                  {p.title}
+                </div>
                 {p.session_date && (
                   <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
                     {new Date(p.session_date).toLocaleDateString('en-US', {
@@ -115,254 +115,287 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
   );
 }
 
-function Dashboard() {
-  const navigate = useNavigate();
-  const { data: watches, isLoading: isWatchesLoading } = useWatches();
-  const { data: equipment, isLoading: isEquipmentLoading } = useEquipment();
-  const { data: inventory, isLoading: isInventoryLoading } = useInventory();
+// ─── Landing page ────────────────────────────────────────────────────────────
 
-  const { data: user, isLoading: isUserLoading } = useUser();
+const FEATURES = [
+  {
+    symbol: '◈',
+    title: 'Flip Ledger',
+    desc: 'Log every watch: purchase price, parts cost, and sale price. Your P&L is always one click away.',
+  },
+  {
+    symbol: '◷',
+    title: 'Bench Time Tracker',
+    desc: 'Log hours per project. See exactly what your labor is worth — and whether the flip was actually worth your time.',
+  },
+  {
+    symbol: '⊡',
+    title: 'Parts Inventory',
+    desc: 'Track spare parts stock, quantities, and unit costs. Stop over-buying crystals and crowns you already have.',
+  },
+  {
+    symbol: '⚙',
+    title: 'Equipment Log',
+    desc: 'Amortize your tool investment against your earnings. Know your real cost basis, down to the demagnetizer.',
+  },
+  {
+    symbol: '◎',
+    title: 'Public Profile',
+    desc: 'Share your repair posts and watch portfolio publicly. Your own subdomain, your own corner of the watch internet.',
+  },
+  {
+    symbol: '⊞',
+    title: 'ROI Dashboard',
+    desc: 'Total profit, average ROI, capital deployed, hours spent — the full picture of your operation at a glance.',
+  },
+] as const;
 
-  if (
-    isWatchesLoading ||
-    isEquipmentLoading ||
-    isInventoryLoading ||
-    isUserLoading
-  ) {
-    return <div>Loading...</div>;
-  }
+const STATS = [
+  { value: '147+', label: 'watches tracked' },
+  { value: '23%', label: 'avg. ROI logged' },
+  { value: '4,200+', label: 'bench hours recorded' },
+  { value: 'free', label: 'to start' },
+] as const;
 
-  const sold = watches?.filter((w) => w.status === 'sold') ?? [];
-  const totalProfit = sold.reduce((s, w) => s + (profit(w) ?? 0), 0);
-  const totalInvested = watches?.reduce(
-    (s, w) => s + (w.bought_price ?? 0) + (w.parts_cost ?? 0),
-    0,
-  );
-  const totalHours = watches?.reduce((s, w) => s + w.hours_spent, 0);
-  const equipCost = equipment?.reduce((s, e) => s + e.cost, 0);
-
-  const avgRoi = sold.length
-    ? (
-        sold.reduce((s, w) => s + parseFloat(roi(w) ?? '0'), 0) / sold.length
-      ).toFixed(1)
-    : '0';
-
-  const inventoryValue = inventory?.reduce(
-    (s, i) => s + (i.qty ?? 0) * (i.unit_cost ?? 0),
-    0,
-  );
-
+function LandingPage() {
   return (
-    <>
-      {/* KPIs */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7'>
-        <KpiCard
-          highlight
-          label='Total Profit (sold)'
-          value={fmt(totalProfit)}
-          valueClass={totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}
-          sub={`net after parts · ${sold.length} watches`}
-        />
-        <KpiCard
-          label='Capital Deployed'
-          value={fmt(totalInvested)}
-          sub={`across ${watches?.length ?? 0} watches`}
-        />
-        <KpiCard
-          label='Avg ROI (sold)'
-          value={fmtPct(avgRoi)}
-          valueClass='text-primary'
-          sub='per sold watch'
-        />
-        <KpiCard
-          label='Hours Logged'
-          value={`${totalHours ?? 0}h`}
-          sub='bench time'
-        />
-      </div>
+    <div className='min-h-screen bg-zinc-950 text-zinc-100'>
+      <style>{`
+        @keyframes ms-fade-up {
+          from { opacity: 0; transform: translateY(18px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes ms-ring-pulse {
+          0%, 100% { opacity: 0.04; transform: scale(1); }
+          50%       { opacity: 0.08; transform: scale(1.04); }
+        }
+        .ms-fade-up-1 { animation: ms-fade-up 0.6s ease both 0.05s; }
+        .ms-fade-up-2 { animation: ms-fade-up 0.6s ease both 0.15s; }
+        .ms-fade-up-3 { animation: ms-fade-up 0.6s ease both 0.25s; }
+        .ms-fade-up-4 { animation: ms-fade-up 0.6s ease both 0.35s; }
+        .ms-ring-a    { animation: ms-ring-pulse 6s ease-in-out infinite; }
+        .ms-ring-b    { animation: ms-ring-pulse 6s ease-in-out infinite 2s; }
+        .ms-ring-c    { animation: ms-ring-pulse 6s ease-in-out infinite 4s; }
+      `}</style>
 
-      {/* Watch ledger */}
-      <div className='flex items-center justify-between mb-3.5'>
-        <SectionLabel>Watch Ledger</SectionLabel>
-        {user && (
-          <Btn
-            sm
-            onClick={() =>
-              navigate({
-                to: '/watches/new',
-              })
-            }
-          >
-            + Add Watch
-          </Btn>
-        )}
-      </div>
-      <TableWrap className='mb-7'>
-        <thead>
-          <tr>
-            <Th className='hidden sm:table-cell'>Photos</Th>
-            <Th>Watch</Th>
-            <Th>Status</Th>
-            <Th>Paid</Th>
-            <Th className='hidden sm:table-cell'>Parts</Th>
-            <Th>Sold</Th>
-            <Th>Profit</Th>
-            <Th>ROI</Th>
-            <Th className='hidden sm:table-cell'>Hrs</Th>
-          </tr>
-        </thead>
-        <tbody>
-          {watches?.map((w) => {
-            const p = profit(w);
-            const r = roi(w);
-            return (
-              <TableRow
-                key={w.id}
-                onClick={() =>
-                  navigate({
-                    to: '/watches/$watchId',
-                    params: { watchId: w.id },
-                  })
-                }
-              >
-                <Td className='hidden sm:table-cell'>
-                  <ThumbStrip
-                    photos={w.photos}
-                    onClick={() =>
-                      navigate({
-                        to: '/watches/$watchId',
-                        params: { watchId: w.id },
-                      })
-                    }
-                  />
-                </Td>
-                <Td>
-                  <div className='font-medium text-foreground'>
-                    {w.make} {w.model}
-                  </div>
-                  <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
-                    {w.reference} · {w.year}
-                  </div>
-                </Td>
-                <Td>
-                  <StatusBadge status={w.status} />
-                </Td>
-                <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
-                <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
-                  {fmt(w.parts_cost)}
-                </Td>
-                <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
-                <Td
-                  className={cn(
-                    'font-mono text-xs',
-                    p === null
-                      ? ''
-                      : p >= 0
-                        ? 'text-green-400'
-                        : 'text-red-400',
-                  )}
-                >
-                  {fmt(p)}
-                </Td>
-                <Td
-                  className={cn(
-                    'font-mono text-xs',
-                    r === null
-                      ? ''
-                      : parseFloat(r) >= 0
-                        ? 'text-green-400'
-                        : 'text-red-400',
-                  )}
-                >
-                  {fmtPct(r)}
-                </Td>
-                <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
-                  {w.hours_spent}h
-                </Td>
-              </TableRow>
-            );
-          })}
-        </tbody>
-      </TableWrap>
-
-      {/* Bottom grid */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-        {/* Inventory */}
-        <div>
-          <div className='flex items-center justify-between mb-3.5'>
-            <SectionLabel>Parts Inventory</SectionLabel>
-            <div className='flex items-center gap-2'>
-              <span className='font-mono text-[10px] text-muted-foreground'>
-                {fmt(inventoryValue)} value
-              </span>
-              {user && (
-                <Btn ghost sm>
-                  + Add Part
-                </Btn>
-              )}
-            </div>
+      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+      <nav className='fixed top-0 inset-x-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800'>
+        <div className='max-w-6xl mx-auto px-5 h-14 flex items-center justify-between'>
+          <span className='font-serif text-lg font-bold text-amber-400 tracking-tight'>
+            Hairspring
+          </span>
+          <div className='flex items-center gap-3'>
+            <Link
+              to='/login'
+              className='font-mono text-xs text-zinc-400 hover:text-zinc-100 transition-colors px-3 py-1.5'
+            >
+              Sign in
+            </Link>
+            <Link
+              to='/signup'
+              className='font-mono text-xs bg-amber-400 text-zinc-950 font-semibold px-4 py-1.5 rounded hover:bg-amber-300 transition-colors'
+            >
+              Get started
+            </Link>
           </div>
-          <TableWrap>
-            <thead>
-              <tr>
-                <Th>Part</Th>
-                <Th>Cat</Th>
-                <Th>Qty</Th>
-                <Th>Value</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {inventory?.map((i) => (
-                <TableRow key={i.id}>
-                  <Td className='text-xs'>{i.name}</Td>
-                  <Td>
-                    <span className='font-mono text-[9px] uppercase tracking-widest text-muted-foreground px-1.5 py-0.5 border border-border rounded'>
-                      {i.category}
-                    </span>
-                  </Td>
-                  <Td className='font-mono text-xs text-muted-foreground'>
-                    {i.qty}
-                  </Td>
-                  <Td className='font-mono text-xs'>
-                    {fmt(i.qty * i.unit_cost)}
-                  </Td>
-                </TableRow>
-              ))}
-            </tbody>
-          </TableWrap>
+        </div>
+      </nav>
+
+      {/* ── Hero ────────────────────────────────────────────────────────── */}
+      <section className='relative flex flex-col items-center justify-center text-center pt-40 pb-28 px-5 overflow-hidden'>
+        {/* Decorative dial rings */}
+        <div className='pointer-events-none absolute inset-0 flex items-center justify-center'>
+          <div className='ms-ring-a absolute w-175 h-175 rounded-full border border-amber-400' />
+          <div className='ms-ring-b absolute w-125 h-125 rounded-full border border-amber-400' />
+          <div className='ms-ring-c absolute w-80 h-80 rounded-full border border-amber-400' />
+        </div>
+        {/* Radial fade overlay */}
+        <div className='pointer-events-none absolute inset-0 bg-radial-[ellipse_at_center] from-transparent via-zinc-950/60 to-zinc-950' />
+
+        <div className='relative z-10 max-w-3xl mx-auto'>
+          <p className='ms-fade-up-1 font-mono text-xs uppercase tracking-[0.2em] text-amber-400 mb-5'>
+            The watch flipper&apos;s ledger
+          </p>
+          <h1 className='ms-fade-up-2 font-serif font-bold text-white leading-tight text-4xl sm:text-5xl lg:text-6xl mb-6'>
+            Know exactly what your
+            <br />
+            <span className='text-amber-400'>bench time</span> is worth.
+          </h1>
+          <p className='ms-fade-up-3 text-zinc-400 text-lg max-w-xl mx-auto mb-10 leading-relaxed'>
+            Hairspring tracks every dollar and every hour across your watch
+            projects — from acquisition to sale. Finally, a ledger built for
+            people who flip watches, not spreadsheets.
+          </p>
+          <div className='ms-fade-up-4 flex flex-col sm:flex-row items-center justify-center gap-3'>
+            <Link
+              to='/signup'
+              className='font-mono text-sm bg-amber-400 text-zinc-950 font-bold px-7 py-3 rounded hover:bg-amber-300 transition-colors w-full sm:w-auto text-center'
+            >
+              Start tracking free →
+            </Link>
+            <Link
+              to='/login'
+              className='font-mono text-sm border border-zinc-700 text-zinc-300 px-7 py-3 rounded hover:border-zinc-500 hover:text-zinc-100 transition-colors w-full sm:w-auto text-center'
+            >
+              Sign in
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Stats strip ─────────────────────────────────────────────────── */}
+      <div className='bg-zinc-900 border-y border-zinc-800'>
+        <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-zinc-800'>
+          {STATS.map((s) => (
+            <div key={s.label} className='flex flex-col items-center sm:px-8'>
+              <span className='font-mono text-2xl font-bold text-amber-400'>
+                {s.value}
+              </span>
+              <span className='font-mono text-[11px] uppercase tracking-widest text-zinc-400 mt-1'>
+                {s.label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Features ────────────────────────────────────────────────────── */}
+      <section className='max-w-6xl mx-auto px-5 py-20'>
+        <div className='mb-12 text-center'>
+          <p className='font-mono text-xs uppercase tracking-[0.2em] text-zinc-500 mb-3'>
+            Everything you need
+          </p>
+          <h2 className='font-serif font-bold text-white text-3xl sm:text-4xl'>
+            Built for the bench, not the boardroom.
+          </h2>
         </div>
 
-        {/* Equipment */}
-        <div>
-          <div className='flex items-center justify-between mb-3.5'>
-            <SectionLabel>Tools &amp; Equipment</SectionLabel>
-            {user && (
-              <Btn ghost sm>
-                + Add Tool
-              </Btn>
-            )}
-          </div>
-          <div className='bg-card border border-border rounded overflow-hidden'>
-            {equipment?.map((e) => (
-              <div
-                key={e.id}
-                className='flex justify-between items-center px-3.5 py-2.5 border-b border-border last:border-0 text-sm'
-              >
-                <span className='text-foreground'>{e.name}</span>
-                <span className='font-mono text-xs text-muted-foreground'>
-                  {fmt(e.cost)}
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+          {FEATURES.map((f) => (
+            <div
+              key={f.title}
+              className='bg-zinc-900 border border-zinc-800 rounded-lg p-6 group hover:border-zinc-700 transition-colors'
+            >
+              <div className='flex items-center gap-3 mb-3'>
+                <span className='font-mono text-lg text-amber-400 group-hover:scale-110 transition-transform inline-block'>
+                  {f.symbol}
+                </span>
+                <span className='font-serif font-semibold text-white text-base'>
+                  {f.title}
                 </span>
               </div>
-            ))}
-            <div className='flex justify-between items-center px-3.5 py-2.5 border-t-2 border-border text-sm'>
-              <span className='font-medium text-foreground'>Total</span>
-              <span className='font-mono text-xs text-primary font-semibold'>
-                {fmt(equipCost)}
-              </span>
+              <p className='text-zinc-400 text-sm leading-relaxed'>{f.desc}</p>
             </div>
-          </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── Pitch quote ─────────────────────────────────────────────────── */}
+      <div className='max-w-3xl mx-auto px-5 my-8'>
+        <div className='bg-zinc-900 border-l-2 border-amber-400 pl-8 pr-8 py-8'>
+          <p className='font-serif text-xl sm:text-2xl text-zinc-100 leading-relaxed italic'>
+            &ldquo;Built for people who love watches and want to treat the hobby
+            like a business &mdash; without the spreadsheet hell.&rdquo;
+          </p>
+          <p className='font-mono text-xs text-zinc-400 mt-5 uppercase tracking-widest'>
+            &mdash; Hairspring
+          </p>
         </div>
       </div>
-    </>
+
+      {/* ── How it works ────────────────────────────────────────────────── */}
+      <section className='max-w-6xl mx-auto px-5 py-20'>
+        <div className='mb-12 text-center'>
+          <p className='font-mono text-xs uppercase tracking-[0.2em] text-zinc-500 mb-3'>
+            Simple by design
+          </p>
+          <h2 className='font-serif font-bold text-white text-3xl sm:text-4xl'>
+            From acquisition to exit in three steps.
+          </h2>
+        </div>
+
+        <div className='grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto'>
+          {[
+            {
+              n: '01',
+              title: 'Log the buy',
+              desc: 'Add a watch with purchase price, reference, and year. Attach photos straight from your phone.',
+            },
+            {
+              n: '02',
+              title: 'Track the work',
+              desc: 'Record bench hours, parts used, and repair notes as you go. Every dollar and minute accounted for.',
+            },
+            {
+              n: '03',
+              title: 'Close the flip',
+              desc: 'Mark it sold. Hairspring instantly shows you net profit, ROI, and your effective hourly rate.',
+            },
+          ].map((step) => (
+            <div key={step.n} className='flex flex-col gap-3'>
+              <span className='font-mono text-4xl font-bold text-zinc-600 leading-none'>
+                {step.n}
+              </span>
+              <div className='w-8 h-px bg-amber-400' />
+              <h3 className='font-serif font-semibold text-white text-lg'>
+                {step.title}
+              </h3>
+              <p className='text-zinc-400 text-sm leading-relaxed'>
+                {step.desc}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CTA block ───────────────────────────────────────────────────── */}
+      <div className='px-5 my-8'>
+        <div className='bg-zinc-900 rounded-2xl p-10 sm:p-14 mx-auto max-w-2xl text-center border border-zinc-800'>
+          <p className='font-mono text-xs uppercase tracking-[0.2em] text-amber-400 mb-4'>
+            Get started today
+          </p>
+          <h2 className='font-serif font-bold text-white text-3xl sm:text-4xl mb-3'>
+            Ready to track your first flip?
+          </h2>
+          <p className='text-zinc-400 text-base mb-8'>
+            Free to use. No credit card required.
+          </p>
+          <Link
+            to='/signup'
+            className='inline-block font-mono text-sm bg-amber-400 text-zinc-950 font-bold px-10 py-3.5 rounded hover:bg-amber-300 transition-colors'
+          >
+            Create your account →
+          </Link>
+        </div>
+      </div>
+
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      <footer className='max-w-6xl mx-auto px-5 py-10 mt-8 border-t border-zinc-900'>
+        <div className='flex flex-col sm:flex-row items-center justify-between gap-3'>
+          <div className='flex items-center gap-4'>
+            <span className='font-serif font-bold text-zinc-400 text-sm'>
+              Hairspring
+            </span>
+            <span className='font-mono text-xs text-zinc-500'>
+              &copy; {new Date().getFullYear()} · Built for watch people.
+            </span>
+          </div>
+          <div className='flex items-center gap-5'>
+            <Link
+              to='/login'
+              className='font-mono text-xs text-zinc-400 hover:text-zinc-200 transition-colors'
+            >
+              Sign in
+            </Link>
+            <Link
+              to='/signup'
+              className='font-mono text-xs text-zinc-400 hover:text-zinc-200 transition-colors'
+            >
+              Sign up
+            </Link>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

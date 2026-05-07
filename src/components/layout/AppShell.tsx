@@ -16,7 +16,7 @@ import {
 } from '#/components/ui/sidebar';
 
 const PAGE_SUBTITLES: Record<string, string> = {
-  '/': 'PROFIT & LOSS OVERVIEW',
+  '/dashboard': 'PROFIT & LOSS OVERVIEW',
   '/watches': 'ALL WATCH RECORDS',
   '/inventory': 'SPARE PARTS STOCK',
   '/equipment': 'TOOLS & CAPITAL EXPENDITURE',
@@ -42,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbPage className='font-serif font-semibold text-foreground'>
-                  {currentPage?.label ?? 'Mainspring'}
+                  {currentPage?.label ?? 'Hairspring'}
                 </BreadcrumbPage>
               </BreadcrumbItem>
               {subtitle && (
