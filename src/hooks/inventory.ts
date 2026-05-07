@@ -1,11 +1,14 @@
 import { InventoryApi } from '#/lib/api/inventory';
+import pb from '#/lib/pocketbase';
 import type { CreateInventory, Inventory } from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export const useInventory = () => {
+  const pbUser = pb.authStore.record?.id;
   return useQuery({
-    queryKey: ['inventory'],
+    queryKey: ['inventory', { user: pbUser }],
     queryFn: () => InventoryApi.getInventory(),
+    enabled: !!pbUser,
   });
 };
 

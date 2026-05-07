@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ReactNode } from 'react';
 import {
   Outlet,
   createRootRouteWithContext,
@@ -6,50 +6,50 @@ import {
   Scripts,
   redirect,
   useRouterState,
-} from '@tanstack/react-router'
-import { createIsomorphicFn } from '@tanstack/react-start'
-import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-import { TanStackDevtools } from '@tanstack/react-devtools'
-import type { QueryClient } from '@tanstack/react-query'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { AppShell } from '#/components/layout/AppShell'
-import { WatchesProvider } from '#/context/watches'
-import { TooltipProvider } from '#/components/ui/tooltip'
-import { GoogleAnalytics } from 'tanstack-router-ga4'
-import { resolveTenant } from '#/middleware/tenant'
-import type { UserProfile } from '#/types'
-import '../styles.css'
+} from '@tanstack/react-router';
+import { createIsomorphicFn } from '@tanstack/react-start';
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
+import { TanStackDevtools } from '@tanstack/react-devtools';
+import type { QueryClient } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { AppShell } from '#/components/layout/AppShell';
+import { WatchesProvider } from '#/context/watches';
+import { TooltipProvider } from '#/components/ui/tooltip';
+import { GoogleAnalytics } from 'tanstack-router-ga4';
+import { resolveTenant } from '#/middleware/tenant';
+import type { UserProfile } from '#/types';
+import '../styles.css';
 
-type RouterContext = { queryClient: QueryClient }
+type RouterContext = { queryClient: QueryClient };
 
-const PUBLIC_PATHS = new Set(['/', '/login', '/signup'])
+const PUBLIC_PATHS = new Set(['/', '/login', '/signup']);
 
 const getHost = createIsomorphicFn()
   .client(() => window.location.host)
   .server(async () => {
-    const { getRequestHeader } = await import('@tanstack/react-start/server')
-    return getRequestHeader('host') ?? ''
-  })
+    const { getRequestHeader } = await import('@tanstack/react-start/server');
+    return getRequestHeader('host') ?? '';
+  });
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ location }) => {
-    const host = await getHost()
-    let tenant: UserProfile | null = null
+    const host = await getHost();
+    let tenant: UserProfile | null = null;
 
     if (host) {
-      tenant = await resolveTenant(host)
+      tenant = await resolveTenant(host);
     }
 
     // Client-side auth guard: only enforce on the main domain (no tenant).
     // Public subdomain routes are accessible without authentication.
     if (typeof window !== 'undefined' && tenant === null) {
-      const pb = (await import('#/lib/pocketbase')).default
+      const pb = (await import('#/lib/pocketbase')).default;
       if (!PUBLIC_PATHS.has(location.pathname) && !pb.authStore.isValid) {
-        throw redirect({ to: '/login', search: { from: location.pathname } })
+        throw redirect({ to: '/login', search: { from: location.pathname } });
       }
     }
 
-    return { tenant }
+    return { tenant };
   },
   head: () => ({
     meta: [
@@ -59,15 +59,15 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     ],
   }),
   component: RootComponent,
-})
+});
 
 function RootComponent() {
   const { queryClient, tenant } = Route.useRouteContext() as {
-    queryClient: QueryClient
-    tenant: UserProfile | null
-  }
-  const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const isPublicRoute = PUBLIC_PATHS.has(pathname)
+    queryClient: QueryClient;
+    tenant: UserProfile | null;
+  };
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isPublicRoute = PUBLIC_PATHS.has(pathname);
 
   if (tenant) {
     // Public subdomain: render without sidebar/auth shell
@@ -80,7 +80,9 @@ function RootComponent() {
                 {tenant.display_name}
               </h1>
               {tenant.bio && (
-                <p className='text-sm text-muted-foreground mt-1'>{tenant.bio}</p>
+                <p className='text-sm text-muted-foreground mt-1'>
+                  {tenant.bio}
+                </p>
               )}
             </header>
             <main className='px-6 py-7 max-w-4xl mx-auto'>
@@ -89,7 +91,7 @@ function RootComponent() {
           </div>
         </QueryClientProvider>
       </RootDocument>
-    )
+    );
   }
 
   if (isPublicRoute) {
@@ -99,7 +101,7 @@ function RootComponent() {
           <Outlet />
         </QueryClientProvider>
       </RootDocument>
-    )
+    );
   }
 
   return (
@@ -124,12 +126,12 @@ function RootComponent() {
         </TooltipProvider>
       </QueryClientProvider>
     </RootDocument>
-  )
+  );
 }
 
 function RootDocument({ children }: { children: ReactNode }) {
   return (
-    <html lang='en' className='dark'>
+    <html lang='en' className='light'>
       <head>
         <HeadContent />
       </head>
@@ -138,5 +140,5 @@ function RootDocument({ children }: { children: ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }

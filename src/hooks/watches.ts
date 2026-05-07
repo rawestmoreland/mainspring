@@ -1,11 +1,14 @@
 import { WatchesApi } from '#/lib/api/watches';
 import type { CreateWatch, Watch } from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import pb from '#/lib/pocketbase';
 
 export const useWatches = () => {
+  const pbUser = pb.authStore.record?.id;
   return useQuery<Watch[]>({
-    queryKey: ['watches'],
+    queryKey: ['watches', { user: pbUser }],
     queryFn: () => WatchesApi.getWatches(),
+    enabled: !!pbUser,
   });
 };
 

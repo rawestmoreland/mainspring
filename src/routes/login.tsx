@@ -37,7 +37,7 @@ function LoginPage() {
   };
 
   return (
-    <div className='min-h-screen bg-zinc-950 flex items-center justify-center p-4'>
+    <div className='min-h-screen bg-background flex items-center justify-center p-4'>
       <div className='w-full max-w-sm'>
         <div className='mb-8 text-center'>
           <h1 className='font-serif text-2xl font-bold text-primary mb-1'>
@@ -48,57 +48,59 @@ function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
-          <FieldGroup>
-            <Controller
-              name='email'
-              control={control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <Label htmlFor='email'>Email</Label>
-                  <Input
-                    id='email'
-                    type='email'
-                    autoComplete='email'
-                    autoFocus
-                    {...field}
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-            <Controller
-              name='password'
-              control={control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <Label htmlFor='password'>Password</Label>
-                  <Input
-                    id='password'
-                    type='password'
-                    autoComplete='current-password'
-                    {...field}
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-          </FieldGroup>
+        <div className='bg-card border border-border rounded-xl shadow-sm p-6'>
+          <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+            <FieldGroup>
+              <Controller
+                name='email'
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <Label htmlFor='email'>Email</Label>
+                    <Input
+                      id='email'
+                      type='email'
+                      autoComplete='email'
+                      autoFocus
+                      {...field}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name='password'
+                control={control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <Label htmlFor='password'>Password</Label>
+                    <Input
+                      id='password'
+                      type='password'
+                      autoComplete='current-password'
+                      {...field}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            </FieldGroup>
 
-          {error && (
-            <p className='text-sm text-red-400'>
-              Invalid email or password.
-            </p>
-          )}
+            {error && (
+              <p className='text-sm text-destructive'>
+                Invalid email or password.
+              </p>
+            )}
 
-          <Button type='submit' className='w-full' disabled={isPending}>
-            {isPending ? 'Signing in…' : 'Sign in'}
-          </Button>
-        </form>
+            <Button type='submit' className='w-full' disabled={isPending}>
+              {isPending ? 'Signing in…' : 'Sign in'}
+            </Button>
+          </form>
+        </div>
 
         <p className='mt-6 text-center font-mono text-xs text-muted-foreground'>
           No account?{' '}

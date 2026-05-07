@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect } from 'react';
 import { cn, fmt, fmtPct, profit, roi } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
@@ -17,6 +18,14 @@ export const Route = createFileRoute('/dashboard')({
 
 function Dashboard() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    import('#/lib/pocketbase').then(({ default: pb }) => {
+      if (!pb.authStore.isValid) {
+        navigate({ to: '/login', replace: true });
+      }
+    });
+  }, [navigate]);
   const { data: watches, isLoading: isWatchesLoading } = useWatches();
   const { data: equipment, isLoading: isEquipmentLoading } = useEquipment();
   const { data: inventory, isLoading: isInventoryLoading } = useInventory();

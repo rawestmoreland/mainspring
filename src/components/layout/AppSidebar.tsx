@@ -1,4 +1,4 @@
-import { Link, useRouterState } from '@tanstack/react-router';
+import { Link, useRouterState, useNavigate } from '@tanstack/react-router';
 import { cn } from '#/lib/helpers';
 import { NAV_PAGES } from '#/lib/constants';
 import { useUser, useLogout } from '#/hooks/user';
@@ -20,6 +20,7 @@ export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isMobile, setOpenMobile } = useSidebar();
 
+  const navigate = useNavigate();
   const { data: user } = useUser();
   const { mutateAsync: logoutMutation } = useLogout();
 
@@ -100,7 +101,7 @@ export function AppSidebar() {
                 variant='outline'
                 size='sm'
                 className='text-xs'
-                onClick={() => logoutMutation()}
+                onClick={() => logoutMutation().then(() => navigate({ to: '/login' }))}
               >
                 Logout
               </Button>
