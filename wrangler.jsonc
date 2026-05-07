@@ -12,4 +12,8 @@
     "VITE_ASSET_URL": "https://ms-assets.westmorelandcreative.com",
     "VITE_POCKETBASE_URL": "https://ms-api.westmorelandcreative.com",
   },
+  "routes": [
+    { "pattern": "hairspring.app/*", "zone_name": "hairspring.app" },
+    { "pattern": "*.hairspring.app/*", "zone_name": "hairspring.app" },
+  ],
 }

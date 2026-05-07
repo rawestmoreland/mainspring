@@ -2,7 +2,10 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
+	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/pocketbase/pocketbase"
@@ -11,6 +14,20 @@ import (
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 
 	_ "mainspring/migrations"
+)
+
+var (
+	subdomainRe = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$`)
+
+	reservedSubdomains = []string{
+		"www", "app", "api", "admin", "mail", "smtp", "imap", "pop",
+		"support", "help", "docs", "status", "blog", "dashboard",
+		"login", "logout", "signup", "register", "auth", "account",
+		"settings", "billing", "pricing", "about", "contact",
+		"static", "assets", "cdn", "media", "images", "uploads",
+		"dev", "staging", "preview", "test", "demo", "sandbox",
+		"hairspring", "mainspring",
+	}
 )
 
 func main() {
@@ -35,6 +52,33 @@ func main() {
 		se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
 
 		return se.Next()
+	})
+
+	validateSubdomain := func(sub string) error {
+		if sub == "" {
+			return nil
+		}
+		if !subdomainRe.MatchString(sub) {
+			return apis.NewApiError(http.StatusBadRequest, "subdomain must match ^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", nil)
+		}
+		if slices.Contains(reservedSubdomains, sub) {
+			return apis.NewApiError(http.StatusBadRequest, "subdomain is reserved", nil)
+		}
+		return nil
+	}
+
+	app.OnRecordCreate("user_profiles").BindFunc(func(e *core.RecordEvent) error {
+		if err := validateSubdomain(e.Record.GetString("subdomain")); err != nil {
+			return err
+		}
+		return e.Next()
+	})
+
+	app.OnRecordUpdate("user_profiles").BindFunc(func(e *core.RecordEvent) error {
+		if err := validateSubdomain(e.Record.GetString("subdomain")); err != nil {
+			return err
+		}
+		return e.Next()
 	})
 
 	if err := app.Start(); err != nil {

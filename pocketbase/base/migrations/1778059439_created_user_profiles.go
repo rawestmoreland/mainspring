@@ -129,7 +129,25 @@ func init() {
 			return err
 		}
 
-		return app.Save(collection)
+		err := app.Save(collection)
+		 if err != nil {
+			return err
+		 }
+
+		 // Add richard to the profiles
+		 record, err := app.FindFirstRecordByData("users", "email", "richard@westmorelandcreative.com")
+		 if err != nil || record.Id == "" {
+			return nil
+		 }
+
+		 newRecord := core.NewRecord(collection)
+
+		 newRecord.Set("user", record.Id)
+		 newRecord.Set("subdomain", "richard")
+		 newRecord.Set("display_name", "Richard W")
+		 newRecord.Set("is_public", true)
+
+		 return app.Save(newRecord)
 	}, func(app core.App) error {
 		collection, err := app.FindCollectionByNameOrId("pbc_2190040129")
 		if err != nil {
