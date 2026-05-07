@@ -7,7 +7,8 @@ function toRepairPost(r: Record<string, unknown>): RepairPost {
   const images = (r.images as string[] | undefined) ?? [];
   return {
     id: r.id as string,
-    watch: r.watch as string,
+    user: r.user as string,
+    watch: r.watch as string | undefined,
     title: r.title as string,
     body: r.body as string,
     session_date: r.session_date as string,
@@ -40,7 +41,9 @@ export const PostsApi = {
     images: File[],
   ): Promise<RepairPost> => {
     const fd = new FormData();
-    fd.append('watch', data.watch);
+    const userId = pb.authStore.record?.id;
+    if (userId) fd.append('user', userId);
+    if (data.watch) fd.append('watch', data.watch);
     fd.append('title', data.title);
     fd.append('body', data.body);
     fd.append('session_date', data.session_date);

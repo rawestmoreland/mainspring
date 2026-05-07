@@ -1,6 +1,13 @@
 import { QueryClient } from '@tanstack/react-query'
 import { createRouter as createTanStackRouter } from '@tanstack/react-router'
 import { routeTree } from './routeTree.gen'
+import type { UserProfile } from '#/types'
+
+// Initial router context — tenant is added by __root.tsx beforeLoad
+export type RouterContext = {
+  queryClient: QueryClient
+  tenant?: UserProfile | null
+}
 
 export function getRouter() {
   const queryClient = new QueryClient({

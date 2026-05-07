@@ -12,7 +12,6 @@ import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { StagePill } from '#/components/primitives/StagePill';
 import { StageTag } from '#/components/primitives/StageTag';
 import { fmt, fmtPct, profit, roi, cn } from '#/lib/helpers';
-import { HOURLY_RATE } from '#/lib/constants';
 import { STAGE_META } from '#/lib/mocks/meta';
 import type { WatchPhoto } from '#/types';
 import { format } from 'date-fns/format';
@@ -252,7 +251,6 @@ function RouteComponent() {
                 ) : '—',
               ],
               ['Hours Spent',   `${watch.hours_spent ?? 0} hrs`],
-              ['Imputed Labor', fmt((watch.hours_spent ?? 0) * HOURLY_RATE)],
               ['Acquired',      watch.bought_date ? format(watch.bought_date, 'MMM d, yyyy') : '—'],
               ['Sold',          watch.sold_date ?? '—'],
             ].map(([k, v]) => (

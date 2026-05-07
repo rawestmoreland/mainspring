@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useQuery } from '@tanstack/react-query';
 import { cn, fmt, fmtPct, profit, roi } from '#/lib/helpers';
-import { HOURLY_RATE } from '#/lib/constants';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
 import { Btn } from '#/components/primitives/Button';
@@ -11,8 +11,109 @@ import { useWatches } from '#/hooks/watches';
 import { useEquipment } from '#/hooks/equipment';
 import { useInventory } from '#/hooks/inventory';
 import { useUser } from '#/hooks/user';
+import type { UserProfile, Watch, RepairPost } from '#/types';
 
-export const Route = createFileRoute('/')({ component: Dashboard });
+export const Route = createFileRoute('/')({
+  component: IndexPage,
+});
+
+function IndexPage() {
+  const ctx = Route.useRouteContext() as { tenant?: UserProfile | null };
+  if (ctx.tenant) return <PublicProfile tenant={ctx.tenant} />;
+  return <Dashboard />;
+}
+
+// ─── Public profile (subdomain visitors) ────────────────────────────────────
+
+function PublicProfile({ tenant }: { tenant: UserProfile }) {
+  const pbUrl = import.meta.env.VITE_POCKETBASE_URL;
+
+  const { data: watches } = useQuery<Watch[]>({
+    queryKey: ['public', 'watches', tenant.user],
+    queryFn: async () => {
+      const res = await fetch(
+        `${pbUrl}/api/collections/watches/records?filter=user%3D%22${tenant.user}%22&sort=-created&perPage=100`,
+      );
+      if (!res.ok) return [];
+      return ((await res.json()) as { items?: Watch[] }).items ?? [];
+    },
+  });
+
+  const { data: posts } = useQuery<RepairPost[]>({
+    queryKey: ['public', 'posts', tenant.user],
+    queryFn: async () => {
+      const res = await fetch(
+        `${pbUrl}/api/collections/repair_posts/records?filter=user%3D%22${tenant.user}%22&sort=-session_date&perPage=50`,
+      );
+      if (!res.ok) return [];
+      return ((await res.json()) as { items?: RepairPost[] }).items ?? [];
+    },
+  });
+
+  return (
+    <div className='space-y-10'>
+      <section>
+        <h2 className='font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4'>
+          Watch Projects
+        </h2>
+        {watches?.length ? (
+          <div className='grid gap-3 sm:grid-cols-2'>
+            {watches.map((w) => (
+              <div
+                key={w.id}
+                className='bg-card border border-border rounded-md px-4 py-3'
+              >
+                <div className='flex items-center justify-between gap-2'>
+                  <span className='font-medium text-sm text-foreground'>
+                    {w.make} {w.model}
+                  </span>
+                  <StatusBadge status={w.status} />
+                </div>
+                {w.reference && (
+                  <span className='font-mono text-[11px] text-muted-foreground'>
+                    {w.reference}
+                    {w.year ? ` · ${w.year}` : ''}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className='text-sm text-muted-foreground'>No projects yet.</p>
+        )}
+      </section>
+
+      <section>
+        <h2 className='font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4'>
+          Repair Posts
+        </h2>
+        {posts?.length ? (
+          <div className='space-y-3'>
+            {posts.map((p) => (
+              <div
+                key={p.id}
+                className='bg-card border border-border rounded-md px-4 py-3'
+              >
+                <div className='font-medium text-sm text-foreground'>{p.title}</div>
+                {p.session_date && (
+                  <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
+                    {new Date(p.session_date).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className='text-sm text-muted-foreground'>No posts yet.</p>
+        )}
+      </section>
+    </div>
+  );
+}
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -76,7 +177,7 @@ function Dashboard() {
         <KpiCard
           label='Hours Logged'
           value={`${totalHours ?? 0}h`}
-          sub={`${fmt(totalHours ?? 0 * HOURLY_RATE)} imputed labor`}
+          sub='bench time'
         />
       </div>
 

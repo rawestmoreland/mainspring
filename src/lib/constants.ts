@@ -1,7 +1,3 @@
-export const HOURLY_RATE = 25;
-export const GOAL = 13900;
-export const GOAL_LABEL = 'IWC Portugieser Automatic 42';
-
 export const NAV_PAGES = [
   { id: 'dashboard', label: 'Dashboard', icon: '◈', path: '/' },
   { id: 'watches', label: 'Watches', icon: '◷', path: '/watches' },

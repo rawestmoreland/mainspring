@@ -1,23 +1,8 @@
-import { useState, useRef, useCallback } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
-import { cn, fmt, profit } from '#/lib/helpers';
-import { GOAL, GOAL_LABEL, NAV_PAGES } from '#/lib/constants';
-import { useWatches } from '#/hooks/watches';
-import { useLogin, useLogout, useUser } from '#/hooks/user';
+import { cn } from '#/lib/helpers';
+import { NAV_PAGES } from '#/lib/constants';
+import { useUser, useLogout } from '#/hooks/user';
 import { Button } from '#/components/ui/button';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '#/components/ui/dialog';
-import { Field, FieldError, FieldGroup } from '#/components/ui/field';
-import { Label } from '#/components/ui/label';
-import { Input } from '#/components/ui/input';
 import {
   Sidebar,
   SidebarContent,
@@ -30,47 +15,17 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '#/components/ui/sidebar';
-import z from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Controller, useForm } from 'react-hook-form';
-
-const loginSchema = z.object({
-  email: z.email(),
-  password: z.string().min(8),
-});
-
-type LoginType = z.infer<typeof loginSchema>;
 
 export function AppSidebar() {
-  const { data: watches } = useWatches();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isMobile, setOpenMobile } = useSidebar();
 
   const { data: user } = useUser();
-  const { mutateAsync: loginMutation, isPending: loginPending } = useLogin();
   const { mutateAsync: logoutMutation } = useLogout();
 
-  const loginForm = useForm<LoginType>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
-  });
-
-  const onSubmit = async (data: LoginType) => {
-    await loginMutation(data);
-  };
-
-  const goalClickCount = useRef(0);
-  const [unlocked, setUnlocked] = useState(false);
-
-  const handleGoalClick = useCallback(() => {
-    if (unlocked) return;
-    goalClickCount.current += 1;
-    if (goalClickCount.current >= 5) setUnlocked(true);
-  }, [unlocked]);
-
-  const sold = (watches ?? []).filter((w) => w.status === 'sold');
-  const totalProfit = sold.reduce((s, w) => s + (profit(w) ?? 0), 0);
-  const goalPct = Math.min(100, (totalProfit / GOAL) * 100).toFixed(1);
+  const initials = user?.email
+    ? user.email.slice(0, 2).toUpperCase()
+    : '??';
 
   return (
     <Sidebar variant='inset'>
@@ -120,115 +75,42 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      {/* Footer: goal card + auth */}
-      <SidebarFooter className='gap-3 px-4 py-4 border-t border-sidebar-border'>
-        {/* Goal card — click 5× to unlock login */}
-        <div
-          className='bg-primary/10 border border-primary/25 rounded-md p-3 select-none cursor-default'
-          onClick={handleGoalClick}
-        >
-          <div className='font-mono text-[9px] uppercase tracking-widest text-primary/90 mb-1.5'>
-            Next Watch Goal
-          </div>
-          <div className='font-serif text-sm font-semibold text-primary'>
-            {GOAL_LABEL}
-          </div>
-          <div className='mt-2 bg-muted rounded-full h-1 overflow-hidden'>
-            <div
-              className='h-full bg-primary rounded-full transition-all'
-              style={{ width: `${goalPct}%` }}
-            />
-          </div>
-          <div className='font-mono text-[10px] text-muted-foreground mt-1.5'>
-            {fmt(totalProfit)} / {fmt(GOAL)} · {goalPct}%
-          </div>
-        </div>
-
-        {/* Auth */}
+      {/* Footer: user identity + auth actions */}
+      <SidebarFooter className='gap-2 px-4 py-4 border-t border-sidebar-border'>
         {user ? (
-          <Button
-            variant='outline'
-            size='sm'
-            className='w-full'
-            onClick={() => logoutMutation()}
-          >
-            Logout
+          <>
+            <div className='flex items-center gap-2.5 min-w-0'>
+              <div className='shrink-0 w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center font-mono text-[10px] font-semibold text-primary'>
+                {initials}
+              </div>
+              <span className='font-mono text-xs text-muted-foreground truncate'>
+                {user.email}
+              </span>
+            </div>
+            <div className='flex gap-2'>
+              <Button
+                variant='outline'
+                size='sm'
+                className='flex-1 text-xs'
+                asChild
+              >
+                <Link to='/settings/profile'>Settings</Link>
+              </Button>
+              <Button
+                variant='outline'
+                size='sm'
+                className='text-xs'
+                onClick={() => logoutMutation()}
+              >
+                Logout
+              </Button>
+            </div>
+          </>
+        ) : (
+          <Button variant='outline' size='sm' className='w-full' asChild>
+            <Link to='/login'>Login</Link>
           </Button>
-        ) : unlocked ? (
-          <Dialog>
-            <form id='login-form' onSubmit={loginForm.handleSubmit(onSubmit)}>
-              <DialogTrigger asChild>
-                <Button
-                  variant='outline'
-                  size='sm'
-                  className='w-full'
-                  disabled={loginPending}
-                >
-                  🔒 Login
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Login</DialogTitle>
-                  <DialogDescription>
-                    Login to your account to continue.
-                  </DialogDescription>
-                </DialogHeader>
-                <FieldGroup>
-                  <Controller
-                    name='email'
-                    control={loginForm.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <Label htmlFor='email'>Email</Label>
-                        <Input
-                          id='email'
-                          {...field}
-                          aria-invalid={fieldState.invalid}
-                          placeholder='Enter your email'
-                          autoComplete='off'
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-                  <Controller
-                    name='password'
-                    control={loginForm.control}
-                    render={({ field, fieldState }) => (
-                      <Field data-invalid={fieldState.invalid}>
-                        <Label htmlFor='password'>Password</Label>
-                        <Input
-                          id='password'
-                          {...field}
-                          type='password'
-                          aria-invalid={fieldState.invalid}
-                          placeholder='Enter your password'
-                          autoComplete='off'
-                        />
-                        {fieldState.invalid && (
-                          <FieldError errors={[fieldState.error]} />
-                        )}
-                      </Field>
-                    )}
-                  />
-                </FieldGroup>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button variant='outline' disabled={loginPending}>
-                      Cancel
-                    </Button>
-                  </DialogClose>
-                  <Button type='submit' form='login-form'>
-                    Login
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </form>
-          </Dialog>
-        ) : null}
+        )}
       </SidebarFooter>
     </Sidebar>
   );

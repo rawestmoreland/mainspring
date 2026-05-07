@@ -3,7 +3,11 @@ import type { CreateEquipment, Equipment } from '#/types';
 
 export const EquipmentApi = {
   getEquipment: async (page: number = 1, limit: number = 100) => {
-    const equipment = await pb.collection('equipment').getList(page, limit);
+    const userId = pb.authStore.record?.id;
+    if (!userId) return [];
+    const equipment = await pb.collection('equipment').getList(page, limit, {
+      filter: `user = "${userId}"`,
+    });
     return equipment.items;
   },
   createEquipment: async (equipment: CreateEquipment) => {

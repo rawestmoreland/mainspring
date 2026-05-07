@@ -6,7 +6,10 @@ export const WatchesApi = {
     page: number = 1,
     limit: number = 100,
   ): Promise<Watch[]> => {
+    const userId = pb.authStore.record?.id;
+    if (!userId) return [];
     const watches = await pb.collection('watches').getList<Watch>(page, limit, {
+      filter: `user = "${userId}"`,
       expand: 'watch_photos_via_watch,parts_used_via_watch',
     });
     return watches.items.map((w) => ({
@@ -27,7 +30,8 @@ export const WatchesApi = {
     }));
   },
   createWatch: async (watch: CreateWatch): Promise<Watch> => {
-    const newWatch = await pb.collection('watches').create<Watch>(watch as any);
+    const userId = pb.authStore.record?.id;
+    const newWatch = await pb.collection('watches').create<Watch>({ ...watch, user: userId } as never);
     return newWatch;
   },
   updateWatch: async (id: string, watch: Watch): Promise<Watch> => {

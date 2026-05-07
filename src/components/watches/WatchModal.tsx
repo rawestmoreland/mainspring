@@ -2,7 +2,6 @@ import { useState } from 'react';
 import type { Watch, WatchPhoto } from '#/types';
 import { cn, fmt, fmtPct, profit, roi } from '#/lib/helpers';
 import { STAGE_META } from '#/lib/mocks/meta';
-import { HOURLY_RATE } from '#/lib/constants';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { StagePill } from '#/components/primitives/StagePill';
 import { StageTag } from '#/components/primitives/StageTag';
@@ -77,7 +76,6 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
       ) : '—',
     ],
     ['Hours Spent',   `${watch.hours_spent} hrs`],
-    ['Imputed Labor', fmt(watch.hours_spent * HOURLY_RATE)],
     ['Acquired',      watch.bought_date],
     ['Sold',          watch.sold_date ?? '—'],
   ];

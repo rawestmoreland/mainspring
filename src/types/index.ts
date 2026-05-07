@@ -85,9 +85,22 @@ export type Inventory = {
 
 export type CreateInventory = Omit<Inventory, 'id'>;
 
+export type UserProfile = {
+  id: string;
+  collectionId: string;
+  user: string;
+  subdomain: string;
+  display_name: string;
+  bio: string;
+  is_public: boolean;
+  created: string;
+  updated: string;
+};
+
 export type RepairPost = {
   id: string;
-  watch: string;
+  user: string;
+  watch?: string;
   title: string;
   body: string;
   session_date: string;
@@ -99,5 +112,5 @@ export type RepairPost = {
 
 export type CreateRepairPost = Omit<
   RepairPost,
-  'id' | 'images' | 'imageUrls' | 'created' | 'updated'
+  'id' | 'user' | 'images' | 'imageUrls' | 'created' | 'updated'
 >;

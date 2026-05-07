@@ -3,7 +3,11 @@ import type { CreateInventory, Inventory } from '#/types';
 
 export const InventoryApi = {
   getInventory: async (page: number = 1, limit: number = 100) => {
-    const inventory = await pb.collection('inventory').getList(page, limit);
+    const userId = pb.authStore.record?.id;
+    if (!userId) return [];
+    const inventory = await pb.collection('inventory').getList(page, limit, {
+      filter: `user = "${userId}"`,
+    });
     return inventory.items;
   },
   createInventory: async (inventory: CreateInventory) => {

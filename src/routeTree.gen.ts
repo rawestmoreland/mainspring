@@ -9,18 +9,31 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as InventoryRouteImport } from './routes/inventory'
 import { Route as EquipmentRouteImport } from './routes/equipment'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WatchesIndexRouteImport } from './routes/watches/index'
 import { Route as WatchesNewRouteImport } from './routes/watches/new'
+import { Route as SettingsProfileRouteImport } from './routes/settings/profile'
 import { Route as WatchesWatchIdIndexRouteImport } from './routes/watches/$watchId/index'
 import { Route as WatchesWatchIdGalleryRouteImport } from './routes/watches/$watchId/gallery'
 import { Route as WatchesWatchIdPostsIndexRouteImport } from './routes/watches/$watchId/posts/index'
 import { Route as WatchesWatchIdPostsNewRouteImport } from './routes/watches/$watchId/posts/new'
 import { Route as WatchesWatchIdPostsPostIdRouteImport } from './routes/watches/$watchId/posts/$postId'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InventoryRoute = InventoryRouteImport.update({
   id: '/inventory',
   path: '/inventory',
@@ -49,6 +62,11 @@ const WatchesIndexRoute = WatchesIndexRouteImport.update({
 const WatchesNewRoute = WatchesNewRouteImport.update({
   id: '/watches/new',
   path: '/watches/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsProfileRoute = SettingsProfileRouteImport.update({
+  id: '/settings/profile',
+  path: '/settings/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WatchesWatchIdIndexRoute = WatchesWatchIdIndexRouteImport.update({
@@ -84,6 +102,9 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/equipment': typeof EquipmentRoute
   '/inventory': typeof InventoryRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/watches/new': typeof WatchesNewRoute
   '/watches/': typeof WatchesIndexRoute
   '/watches/$watchId/gallery': typeof WatchesWatchIdGalleryRoute
@@ -97,6 +118,9 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/equipment': typeof EquipmentRoute
   '/inventory': typeof InventoryRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/watches/new': typeof WatchesNewRoute
   '/watches': typeof WatchesIndexRoute
   '/watches/$watchId/gallery': typeof WatchesWatchIdGalleryRoute
@@ -111,6 +135,9 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/equipment': typeof EquipmentRoute
   '/inventory': typeof InventoryRoute
+  '/login': typeof LoginRoute
+  '/signup': typeof SignupRoute
+  '/settings/profile': typeof SettingsProfileRoute
   '/watches/new': typeof WatchesNewRoute
   '/watches/': typeof WatchesIndexRoute
   '/watches/$watchId/gallery': typeof WatchesWatchIdGalleryRoute
@@ -126,6 +153,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/equipment'
     | '/inventory'
+    | '/login'
+    | '/signup'
+    | '/settings/profile'
     | '/watches/new'
     | '/watches/'
     | '/watches/$watchId/gallery'
@@ -139,6 +169,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/equipment'
     | '/inventory'
+    | '/login'
+    | '/signup'
+    | '/settings/profile'
     | '/watches/new'
     | '/watches'
     | '/watches/$watchId/gallery'
@@ -152,6 +185,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/equipment'
     | '/inventory'
+    | '/login'
+    | '/signup'
+    | '/settings/profile'
     | '/watches/new'
     | '/watches/'
     | '/watches/$watchId/gallery'
@@ -166,6 +202,9 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   EquipmentRoute: typeof EquipmentRoute
   InventoryRoute: typeof InventoryRoute
+  LoginRoute: typeof LoginRoute
+  SignupRoute: typeof SignupRoute
+  SettingsProfileRoute: typeof SettingsProfileRoute
   WatchesNewRoute: typeof WatchesNewRoute
   WatchesIndexRoute: typeof WatchesIndexRoute
   WatchesWatchIdGalleryRoute: typeof WatchesWatchIdGalleryRoute
@@ -177,6 +216,20 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/inventory': {
       id: '/inventory'
       path: '/inventory'
@@ -217,6 +270,13 @@ declare module '@tanstack/react-router' {
       path: '/watches/new'
       fullPath: '/watches/new'
       preLoaderRoute: typeof WatchesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings/profile': {
+      id: '/settings/profile'
+      path: '/settings/profile'
+      fullPath: '/settings/profile'
+      preLoaderRoute: typeof SettingsProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/watches/$watchId/': {
@@ -262,6 +322,9 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   EquipmentRoute: EquipmentRoute,
   InventoryRoute: InventoryRoute,
+  LoginRoute: LoginRoute,
+  SignupRoute: SignupRoute,
+  SettingsProfileRoute: SettingsProfileRoute,
   WatchesNewRoute: WatchesNewRoute,
   WatchesIndexRoute: WatchesIndexRoute,
   WatchesWatchIdGalleryRoute: WatchesWatchIdGalleryRoute,

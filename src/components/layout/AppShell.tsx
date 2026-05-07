@@ -20,6 +20,7 @@ const PAGE_SUBTITLES: Record<string, string> = {
   '/watches': 'ALL WATCH RECORDS',
   '/inventory': 'SPARE PARTS STOCK',
   '/equipment': 'TOOLS & CAPITAL EXPENDITURE',
+  '/settings/profile': 'YOUR PUBLIC PROFILE',
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
