@@ -1,10 +1,10 @@
 # Mainspring — Claude Project Rules
 
 ## Project Overview
-Watch flip tracker SPA. Dark-UI, data-dense. Stack: React 19, TanStack Router (file-based, router-only — NO TanStack Start SSR), Tailwind CSS v4, React Hook Form + Zod, TanStack Table, TypeScript strict.
+Watch flip tracker app. Dark-UI, data-dense. Stack: React 19, TanStack Start (SSR, file-based routing), Tailwind CSS v4, React Hook Form + Zod, TanStack Table, TypeScript strict.
 
 ## Tech Stack Decisions
-- **Routing**: TanStack Router file-based. All routes live in `src/routes/`. Auto-generates `src/routeTree.gen.ts` — never edit it.
+- **Routing**: TanStack Start (SSR). File-based routing via `src/routes/`. Auto-generates `src/routeTree.gen.ts` — never edit it. Root route uses `createRootRouteWithContext` with `RouterContext = { queryClient: QueryClient }`. Router factory lives in `src/router.tsx`.
 - **Styling**: Tailwind v4 utility classes only. No CSS modules. Dark-first (`bg-zinc-950` root). Design language: zinc grays, amber accent, mono fonts for data.
 - **State**: `WatchesProvider` context in `src/context/watches.tsx` wraps entire app from `__root.tsx`. Use `useWatches()` in any route.
 - **Forms**: React Hook Form + Zod schemas. Define schemas in the same file as the form component unless reused.
@@ -79,8 +79,16 @@ const { register, handleSubmit, formState: { errors } } = useForm<FormData>({ re
 
 ## Build & Dev
 - `npm run dev` — dev server on :3000
-- `npm run build` — production build (vite build)
+- `npm run build` — production build (outputs to `dist/client/` + `dist/server/`)
+- `npm run preview` — preview production build locally
+- `npm run deploy` — build + deploy to Cloudflare Workers
 - `npm run test` — vitest
+
+## SSR Notes
+- `src/router.tsx` — per-request router factory (`getRouter()`). Creates a fresh `QueryClient` each call and passes it as router context.
+- `src/routes/__root.tsx` — owns the full HTML document (`<html>/<head>/<body>`). Must include `<Scripts />` for client hydration.
+- `src/lib/pocketbase.ts` — marked `'use client'` to isolate from server bundle (reads localStorage).
+- Wrangler deploy target: `dist/server/server.js` (Worker) + `dist/client/` (assets).
 
 ## Commit Style
 Conventional commits: `feat:`, `fix:`, `refactor:`, `chore:`. Keep subject line ≤72 chars.
