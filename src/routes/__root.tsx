@@ -19,6 +19,7 @@ import { GoogleAnalytics } from 'tanstack-router-ga4';
 import { resolveTenant } from '#/middleware/tenant';
 import type { UserProfile } from '#/types';
 import '../styles.css';
+import { Toaster } from 'sonner';
 
 type RouterContext = { queryClient: QueryClient };
 
@@ -137,6 +138,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body>
         {children}
+        <Toaster />
         <Scripts />
       </body>
     </html>

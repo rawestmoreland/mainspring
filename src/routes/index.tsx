@@ -120,39 +120,39 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
 const FEATURES = [
   {
     symbol: '◈',
-    title: 'Flip Ledger',
-    desc: 'Log every watch: purchase price, parts cost, and sale price. Your P&L is always one click away.',
+    title: 'Watch Projects',
+    desc: 'Log every movement on your bench. Status, service history, reference details, and photos — all in one place.',
   },
   {
     symbol: '◷',
-    title: 'Bench Time Tracker',
-    desc: 'Log hours per project. See exactly what your labor is worth — and whether the flip was actually worth your time.',
+    title: 'Repair Logs',
+    desc: 'Document each bench session with notes, time spent, and what you actually did. Build a searchable history of your work.',
   },
   {
     symbol: '⊡',
     title: 'Parts Inventory',
-    desc: 'Track spare parts stock, quantities, and unit costs. Stop over-buying crystals and crowns you already have.',
+    desc: "Know what's in your drawers before you order more. Track stems, crystals, mainsprings, and anything else you keep in stock.",
   },
   {
     symbol: '⚙',
-    title: 'Equipment Log',
-    desc: 'Amortize your tool investment against your earnings. Know your real cost basis, down to the demagnetizer.',
+    title: 'Tool Log',
+    desc: 'Catalogue your bench setup from your staking set to your movement holder. Know exactly what you have.',
   },
   {
     symbol: '◎',
     title: 'Public Profile',
-    desc: 'Share your repair posts and watch portfolio publicly. Your own subdomain, your own corner of the watch internet.',
+    desc: 'Share your work with the community. Your own subdomain with your repair posts and watch portfolio.',
   },
   {
     symbol: '⊞',
-    title: 'ROI Dashboard',
-    desc: 'Total profit, average ROI, capital deployed, hours spent — the full picture of your operation at a glance.',
+    title: 'Bench Overview',
+    desc: 'All your active projects, recent sessions, and low-stock parts at a glance. Your whole hobby in one dashboard.',
   },
 ] as const;
 
 const STATS = [
   { value: '147+', label: 'watches tracked' },
-  { value: '23%', label: 'avg. ROI logged' },
+  { value: '1,200+', label: 'parts catalogued' },
   { value: '4,200+', label: 'bench hours recorded' },
   { value: 'free', label: 'to start' },
 ] as const;
@@ -214,17 +214,17 @@ function LandingPage() {
 
         <div className='relative z-10 max-w-3xl mx-auto'>
           <p className='ms-fade-up-1 font-mono text-xs uppercase tracking-[0.2em] text-amber-400 mb-5'>
-            The watch flipper&apos;s ledger
+            For the hobbyist watchmaker
           </p>
           <h1 className='ms-fade-up-2 font-serif font-bold text-white leading-tight text-4xl sm:text-5xl lg:text-6xl mb-6'>
-            Know exactly what your
+            Six watches in pieces.
             <br />
-            <span className='text-amber-400'>bench time</span> is worth.
+            <span className='text-amber-400'>Zero spreadsheets.</span>
           </h1>
           <p className='ms-fade-up-3 text-zinc-400 text-lg max-w-xl mx-auto mb-10 leading-relaxed'>
-            Hairspring tracks every dollar and every hour across your watch
-            projects — from acquisition to sale. Finally, a ledger built for
-            people who flip watches, not spreadsheets.
+            Hairspring keeps track of every project on your bench — movement
+            details, parts on hand, repair notes, and photos. Built for the
+            people who actually love this stuff.
           </p>
           <div className='ms-fade-up-4 flex flex-col sm:flex-row items-center justify-center gap-3'>
             <Link
@@ -266,7 +266,7 @@ function LandingPage() {
             Everything you need
           </p>
           <h2 className='font-serif font-bold text-white text-3xl sm:text-4xl'>
-            Built for the bench, not the boardroom.
+            For the hobbyist who takes the craft seriously.
           </h2>
         </div>
 
@@ -294,8 +294,9 @@ function LandingPage() {
       <div className='max-w-3xl mx-auto px-5 my-8'>
         <div className='bg-zinc-900 border-l-2 border-amber-400 pl-8 pr-8 py-8'>
           <p className='font-serif text-xl sm:text-2xl text-zinc-100 leading-relaxed italic'>
-            &ldquo;Built for people who love watches and want to treat the hobby
-            like a business &mdash; without the spreadsheet hell.&rdquo;
+            &ldquo;Built for people who&apos;d rather be at the bench than on a
+            spreadsheet &mdash; and who have more movements in ziplock bags than
+            they&apos;d like to admit.&rdquo;
           </p>
           <p className='font-mono text-xs text-zinc-400 mt-5 uppercase tracking-widest'>
             &mdash; Hairspring
@@ -310,7 +311,7 @@ function LandingPage() {
             Simple by design
           </p>
           <h2 className='font-serif font-bold text-white text-3xl sm:text-4xl'>
-            From acquisition to exit in three steps.
+            Three steps to a cleaner bench.
           </h2>
         </div>
 
@@ -318,18 +319,18 @@ function LandingPage() {
           {[
             {
               n: '01',
-              title: 'Log the buy',
-              desc: 'Add a watch with purchase price, reference, and year. Attach photos straight from your phone.',
+              title: 'Add a project',
+              desc: 'Log the watch: make, model, movement, reference, and what you\'re trying to accomplish. Attach photos straight from your phone.',
             },
             {
               n: '02',
-              title: 'Track the work',
-              desc: 'Record bench hours, parts used, and repair notes as you go. Every dollar and minute accounted for.',
+              title: 'Document the work',
+              desc: 'Write up each bench session, record parts used, and photograph the movement as you go. Every job, searchable later.',
             },
             {
               n: '03',
-              title: 'Close the flip',
-              desc: 'Mark it sold. Hairspring instantly shows you net profit, ROI, and your effective hourly rate.',
+              title: 'Build your archive',
+              desc: 'Watch your repair history grow. Refer back to old notes, track patterns across similar movements, and share your best work.',
             },
           ].map((step) => (
             <div key={step.n} className='flex flex-col gap-3'>
@@ -352,10 +353,10 @@ function LandingPage() {
       <div className='px-5 my-8'>
         <div className='bg-zinc-900 rounded-2xl p-10 sm:p-14 mx-auto max-w-2xl text-center border border-zinc-800'>
           <p className='font-mono text-xs uppercase tracking-[0.2em] text-amber-400 mb-4'>
-            Get started today
+            Free to start
           </p>
           <h2 className='font-serif font-bold text-white text-3xl sm:text-4xl mb-3'>
-            Ready to track your first flip?
+            Ready to bring order to the bench?
           </h2>
           <p className='text-zinc-400 text-base mb-8'>
             Free to use. No credit card required.
@@ -377,7 +378,7 @@ function LandingPage() {
               Hairspring
             </span>
             <span className='font-mono text-xs text-zinc-500'>
-              &copy; {new Date().getFullYear()} · Built for watch people.
+              &copy; {new Date().getFullYear()} · Built for bench hobbyists.
             </span>
           </div>
           <div className='flex items-center gap-5'>

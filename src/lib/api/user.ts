@@ -10,13 +10,18 @@ export const UserApi = {
     return user;
   },
   signup: async (email: string, password: string, displayName: string) => {
-    await pb.collection('users').create({ email, password, passwordConfirm: password });
+    await pb
+      .collection('users')
+      .create({ email, password, passwordConfirm: password });
     const auth = await pb.collection('users').authWithPassword(email, password);
     await pb.collection('user_profiles').create({
       user: auth.record.id,
       display_name: displayName,
     });
     return auth;
+  },
+  passwordReset: async (email: string) => {
+    await pb.collection('users').requestPasswordReset(email);
   },
   logout: async () => {
     pb.authStore.clear();

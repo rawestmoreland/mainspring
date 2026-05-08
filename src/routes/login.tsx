@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
+import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,6 +8,19 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Field, FieldError, FieldGroup } from '#/components/ui/field';
+import { UserApi } from '#/lib/api/user';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '#/components/ui/dialog';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 const schema = z.object({
   email: z.email('Enter a valid email'),
@@ -25,6 +39,8 @@ function LoginPage() {
   const navigate = useNavigate();
   const { from } = Route.useSearch();
   const { mutateAsync: login, isPending, error } = useLogin();
+  const [resetOpen, setResetOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const { control, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -108,6 +124,77 @@ function LoginPage() {
             Create one
           </Link>
         </p>
+
+        <div className='flex items-center justify-center mt-4'>
+          <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+            <DialogTrigger asChild>
+              <button
+                type='button'
+                className='font-mono text-xs text-muted-foreground'
+                onClick={() => setResetOpen(true)}
+              >
+                Forgot your password?
+              </button>
+            </DialogTrigger>
+            <DialogContent className='sm:max-w-sm'>
+              <form
+                className='space-y-4'
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setSubmitting(true);
+                  const formData = new FormData(e.currentTarget);
+                  const email = formData.get('reset-email') as string;
+                  if (!email) {
+                    return;
+                  }
+                  try {
+                    await UserApi.passwordReset(email);
+                    toast.success(
+                      'If an account exists for this email, you will receive instructions shortly',
+                    );
+                  } catch (error) {
+                    toast.error('There was an error during the submission');
+                  } finally {
+                    setSubmitting(false);
+                    setResetOpen(false);
+                  }
+                }}
+              >
+                <DialogHeader>
+                  <DialogTitle>Password reset</DialogTitle>
+                  <DialogDescription>
+                    Please provide the email address for this account.
+                  </DialogDescription>
+                </DialogHeader>
+                <FieldGroup>
+                  <Field>
+                    <Label htmlFor='reset-email'>Email address</Label>
+                    <Input
+                      id='reset-email'
+                      name='reset-email'
+                      placeholder='bob@example.com'
+                    />
+                  </Field>
+                </FieldGroup>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant='outline' disabled={submitting}>
+                      Cancel
+                    </Button>
+                  </DialogClose>
+                  <Button type='submit' disabled={submitting}>
+                    <Loader2
+                      className={
+                        submitting ? 'block animate-spin mr-2' : 'hidden'
+                      }
+                    />
+                    {submitting ? 'Submitting' : 'Submit'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     </div>
   );
