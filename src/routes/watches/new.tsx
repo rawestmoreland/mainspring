@@ -1,13 +1,29 @@
+'use client';
+
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { CreateWatch, WatchCondition, WatchStatus } from '#/types';
-import { Btn } from '#/components/primitives/Button';
-import { cn } from '#/lib/helpers';
+import { numberField } from '#/lib/helpers';
 import { useCreateWatch } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
+import {
+  Field,
+  FieldContent,
+  FieldError,
+  FieldLabel,
+} from '#/components/ui/field';
+import { Input } from '#/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select';
+import { Button } from '#/components/ui/button';
 
 export const Route = createFileRoute('/watches/new')({
   component: NewWatchRoute,
@@ -27,18 +43,6 @@ const WATCH_CONDITIONS: readonly WatchCondition[] = [
   'worn',
   'parts_only',
 ] as const;
-
-const numberField = (opts?: { min?: number; message?: string }) =>
-  z.preprocess(
-    (v) => {
-      if (v === '' || v === null || typeof v === 'undefined') return NaN;
-      const n = typeof v === 'number' ? v : Number(v);
-      return n;
-    },
-    (opts?.min ?? 0) > 0
-      ? z.number().min(opts!.min!, opts!.message)
-      : z.number().min(0, opts?.message),
-  );
 
 const formSchema = z.object({
   make: z.string().trim().min(1, 'Make is required'),
@@ -74,14 +78,6 @@ function NewWatchRoute() {
 
   const { data: user, isLoading: isUserLoading } = useUser();
 
-  if (isUserLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return <div>Unauthorized</div>;
-  }
-
   const defaultValues = useMemo<FormValues>(
     () => ({
       make: '',
@@ -102,13 +98,21 @@ function NewWatchRoute() {
   );
 
   const {
-    register,
+    control,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
+
+  if (isUserLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <div>Unauthorized</div>;
+  }
 
   const onSubmit = handleSubmit(async (raw) => {
     setSubmitError(null);
@@ -134,12 +138,6 @@ function NewWatchRoute() {
       setSubmitError(msg);
     }
   });
-
-  const inputBase =
-    'w-full rounded-md bg-background border border-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/50';
-
-  const labelBase =
-    'text-[10px] uppercase tracking-widest font-mono text-muted-foreground';
 
   return (
     <div className='max-w-3xl'>
@@ -169,276 +167,343 @@ function NewWatchRoute() {
 
       <form onSubmit={onSubmit} className='space-y-6'>
         <section className='grid grid-cols-2 gap-4'>
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='make'>
-              Make
-            </label>
-            <input
-              id='make'
-              autoFocus
-              className={cn(inputBase, errors.make && 'border-red-800')}
-              {...register('make')}
-              placeholder='Rolex'
-            />
-            {errors.make && (
-              <div className='text-xs text-red-300'>{errors.make.message}</div>
+          <Controller
+            name='make'
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='make'>Make</FieldLabel>
+                <Input
+                  {...field}
+                  id='make'
+                  autoFocus
+                  aria-invalid={fieldState.invalid}
+                  placeholder='Rolex'
+                  autoComplete='off'
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
 
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='model'>
-              Model
-            </label>
-            <input
-              id='model'
-              className={cn(inputBase, errors.model && 'border-red-800')}
-              {...register('model')}
-              placeholder='Submariner'
-            />
-            {errors.model && (
-              <div className='text-xs text-red-300'>{errors.model.message}</div>
+          <Controller
+            name='model'
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='model'>Model</FieldLabel>
+                <Input
+                  {...field}
+                  id='model'
+                  aria-invalid={fieldState.invalid}
+                  placeholder='Submariner'
+                  autoComplete='off'
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
 
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='reference'>
-              Reference
-            </label>
-            <input
-              id='reference'
-              className={cn(inputBase, errors.reference && 'border-red-800')}
-              {...register('reference')}
-              placeholder='16610'
-            />
-            {errors.reference && (
-              <div className='text-xs text-red-300'>
-                {errors.reference.message}
-              </div>
+          <Controller
+            name='reference'
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='reference'>Reference</FieldLabel>
+                <Input
+                  {...field}
+                  value={field.value ?? ''}
+                  id='reference'
+                  aria-invalid={fieldState.invalid}
+                  placeholder='16610'
+                  autoComplete='off'
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
 
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='year'>
-              Year
-            </label>
-            <input
-              id='year'
-              type='number'
-              inputMode='numeric'
-              className={cn(inputBase, errors.year && 'border-red-800')}
-              {...register('year', { valueAsNumber: true })}
-            />
-            {errors.year && (
-              <div className='text-xs text-red-300'>{errors.year.message}</div>
+          <Controller
+            name='year'
+            control={control}
+            render={({ field: { onChange, ...field }, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='year'>Year</FieldLabel>
+                <Input
+                  {...field}
+                  id='year'
+                  type='number'
+                  inputMode='numeric'
+                  aria-invalid={fieldState.invalid}
+                  autoComplete='off'
+                  onChange={(e) => onChange(e.target.valueAsNumber)}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
         </section>
 
         <section className='grid grid-cols-2 gap-4'>
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='status'>
-              Status
-            </label>
-            <select
-              id='status'
-              className={cn(inputBase, errors.status && 'border-red-800')}
-              {...register('status')}
-            >
-              {WATCH_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {s.replace('_', ' ')}
-                </option>
-              ))}
-            </select>
-            {errors.status && (
-              <div className='text-xs text-red-300'>
-                {errors.status.message}
-              </div>
+          <Controller
+            name='status'
+            control={control}
+            render={({ fieldState, field }) => (
+              <Field orientation='responsive' data-invalid={fieldState.invalid}>
+                <FieldContent>
+                  <FieldLabel htmlFor='status'>Status</FieldLabel>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </FieldContent>
+                <Select
+                  name={field.name}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger
+                    id='status'
+                    aria-invalid={fieldState.invalid}
+                    className='min-w-30'
+                  >
+                    <SelectValue placeholder='select' />
+                  </SelectTrigger>
+                  <SelectContent position='item-aligned'>
+                    {WATCH_STATUSES.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s.replace('_', ' ').toUpperCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
             )}
-          </div>
+          />
 
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='condition_bought'>
-              Condition (bought)
-            </label>
-            <select
-              id='condition_bought'
-              className={cn(
-                inputBase,
-                errors.condition_bought && 'border-red-800',
-              )}
-              {...register('condition_bought')}
-            >
-              {WATCH_CONDITIONS.map((c) => (
-                <option key={c} value={c}>
-                  {c.replace('_', ' ')}
-                </option>
-              ))}
-            </select>
-            {errors.condition_bought && (
-              <div className='text-xs text-red-300'>
-                {errors.condition_bought.message}
-              </div>
+          <Controller
+            name='condition_bought'
+            control={control}
+            render={({ fieldState, field }) => (
+              <Field orientation='responsive' data-invalid={fieldState.invalid}>
+                <FieldContent>
+                  <FieldLabel htmlFor='condition_bought'>
+                    Condition (bought)
+                  </FieldLabel>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </FieldContent>
+                <Select
+                  name={field.name}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger
+                    id='condition_bought'
+                    aria-invalid={fieldState.invalid}
+                    className='min-w-30'
+                  >
+                    <SelectValue placeholder='select' />
+                  </SelectTrigger>
+                  <SelectContent position='item-aligned'>
+                    {WATCH_CONDITIONS.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c.replace('_', ' ').toUpperCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
             )}
-          </div>
+          />
         </section>
 
         <section className='grid grid-cols-3 gap-4'>
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='bought_price'>
-              Bought price
-            </label>
-            <input
-              id='bought_price'
-              type='number'
-              inputMode='decimal'
-              step='any'
-              className={cn(inputBase, errors.bought_price && 'border-red-800')}
-              {...register('bought_price', { valueAsNumber: true })}
-            />
-            {errors.bought_price && (
-              <div className='text-xs text-red-300'>
-                {errors.bought_price.message}
-              </div>
+          <Controller
+            name='bought_price'
+            control={control}
+            render={({ field: { onChange, ...field }, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='bought_price'>Bought price</FieldLabel>
+                <Input
+                  {...field}
+                  id='bought_price'
+                  type='number'
+                  inputMode='decimal'
+                  step='any'
+                  aria-invalid={fieldState.invalid}
+                  autoComplete='off'
+                  onChange={(e) => onChange(e.target.valueAsNumber)}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
 
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='parts_cost'>
-              Parts cost
-            </label>
-            <input
-              id='parts_cost'
-              type='number'
-              inputMode='decimal'
-              step='any'
-              className={cn(inputBase, errors.parts_cost && 'border-red-800')}
-              {...register('parts_cost', { valueAsNumber: true })}
-            />
-            {errors.parts_cost && (
-              <div className='text-xs text-red-300'>
-                {errors.parts_cost.message}
-              </div>
+          <Controller
+            name='parts_cost'
+            control={control}
+            render={({ field: { onChange, ...field }, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='parts_cost'>Parts cost</FieldLabel>
+                <Input
+                  {...field}
+                  id='parts_cost'
+                  type='number'
+                  inputMode='decimal'
+                  step='any'
+                  aria-invalid={fieldState.invalid}
+                  autoComplete='off'
+                  onChange={(e) => onChange(e.target.valueAsNumber)}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
 
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='hours_spent'>
-              Hours spent
-            </label>
-            <input
-              id='hours_spent'
-              type='number'
-              inputMode='decimal'
-              step='0.25'
-              className={cn(inputBase, errors.hours_spent && 'border-red-800')}
-              {...register('hours_spent', { valueAsNumber: true })}
-            />
-            {errors.hours_spent && (
-              <div className='text-xs text-red-300'>
-                {errors.hours_spent.message}
-              </div>
+          <Controller
+            name='hours_spent'
+            control={control}
+            render={({ field: { onChange, ...field }, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='hours_spent'>Hours spent</FieldLabel>
+                <Input
+                  {...field}
+                  id='hours_spent'
+                  type='number'
+                  inputMode='decimal'
+                  step='0.25'
+                  aria-invalid={fieldState.invalid}
+                  autoComplete='off'
+                  onChange={(e) => onChange(e.target.valueAsNumber)}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
         </section>
 
         <section className='grid grid-cols-2 gap-4'>
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='bought_date'>
-              Bought date
-            </label>
-            <input
-              id='bought_date'
-              type='date'
-              className={cn(inputBase, errors.bought_date && 'border-red-800')}
-              {...register('bought_date')}
-            />
-            {errors.bought_date && (
-              <div className='text-xs text-red-300'>
-                {errors.bought_date.message}
-              </div>
+          <Controller
+            name='bought_date'
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='bought_date'>Bought date</FieldLabel>
+                <Input
+                  {...field}
+                  id='bought_date'
+                  type='date'
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
 
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='sold_date'>
-              Sold date (optional)
-            </label>
-            <input
-              id='sold_date'
-              type='date'
-              className={cn(inputBase, errors.sold_date && 'border-red-800')}
-              {...register('sold_date', {
-                setValueAs: (v) =>
-                  typeof v === 'string' && v.trim() ? v : null,
-              })}
-            />
-            {errors.sold_date && (
-              <div className='text-xs text-red-300'>
-                {errors.sold_date.message}
-              </div>
+          <Controller
+            name='sold_date'
+            control={control}
+            render={({ field: { onChange, value, ...field }, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='sold_date'>
+                  Sold date (optional)
+                </FieldLabel>
+                <Input
+                  {...field}
+                  value={value ?? ''}
+                  id='sold_date'
+                  type='date'
+                  aria-invalid={fieldState.invalid}
+                  onChange={(e) => onChange(e.target.value || null)}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
         </section>
 
         <section className='grid grid-cols-2 gap-4'>
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='sold_price'>
-              Sold price (optional)
-            </label>
-            <input
-              id='sold_price'
-              type='number'
-              inputMode='decimal'
-              step='any'
-              className={cn(inputBase, errors.sold_price && 'border-red-800')}
-              {...register('sold_price', {
-                setValueAs: (v) =>
-                  v === '' || v === null || typeof v === 'undefined'
-                    ? null
-                    : Number(v),
-              })}
-            />
-            {errors.sold_price && (
-              <div className='text-xs text-red-300'>
-                {errors.sold_price.message}
-              </div>
+          <Controller
+            name='sold_price'
+            control={control}
+            render={({ field: { onChange, value, ...field }, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='sold_price'>
+                  Sold price (optional)
+                </FieldLabel>
+                <Input
+                  {...field}
+                  value={(value as number | null) ?? ''}
+                  id='sold_price'
+                  type='number'
+                  inputMode='decimal'
+                  step='any'
+                  aria-invalid={fieldState.invalid}
+                  autoComplete='off'
+                  onChange={(e) =>
+                    onChange(
+                      e.target.value === '' ? null : e.target.valueAsNumber,
+                    )
+                  }
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
 
-          <div className='space-y-1.5'>
-            <label className={labelBase} htmlFor='notes'>
-              Notes
-            </label>
-            <textarea
-              id='notes'
-              rows={4}
-              className={cn(
-                inputBase,
-                'resize-y',
-                errors.notes && 'border-red-800',
-              )}
-              {...register('notes')}
-              placeholder='Anything worth remembering…'
-            />
-            {errors.notes && (
-              <div className='text-xs text-red-300'>{errors.notes.message}</div>
+          <Controller
+            name='notes'
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='notes'>Notes</FieldLabel>
+                <textarea
+                  {...field}
+                  id='notes'
+                  rows={4}
+                  aria-invalid={fieldState.invalid}
+                  placeholder='Anything worth remembering…'
+                  className='w-full min-w-0 resize-y rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30'
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
             )}
-          </div>
+          />
         </section>
 
         <div className='flex items-center gap-2 pt-2'>
-          <Btn type='submit' disabled={isSubmitting || createWatch.isPending}>
+          <Button
+            type='submit'
+            disabled={isSubmitting || createWatch.isPending}
+          >
             {createWatch.isPending ? 'Creating…' : 'Create watch'}
-          </Btn>
-          <Link to='/watches' className='inline-block'>
-            <button
-              type='button'
-              className='rounded font-semibold tracking-wide transition-opacity hover:opacity-90 cursor-pointer bg-transparent text-muted-foreground border border-border hover:text-foreground hover:border-ring px-4 py-2 text-xs'
-            >
-              Cancel
-            </button>
-          </Link>
+          </Button>
+          <Button asChild variant='outline'>
+            <Link to='/watches'>Cancel</Link>
+          </Button>
         </div>
       </form>
     </div>

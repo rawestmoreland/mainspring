@@ -8,6 +8,7 @@ import type { WatchStatus } from '#/types';
 import { useWatches } from '#/hooks/watches';
 import { Button } from '#/components/ui/button';
 import { useUser } from '#/hooks/user';
+import { PlusIcon } from 'lucide-react';
 
 export const Route = createFileRoute('/watches/')({ component: WatchesPage });
 
@@ -57,7 +58,10 @@ function WatchesPage() {
         <div className='ml-auto'>
           {user && (
             <Button asChild>
-              <Link to='/watches/new'>+ Add Watch</Link>
+              <Link to='/watches/new'>
+                <PlusIcon className='size-3' />
+                Add Watch
+              </Link>
             </Button>
           )}
         </div>

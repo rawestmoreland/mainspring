@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { fmt } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
@@ -7,8 +7,10 @@ import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { useEquipment } from '#/hooks/equipment';
 import { format } from 'date-fns';
 import { useUser } from '#/hooks/user';
+import { Button } from '#/components/ui/button';
+import { PlusIcon } from 'lucide-react';
 
-export const Route = createFileRoute('/equipment')({
+export const Route = createFileRoute('/equipment/')({
   component: EquipmentPage,
 });
 
@@ -41,7 +43,14 @@ function EquipmentPage() {
 
       <div className='flex items-center justify-between mb-3.5'>
         <SectionLabel>Tools &amp; Equipment</SectionLabel>
-        {user && <Btn sm>+ Add Tool</Btn>}
+        {user && (
+          <Button asChild>
+            <Link to='/equipment/new'>
+              <PlusIcon className='size-3' />
+              Add Tool
+            </Link>
+          </Button>
+        )}
       </div>
 
       <TableWrap>

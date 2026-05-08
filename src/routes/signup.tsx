@@ -2,17 +2,19 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation } from '@tanstack/react-query';
-import { UserApi } from '#/lib/api/user';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Field, FieldError, FieldGroup } from '#/components/ui/field';
+import { useJoinWaitlist } from '#/hooks/waitlist';
 
 const schema = z.object({
-  display_name: z.string().min(2, 'Display name must be at least 2 characters').max(256),
+  // display_name: z
+  //   .string()
+  //   .min(2, 'Display name must be at least 2 characters')
+  //   .max(256),
   email: z.email('Enter a valid email'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  // password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -20,18 +22,19 @@ export const Route = createFileRoute('/signup')({ component: SignupPage });
 
 function SignupPage() {
   const navigate = useNavigate();
-  const { mutateAsync: signup, isPending, error } = useMutation({
-    mutationFn: ({ email, password, display_name }: FormData) =>
-      UserApi.signup(email, password, display_name),
-  });
+
+  const { mutateAsync: joinWaitlist, isPending, error } = useJoinWaitlist();
 
   const { control, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { display_name: '', email: '', password: '' },
+    defaultValues: {
+      email: '',
+    },
+    // defaultValues: { display_name: '', email: '', password: '' },
   });
 
   const onSubmit = async (data: FormData) => {
-    await signup(data);
+    await joinWaitlist(data.email);
     navigate({ to: '/', replace: true });
   };
 
@@ -39,18 +42,19 @@ function SignupPage() {
     <div className='min-h-screen bg-background flex items-center justify-center p-4'>
       <div className='w-full max-w-sm'>
         <div className='mb-8 text-center'>
-          <h1 className='font-serif text-2xl font-bold text-primary mb-1'>
-            Hairspring
+          <h1 className='font-serif text-2xl font-bold text-primary mb-5'>
+            Hairspring Waitlist
           </h1>
           <p className='font-mono text-xs text-muted-foreground tracking-widest uppercase'>
-            Create your account
+            Hairspring is going public soon. Join the waitlist to be notified
+            when you can officially create an account.
           </p>
         </div>
 
         <div className='bg-card border border-border rounded-xl shadow-sm p-6'>
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
             <FieldGroup>
-              <Controller
+              {/* <Controller
                 name='display_name'
                 control={control}
                 render={({ field, fieldState }) => (
@@ -68,7 +72,7 @@ function SignupPage() {
                     )}
                   </Field>
                 )}
-              />
+              /> */}
               <Controller
                 name='email'
                 control={control}
@@ -87,7 +91,7 @@ function SignupPage() {
                   </Field>
                 )}
               />
-              <Controller
+              {/* <Controller
                 name='password'
                 control={control}
                 render={({ field, fieldState }) => (
@@ -104,17 +108,18 @@ function SignupPage() {
                     )}
                   </Field>
                 )}
-              />
+              /> */}
             </FieldGroup>
 
             {error && (
               <p className='text-sm text-destructive'>
-                {(error as Error).message ?? 'Signup failed. Please try again.'}
+                {(error as Error).message ??
+                  'Request failed. Please try again.'}
               </p>
             )}
 
             <Button type='submit' className='w-full' disabled={isPending}>
-              {isPending ? 'Creating account…' : 'Create account'}
+              {isPending ? 'Joining waitlist...' : 'Join waitlist'}
             </Button>
           </form>
         </div>

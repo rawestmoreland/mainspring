@@ -10,8 +10,16 @@ export type InventoryCategory =
   | 'movement'
   | 'crystal'
   | 'strap'
+  | 'bracelet'
+  | 'crown'
+  | 'gasket'
+  | 'hand'
+  | 'dial'
+  | 'bezel'
+  | 'case'
   | 'tool'
-  | 'gasket';
+  | 'oil'
+  | 'other';
 
 export type WatchPhoto = {
   id: string;
@@ -62,6 +70,7 @@ export type InventoryItem = {
   qty: number;
   unit_cost: number;
   category: InventoryCategory;
+  notes: string;
 };
 
 export type CreateInventoryItem = Omit<InventoryItem, 'id'>;
@@ -77,6 +86,7 @@ export type CreateEquipment = Omit<Equipment, 'id'>;
 
 export type Inventory = {
   id: string;
+  user: string;
   name: string;
   qty: number;
   unit_cost: number;

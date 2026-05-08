@@ -13,7 +13,6 @@ import { TanStackDevtools } from '@tanstack/react-devtools';
 import type { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from '#/components/layout/AppShell';
-import { WatchesProvider } from '#/context/watches';
 import { TooltipProvider } from '#/components/ui/tooltip';
 import { GoogleAnalytics } from 'tanstack-router-ga4';
 import { resolveTenant } from '#/middleware/tenant';
@@ -109,21 +108,19 @@ function RootComponent() {
     <RootDocument>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <WatchesProvider>
-            <AppShell>
-              <GoogleAnalytics measurementId='G-7TWPVSWCR2' />
-              <Outlet />
-            </AppShell>
-            <TanStackDevtools
-              config={{ position: 'bottom-right' }}
-              plugins={[
-                {
-                  name: 'TanStack Router',
-                  render: <TanStackRouterDevtoolsPanel />,
-                },
-              ]}
-            />
-          </WatchesProvider>
+          <AppShell>
+            <GoogleAnalytics measurementId='G-7TWPVSWCR2' />
+            <Outlet />
+          </AppShell>
+          <TanStackDevtools
+            config={{ position: 'bottom-right' }}
+            plugins={[
+              {
+                name: 'TanStack Router',
+                render: <TanStackRouterDevtoolsPanel />,
+              },
+            ]}
+          />
         </TooltipProvider>
       </QueryClientProvider>
     </RootDocument>

@@ -1,13 +1,14 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { fmt } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
-import { Btn } from '#/components/primitives/Button';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { useInventory } from '#/hooks/inventory';
 import { useUser } from '#/hooks/user';
+import { Button } from '#/components/ui/button';
+import { PlusIcon } from 'lucide-react';
 
-export const Route = createFileRoute('/inventory')({
+export const Route = createFileRoute('/inventory/')({
   component: InventoryPage,
 });
 
@@ -41,7 +42,14 @@ function InventoryPage() {
 
       <div className='flex items-center justify-between mb-3.5'>
         <SectionLabel>Spare Parts</SectionLabel>
-        {user && <Btn sm>+ Add Part</Btn>}
+        {user && (
+          <Button asChild>
+            <Link to='/inventory/new'>
+              <PlusIcon className='size-3' />
+              Add Part
+            </Link>
+          </Button>
+        )}
       </div>
 
       <TableWrap>

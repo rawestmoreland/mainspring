@@ -1,9 +1,8 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { cn, fmt, fmtPct, profit, roi } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
-import { Btn } from '#/components/primitives/Button';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { ThumbStrip } from '#/components/watches/ThumbStrip';
@@ -11,6 +10,8 @@ import { useWatches } from '#/hooks/watches';
 import { useEquipment } from '#/hooks/equipment';
 import { useInventory } from '#/hooks/inventory';
 import { useUser } from '#/hooks/user';
+import { Button } from '#/components/ui/button';
+import { PlusIcon } from 'lucide-react';
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -94,16 +95,12 @@ function Dashboard() {
       <div className='flex items-center justify-between mb-3.5'>
         <SectionLabel>Watch Ledger</SectionLabel>
         {user && (
-          <Btn
-            sm
-            onClick={() =>
-              navigate({
-                to: '/watches/new',
-              })
-            }
-          >
-            + Add Watch
-          </Btn>
+          <Button variant='outline' asChild>
+            <Link to='/watches/new'>
+              <PlusIcon className='size-3' />
+              Add Watch
+            </Link>
+          </Button>
         )}
       </div>
       <TableWrap className='mb-7'>
@@ -205,9 +202,12 @@ function Dashboard() {
                 {fmt(inventoryValue)} value
               </span>
               {user && (
-                <Btn ghost sm>
-                  + Add Part
-                </Btn>
+                <Button variant='outline' asChild>
+                  <Link to='/inventory/new'>
+                    <PlusIcon className='size-3' />
+                    Add Part
+                  </Link>
+                </Button>
               )}
             </div>
           </div>
@@ -246,9 +246,12 @@ function Dashboard() {
           <div className='flex items-center justify-between mb-3.5'>
             <SectionLabel>Tools &amp; Equipment</SectionLabel>
             {user && (
-              <Btn ghost sm>
-                + Add Tool
-              </Btn>
+              <Button variant='outline' asChild>
+                <Link to='/equipment/new'>
+                  <PlusIcon className='size-3' />
+                  Add Tool
+                </Link>
+              </Button>
             )}
           </div>
           <div className='bg-card border border-border rounded overflow-hidden'>

@@ -1,4 +1,5 @@
 import type { Watch } from '#/types';
+import z from 'zod';
 
 export function placeholderImg(seed: string) {
   return `https://picsum.photos/seed/${seed}/800/600`;
@@ -36,3 +37,6 @@ export function fmtPct(n: string | number | null | undefined): string {
 export function cn(...classes: (string | false | null | undefined)[]): string {
   return classes.filter(Boolean).join(' ');
 }
+
+export const numberField = (opts?: { min?: number; message?: string }) =>
+  z.number({ error: opts?.message ?? 'Must be a number' }).min(opts?.min ?? 0, opts?.message);

@@ -195,7 +195,7 @@ function LandingPage() {
               to='/signup'
               className='font-mono text-xs bg-amber-400 text-zinc-950 font-semibold px-4 py-1.5 rounded hover:bg-amber-300 transition-colors'
             >
-              Get started
+              Waitlist
             </Link>
           </div>
         </div>
@@ -231,7 +231,7 @@ function LandingPage() {
               to='/signup'
               className='font-mono text-sm bg-amber-400 text-zinc-950 font-bold px-7 py-3 rounded hover:bg-amber-300 transition-colors w-full sm:w-auto text-center'
             >
-              Start tracking free →
+              Join the waitlist →
             </Link>
             <Link
               to='/login'
@@ -320,7 +320,7 @@ function LandingPage() {
             {
               n: '01',
               title: 'Add a project',
-              desc: 'Log the watch: make, model, movement, reference, and what you\'re trying to accomplish. Attach photos straight from your phone.',
+              desc: "Log the watch: make, model, movement, reference, and what you're trying to accomplish. Attach photos straight from your phone.",
             },
             {
               n: '02',
@@ -365,7 +365,7 @@ function LandingPage() {
             to='/signup'
             className='inline-block font-mono text-sm bg-amber-400 text-zinc-950 font-bold px-10 py-3.5 rounded hover:bg-amber-300 transition-colors'
           >
-            Create your account →
+            Join the waitlist →
           </Link>
         </div>
       </div>
@@ -392,7 +392,7 @@ function LandingPage() {
               to='/signup'
               className='font-mono text-xs text-zinc-400 hover:text-zinc-200 transition-colors'
             >
-              Sign up
+              Waitlist
             </Link>
           </div>
         </div>
