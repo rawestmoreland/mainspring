@@ -15,6 +15,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '#/components/ui/sidebar';
+import HSBrass from '../../../public/hairspring-mark-brass.svg';
 
 export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -24,17 +25,18 @@ export function AppSidebar() {
   const { data: user } = useUser();
   const { mutateAsync: logoutMutation } = useLogout();
 
-  const initials = user?.email
-    ? user.email.slice(0, 2).toUpperCase()
-    : '??';
+  const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : '??';
 
   return (
     <Sidebar variant='inset'>
       {/* Logo */}
       <SidebarHeader className='px-4 py-5 border-b border-sidebar-border'>
-        <h1 className='font-serif text-lg font-bold text-primary leading-tight'>
-          Hairspring
-        </h1>
+        <div className='flex space-x-2'>
+          <img alt='Hairspring' src={HSBrass} className='size-6' />
+          <h1 className='font-serif text-lg font-bold text-primary leading-tight'>
+            Hairspring
+          </h1>
+        </div>
         <p className='font-mono text-[10px] text-muted-foreground tracking-widest uppercase mt-0.5'>
           Watch Flip Tracker
         </p>
@@ -101,7 +103,9 @@ export function AppSidebar() {
                 variant='outline'
                 size='sm'
                 className='text-xs'
-                onClick={() => logoutMutation().then(() => navigate({ to: '/login' }))}
+                onClick={() =>
+                  logoutMutation().then(() => navigate({ to: '/login' }))
+                }
               >
                 Logout
               </Button>
