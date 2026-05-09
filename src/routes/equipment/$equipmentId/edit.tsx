@@ -1,53 +1,26 @@
 'use client';
 
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { CreateInventoryItem, InventoryCategory } from '#/types';
+import type { Equipment } from '#/types';
 import { Btn } from '#/components/primitives/Button';
 import { numberField } from '#/lib/helpers';
 import { useUser } from '#/hooks/user';
-import { useCreateInventory } from '#/hooks/inventory';
+import { useGetEquipmentById, useUpdateEquipment } from '#/hooks/equipment';
+import type { RecordModel } from 'pocketbase';
 import {
   Field,
-  FieldContent,
   FieldError,
   FieldLabel,
 } from '#/components/ui/field';
 import { Input } from '#/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '#/components/ui/select';
-import { FormSkeleton } from '#/components/skeletons';
-import { requireAuth } from '#/lib/auth';
 
-export const Route = createFileRoute('/inventory/new')({
-  beforeLoad: requireAuth,
-  component: NewInventoryRoute,
+export const Route = createFileRoute('/equipment/$equipmentId/edit')({
+  component: EditEquipmentRoute,
 });
-
-const INVENTORY_CATEGORIES: readonly InventoryCategory[] = [
-  'movement',
-  'mainspring',
-  'crystal',
-  'strap',
-  'bracelet',
-  'crown',
-  'gasket',
-  'hand',
-  'dial',
-  'bezel',
-  'case',
-  'tool',
-  'oil',
-  'other',
-] as const;
 
 const formSchema = z.object({
   name: z
@@ -55,78 +28,94 @@ const formSchema = z.object({
     .trim()
     .min(1, 'This is required')
     .max(256, 'Must be fewer than 256 characters'),
-  category: z.enum(INVENTORY_CATEGORIES),
-  qty: numberField({ min: 0, message: 'Quantity must be 0 or more' }),
-  unit_cost: numberField({
-    min: 0,
-    message: 'Unit cost must be 0 or more',
-  }),
+  cost: numberField({ min: 0, message: 'Cost must be 0 or more' }),
+  date_acquired: z.string().min(1, 'Date is required'),
   supplier: z.string(),
   notes: z.string(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-function NewInventoryRoute() {
-  const navigate = useNavigate();
-  const createInventory = useCreateInventory();
-  const [submitError, setSubmitError] = useState<string | null>(null);
+function EditEquipmentRoute() {
+  const { equipmentId } = Route.useParams();
+  const { data: item, isLoading: isItemLoading } = useGetEquipmentById(equipmentId);
+  const { data: user, isLoading: isUserLoading } = useUser();
 
-  const { isPending: isUserPending } = useUser();
-
-  const defaultValues = useMemo<FormData>(
-    () => ({
-      name: '',
-      category: 'movement',
-      qty: 1,
-      unit_cost: 0,
-      supplier: '',
-      notes: '',
-    }),
-    [],
-  );
-
-  const {
-    control,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues,
-  });
-
-  if (isUserPending) {
-    return <FormSkeleton />;
+  if (isItemLoading || isUserLoading) {
+    return <div className='text-sm text-muted-foreground font-mono'>Loading…</div>;
   }
 
-  const onSubmit = async (data: FormData) => {
+  if (!item) {
+    return (
+      <div className='space-y-3'>
+        <Link
+          to='/equipment'
+          className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
+        >
+          ← Back to Equipment
+        </Link>
+        <div className='text-sm text-red-400 font-mono'>Item not found.</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <div className='text-sm text-red-400 font-mono'>Unauthorized</div>;
+  }
+
+  return <EditEquipmentForm item={item} />;
+}
+
+function EditEquipmentForm({ item }: { item: RecordModel }) {
+  const navigate = useNavigate();
+  const updateEquipment = useUpdateEquipment();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const { control, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: item.name as string,
+      cost: item.cost as number,
+      date_acquired: ((item.date_acquired as string) ?? '').slice(0, 10),
+      supplier: (item.supplier as string) ?? '',
+      notes: (item.notes as string) ?? '',
+    },
+  });
+
+  const onSubmit = handleSubmit(async (data) => {
     setSubmitError(null);
-
-    const payload: CreateInventoryItem = data;
-
+    const payload = {
+      id: item.id,
+      user: item['user'] as string,
+      name: data.name,
+      cost: data.cost,
+      date_acquired: data.date_acquired,
+      supplier: data.supplier,
+      notes: data.notes,
+    } as Equipment;
     try {
-      await createInventory.mutateAsync(payload);
-      navigate({ to: '/inventory' });
+      await updateEquipment.mutateAsync(payload);
+      navigate({ to: '/equipment' });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Failed to create item.';
+      const msg = e instanceof Error ? e.message : 'Failed to save item.';
       setSubmitError(msg);
     }
-  };
+  });
 
   return (
     <div className='max-w-3xl'>
       <div className='mb-6'>
         <Link
-          to='/inventory'
+          to='/equipment'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Inventory
+          ← Back to Equipment
         </Link>
         <h1 className='mt-3 text-2xl font-serif font-semibold text-foreground'>
-          Add Item
+          Edit Tool
         </h1>
         <p className='mt-1 text-xs font-mono text-muted-foreground tracking-wide'>
-          Add a part to your inventory
+          {item.name as string}
         </p>
       </div>
 
@@ -139,11 +128,7 @@ function NewInventoryRoute() {
         </div>
       )}
 
-      <form
-        id='inventory-item-form'
-        onSubmit={handleSubmit(onSubmit)}
-        className='space-y-6'
-      >
+      <form onSubmit={onSubmit} className='space-y-6'>
         <section className='grid grid-cols-2 gap-4'>
           <Controller
             name='name'
@@ -154,8 +139,9 @@ function NewInventoryRoute() {
                 <Input
                   {...field}
                   id='name'
+                  autoFocus
                   aria-invalid={fieldState.invalid}
-                  placeholder='Mainspring'
+                  placeholder='Bergeon 30080 case opener'
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -166,74 +152,14 @@ function NewInventoryRoute() {
           />
 
           <Controller
-            name='category'
-            control={control}
-            render={({ fieldState, field }) => (
-              <Field orientation='responsive' data-invalid={fieldState.invalid}>
-                <FieldContent>
-                  <FieldLabel htmlFor='category'>Category</FieldLabel>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </FieldContent>
-                <Select
-                  name={field.name}
-                  value={field.value}
-                  onValueChange={field.onChange}
-                >
-                  <SelectTrigger
-                    id='category'
-                    aria-invalid={fieldState.invalid}
-                    className='min-w-30'
-                  >
-                    <SelectValue placeholder='select' />
-                  </SelectTrigger>
-                  <SelectContent position='item-aligned'>
-                    {INVENTORY_CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c.replace('_', ' ').toUpperCase()}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-            )}
-          />
-        </section>
-
-        <section className='grid grid-cols-2 gap-4'>
-          <Controller
-            name='qty'
+            name='cost'
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='qty'>Quantity</FieldLabel>
+                <FieldLabel htmlFor='cost'>Cost</FieldLabel>
                 <Input
                   {...field}
-                  id='qty'
-                  type='number'
-                  step='1'
-                  min={0}
-                  aria-invalid={fieldState.invalid}
-                  autoComplete='off'
-                  onChange={(e) => onChange(e.target.valueAsNumber)}
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name='unit_cost'
-            control={control}
-            render={({ field: { onChange, ...field }, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='unit_cost'>Unit Cost</FieldLabel>
-                <Input
-                  {...field}
-                  id='unit_cost'
+                  id='cost'
                   type='number'
                   inputMode='decimal'
                   step='0.01'
@@ -252,6 +178,25 @@ function NewInventoryRoute() {
 
         <section className='grid grid-cols-2 gap-4'>
           <Controller
+            name='date_acquired'
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='date_acquired'>Date Acquired</FieldLabel>
+                <Input
+                  {...field}
+                  id='date_acquired'
+                  type='date'
+                  aria-invalid={fieldState.invalid}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
             name='supplier'
             control={control}
             render={({ field, fieldState }) => (
@@ -261,7 +206,7 @@ function NewInventoryRoute() {
                   {...field}
                   id='supplier'
                   aria-invalid={fieldState.invalid}
-                  placeholder='e.g. Cousins UK'
+                  placeholder='e.g. Esslinger &amp; Co.'
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -298,11 +243,11 @@ function NewInventoryRoute() {
         <div className='flex items-center gap-2 pt-2'>
           <Btn
             type='submit'
-            disabled={isSubmitting || createInventory.isPending}
+            disabled={isSubmitting || updateEquipment.isPending}
           >
-            {createInventory.isPending ? 'Creating…' : 'Create item'}
+            {updateEquipment.isPending ? 'Saving…' : 'Save changes'}
           </Btn>
-          <Link to='/inventory' className='inline-block'>
+          <Link to='/equipment' className='inline-block'>
             <button
               type='button'
               className='rounded font-semibold tracking-wide transition-opacity hover:opacity-90 cursor-pointer bg-transparent text-muted-foreground border border-border hover:text-foreground hover:border-ring px-4 py-2 text-xs'

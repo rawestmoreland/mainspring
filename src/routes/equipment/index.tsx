@@ -7,19 +7,22 @@ import { useEquipment } from '#/hooks/equipment';
 import { format } from 'date-fns';
 import { useUser } from '#/hooks/user';
 import { Button } from '#/components/ui/button';
-import { PlusIcon } from 'lucide-react';
+import { PencilIcon, PlusIcon } from 'lucide-react';
+import { EquipmentSkeleton } from '#/components/skeletons';
+import { requireAuth } from '#/lib/auth';
 
 export const Route = createFileRoute('/equipment/')({
+  beforeLoad: requireAuth,
   component: EquipmentPage,
 });
 
 function EquipmentPage() {
-  const { data: equipment, isLoading } = useEquipment();
+  const { data: equipment, isPending } = useEquipment();
 
-  const { data: user, isLoading: isUserLoading } = useUser();
+  const { data: user, isPending: isUserPending } = useUser();
 
-  if (isLoading || isUserLoading) {
-    return <div>Loading...</div>;
+  if (isPending || isUserPending) {
+    return <EquipmentSkeleton />;
   }
   if (!equipment) {
     return <div>No equipment found</div>;
@@ -58,6 +61,7 @@ function EquipmentPage() {
             <Th>Tool / Equipment</Th>
             <Th>Date Acquired</Th>
             <Th>Cost</Th>
+            <Th>{''}</Th>
           </tr>
         </thead>
         <tbody>
@@ -68,6 +72,17 @@ function EquipmentPage() {
                 {format(e.date_acquired, 'MM/dd/yyyy')}
               </Td>
               <Td className='font-mono text-xs'>{fmt(e.cost)}</Td>
+              <Td className='w-8 text-right'>
+                {user && (
+                  <Link
+                    to='/equipment/$equipmentId/edit'
+                    params={{ equipmentId: e.id }}
+                    className='inline-flex items-center justify-center size-6 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors'
+                  >
+                    <PencilIcon className='size-3' />
+                  </Link>
+                )}
+              </Td>
             </TableRow>
           ))}
           <tr className='border-t-2 border-border'>

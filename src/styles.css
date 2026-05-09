@@ -1,4 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Mono:wght@300;400;500&family=Caveat:wght@400;600&display=swap');
+/* Self-hosted via fontsource — no external network requests */
+@import '@fontsource/playfair-display/400.css';
+@import '@fontsource/playfair-display/600.css';
+@import '@fontsource/playfair-display/700.css';
+@import '@fontsource/lora/400.css';
+@import '@fontsource/lora/400-italic.css';
+@import '@fontsource/lora/500.css';
+@import '@fontsource/lora/500-italic.css';
+@import '@fontsource/lora/600.css';
+@import '@fontsource/lora/600-italic.css';
+@import '@fontsource/dm-mono/300.css';
+@import '@fontsource/dm-mono/400.css';
+@import '@fontsource/dm-mono/500.css';
+@import '@fontsource/caveat/400.css';
+@import '@fontsource/caveat/600.css';
+
 @import 'tailwindcss';
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -150,6 +165,18 @@ code {
   background: var(--paper-bright);
   border-radius: 4px;
   padding: 2px 7px;
+}
+
+/* ── 404 Not Found ──────────────────────────────────────────────────────── */
+@keyframes hairspring-turn {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* transform-origin uses px coordinates matching the SVG viewBox — can't be a Tailwind utility */
+.hairspring-spiral {
+  transform-origin: 100px 100px;
+  animation: hairspring-turn 60s linear infinite;
 }
 
 .prose img {

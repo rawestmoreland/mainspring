@@ -95,6 +95,19 @@ func main() {
 		return e.Next()
 	})
 
+	app.OnRecordDelete("parts_used").BindFunc(func(e *core.RecordEvent) error {
+		quantityUsed := e.Record.GetInt("qty_used")
+		errs := e.App.ExpandRecord(e.Record, []string{"inventory_item"}, nil)
+
+		if len(errs) == 0 {
+			inventoryRecord := e.Record.ExpandedOne("inventory_item")
+			inventoryRecord.Set("qty", inventoryRecord.GetInt("qty")+quantityUsed)
+			e.App.Save(inventoryRecord)
+		}
+
+		return e.Next()
+	})
+
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
 	}

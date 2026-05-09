@@ -6,19 +6,22 @@ import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { useInventory } from '#/hooks/inventory';
 import { useUser } from '#/hooks/user';
 import { Button } from '#/components/ui/button';
-import { PlusIcon } from 'lucide-react';
+import { PencilIcon, PlusIcon } from 'lucide-react';
+import { InventorySkeleton } from '#/components/skeletons';
+import { requireAuth } from '#/lib/auth';
 
 export const Route = createFileRoute('/inventory/')({
+  beforeLoad: requireAuth,
   component: InventoryPage,
 });
 
 function InventoryPage() {
-  const { data: inventory, isLoading } = useInventory();
+  const { data: inventory, isPending } = useInventory();
 
-  const { data: user, isLoading: isUserLoading } = useUser();
+  const { data: user, isPending: isUserPending } = useUser();
 
-  if (isLoading || isUserLoading) {
-    return <div>Loading...</div>;
+  if (isPending || isUserPending) {
+    return <InventorySkeleton />;
   }
   if (!inventory) {
     return <div>No inventory found</div>;
@@ -60,6 +63,7 @@ function InventoryPage() {
             <Th>Qty</Th>
             <Th>Unit Cost</Th>
             <Th>Total Value</Th>
+            <Th>{''}</Th>
           </tr>
         </thead>
         <tbody>
@@ -77,6 +81,17 @@ function InventoryPage() {
               </Td>
               <Td className='font-mono text-xs'>
                 {fmt(i.qty * i.unit_cost, 2)}
+              </Td>
+              <Td className='w-8 text-right'>
+                {user && (
+                  <Link
+                    to='/inventory/$inventoryId/edit'
+                    params={{ inventoryId: i.id }}
+                    className='inline-flex items-center justify-center size-6 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors'
+                  >
+                    <PencilIcon className='size-3' />
+                  </Link>
+                )}
               </Td>
             </TableRow>
           ))}

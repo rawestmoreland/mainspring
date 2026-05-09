@@ -9,8 +9,10 @@ import { useWatches } from '#/hooks/watches';
 import { Button } from '#/components/ui/button';
 import { useUser } from '#/hooks/user';
 import { PlusIcon } from 'lucide-react';
+import { WatchesListSkeleton } from '#/components/skeletons';
+import { requireAuth } from '#/lib/auth';
 
-export const Route = createFileRoute('/watches/')({ component: WatchesPage });
+export const Route = createFileRoute('/watches/')({ beforeLoad: requireAuth, component: WatchesPage });
 
 type FilterValue = 'all' | WatchStatus;
 const FILTERS: [FilterValue, string][] = [
@@ -22,20 +24,18 @@ const FILTERS: [FilterValue, string][] = [
 ];
 
 function WatchesPage() {
-  const { data: watches, isLoading } = useWatches();
+  const { data: watches, isPending } = useWatches();
   const [filter, setFilter] = useState<FilterValue>('all');
 
-  const { data: user, isLoading: isUserLoading } = useUser();
+  const { data: user, isPending: isUserPending } = useUser();
 
-  if (isLoading || isUserLoading) {
-    return <div>Loading...</div>;
-  }
-  if (!watches) {
-    return <div>No watches found</div>;
+  if (isPending || isUserPending) {
+    return <WatchesListSkeleton />;
   }
 
+  const allWatches = watches ?? [];
   const filtered =
-    filter === 'all' ? watches : watches.filter((w) => w.status === filter);
+    filter === 'all' ? allWatches : allWatches.filter((w) => w.status === filter);
 
   return (
     <>
@@ -145,9 +145,14 @@ function WatchesPage() {
         </tbody>
       </TableWrap>
 
-      {filtered.length === 0 && (
+      {allWatches.length === 0 && (
         <div className='text-center py-12 text-muted-foreground font-mono text-xs'>
-          No watches match this filter
+          No watches yet — add your first one.
+        </div>
+      )}
+      {allWatches.length > 0 && filtered.length === 0 && (
+        <div className='text-center py-12 text-muted-foreground font-mono text-xs'>
+          No watches match this filter.
         </div>
       )}
     </>

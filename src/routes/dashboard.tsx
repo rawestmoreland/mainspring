@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { requireAuth } from '#/lib/auth';
 import { cn, fmt, fmtPct, profit, roi } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
@@ -12,34 +12,23 @@ import { useInventory } from '#/hooks/inventory';
 import { useUser } from '#/hooks/user';
 import { Button } from '#/components/ui/button';
 import { PlusIcon } from 'lucide-react';
+import { DashboardSkeleton } from '#/components/skeletons';
 
 export const Route = createFileRoute('/dashboard')({
+  beforeLoad: requireAuth,
   component: Dashboard,
 });
 
 function Dashboard() {
   const navigate = useNavigate();
 
-  useEffect(() => {
-    import('#/lib/pocketbase').then(({ default: pb }) => {
-      if (!pb.authStore.isValid) {
-        navigate({ to: '/login', replace: true });
-      }
-    });
-  }, [navigate]);
-  const { data: watches, isLoading: isWatchesLoading } = useWatches();
-  const { data: equipment, isLoading: isEquipmentLoading } = useEquipment();
-  const { data: inventory, isLoading: isInventoryLoading } = useInventory();
+  const { data: watches, isPending: isWatchesPending } = useWatches();
+  const { data: equipment, isPending: isEquipmentPending } = useEquipment();
+  const { data: inventory, isPending: isInventoryPending } = useInventory();
+  const { data: user, isPending: isUserPending } = useUser();
 
-  const { data: user, isLoading: isUserLoading } = useUser();
-
-  if (
-    isWatchesLoading ||
-    isEquipmentLoading ||
-    isInventoryLoading ||
-    isUserLoading
-  ) {
-    return <div>Loading...</div>;
+  if (isWatchesPending || isEquipmentPending || isInventoryPending || isUserPending) {
+    return <DashboardSkeleton />;
   }
 
   const sold = watches?.filter((w) => w.status === 'sold') ?? [];

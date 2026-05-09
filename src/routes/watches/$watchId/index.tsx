@@ -18,7 +18,9 @@ import { format } from 'date-fns/format';
 import { UploadZone } from '#/components/watches/UploadZone';
 import type { PendingPhoto } from '#/components/watches/UploadZone';
 import { Lightbox } from '#/components/watches/Lightbox';
-import Tiptap from '#/components/TipTap';
+import { AddPartUsedDialog } from '#/components/watches/AddPartUsedDialog';
+import TipTapEditor from '#/components/TipTap';
+import { useDeletePartUsed } from '#/hooks/parts_used';
 import { capitalize } from 'lodash';
 
 export const Route = createFileRoute('/watches/$watchId/')({
@@ -34,6 +36,7 @@ function RouteComponent() {
   const deletePhoto = useDeleteWatchPhoto(watchId);
   const uploadPhotos = useUploadWatchPhotos(watchId);
   const updateWatch = useUpdateWatch();
+  const deletePartUsed = useDeletePartUsed(watchId);
 
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [activeIdx, setActiveIdx] = useState(0);
@@ -99,6 +102,8 @@ function RouteComponent() {
       })),
     );
   };
+
+  const partsUsed = watch.expand?.parts_used_via_watch ?? [];
 
   const p = profit(watch);
   const r = roi(watch);
@@ -224,7 +229,13 @@ function RouteComponent() {
                     <div
                       onClick={(e) => {
                         e.stopPropagation();
-                        deletePhoto.mutate(ph.id);
+                        if (
+                          confirm('Are you sure you want to delete this photo?')
+                        ) {
+                          deletePhoto.mutate(ph.id);
+                        } else {
+                          return;
+                        }
                       }}
                       className='absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity cursor-pointer'
                     >
@@ -253,10 +264,19 @@ function RouteComponent() {
         <div className='flex-1 space-y-5 min-w-0'>
           {/* Financials */}
           <section className='rounded-xl border border-border bg-card overflow-hidden'>
-            <div className='px-4 py-2.5 border-b border-border'>
+            <div className='flex justify-between px-4 py-2.5 border-b border-border'>
               <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
                 Details
               </span>
+              {user && (
+                <Link
+                  to='/watches/$watchId/edit'
+                  params={{ watchId }}
+                  className='font-mono text-[10px] text-muted-foreground'
+                >
+                  Edit
+                </Link>
+              )}
             </div>
             {[
               [
@@ -315,6 +335,83 @@ function RouteComponent() {
                 </span>
               </div>
             ))}
+          </section>
+
+          {/* Parts Used */}
+          <section className='rounded-xl border border-border bg-card overflow-hidden'>
+            <div className='flex items-center justify-between px-4 py-2.5 border-b border-border'>
+              <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+                Parts Used
+              </span>
+              {user && <AddPartUsedDialog watchId={watchId} />}
+            </div>
+            {partsUsed.length === 0 ? (
+              <p className='px-4 py-3 font-mono text-xs italic text-muted-foreground/50'>
+                No parts logged yet.
+              </p>
+            ) : (
+              <>
+                <table className='w-full text-xs font-mono'>
+                  <thead>
+                    <tr className='border-b border-border bg-muted/40'>
+                      <th className='px-3.5 py-2 text-left text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>Part</th>
+                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>Qty</th>
+                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>Unit</th>
+                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>Total</th>
+                      {user && <th className='px-3.5 py-2 w-6' />}
+                    </tr>
+                  </thead>
+                  <tbody className='divide-y divide-border'>
+                    {partsUsed.map((part) => {
+                      const unitCost = part.expand?.inventory_item?.unit_cost ?? 0;
+                      const total = (part.qty_used ?? 0) * unitCost;
+                      return (
+                        <tr key={part.id} className='hover:bg-white/2 transition-colors'>
+                          <td className='px-3.5 py-2.5 text-foreground'>
+                            {part.expand?.inventory_item?.name ?? '—'}
+                          </td>
+                          <td className='px-3.5 py-2.5 text-right text-muted-foreground'>
+                            {part.qty_used}
+                          </td>
+                          <td className='px-3.5 py-2.5 text-right text-muted-foreground'>
+                            {fmt(unitCost)}
+                          </td>
+                          <td className='px-3.5 py-2.5 text-right text-foreground'>
+                            {fmt(total)}
+                          </td>
+                          {user && (
+                            <td className='px-3.5 py-2.5 text-right'>
+                              <button
+                                onClick={() => {
+                                  if (confirm('Remove this part from the log?')) {
+                                    deletePartUsed.mutate(part.id);
+                                  }
+                                }}
+                                className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
+                                aria-label='Remove part'
+                              >
+                                ×
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className='border-t border-border bg-muted/20'>
+                      <td colSpan={user ? 3 : 3} className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
+                        Total
+                      </td>
+                      <td className='px-3.5 py-2 text-right font-semibold text-foreground'>
+                        {fmt(watch.parts_cost)}
+                      </td>
+                      {user && <td />}
+                    </tr>
+                  </tfoot>
+                </table>
+              </>
+            )}
           </section>
 
           {/* Repair Log */}
@@ -411,7 +508,18 @@ function RouteComponent() {
             <div className='px-4 py-3'>
               {editingNotes ? (
                 <div className='space-y-3'>
-                  <Tiptap value={draftNotes} onChange={setDraftNotes} />
+                  <TipTapEditor
+                    value={draftNotes}
+                    onChange={setDraftNotes}
+                    toolbarConfig={{
+                      headings: [true, true, true],
+                      bold: true,
+                      italic: true,
+                      strike: true,
+                      bulletList: true,
+                      orderedList: true,
+                    }}
+                  />
                   <div className='flex gap-3'>
                     <button
                       onClick={() => {
@@ -433,7 +541,7 @@ function RouteComponent() {
                 </div>
               ) : !!watch.notes ? (
                 <div
-                  className='prose max-w-none'
+                  className='prose text-sm max-w-none'
                   dangerouslySetInnerHTML={{ __html: watch.notes }}
                 />
               ) : (

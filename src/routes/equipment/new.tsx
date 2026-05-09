@@ -16,8 +16,11 @@ import {
   FieldLabel,
 } from '#/components/ui/field';
 import { Input } from '#/components/ui/input';
+import { FormSkeleton } from '#/components/skeletons';
+import { requireAuth } from '#/lib/auth';
 
 export const Route = createFileRoute('/equipment/new')({
+  beforeLoad: requireAuth,
   component: NewEquipmentRoute,
 });
 
@@ -40,7 +43,7 @@ function NewEquipmentRoute() {
   const createEquipment = useCreateEquipment();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const { data: user, isLoading: isUserLoading } = useUser();
+  const { isPending: isUserPending } = useUser();
 
   const defaultValues = useMemo<FormData>(
     () => ({
@@ -62,12 +65,8 @@ function NewEquipmentRoute() {
     defaultValues,
   });
 
-  if (isUserLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return <div>Unauthorized</div>;
+  if (isUserPending) {
+    return <FormSkeleton />;
   }
 
   const onSubmit = async (data: FormData) => {

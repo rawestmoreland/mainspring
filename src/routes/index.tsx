@@ -3,6 +3,7 @@ import { createFileRoute, redirect, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
+import { PublicProfileSkeleton } from '#/components/skeletons';
 import type { UserProfile, Watch, RepairPost } from '#/types';
 
 export const Route = createFileRoute('/')({
@@ -28,7 +29,7 @@ function IndexPage() {
 function PublicProfile({ tenant }: { tenant: UserProfile }) {
   const pbUrl = import.meta.env.VITE_POCKETBASE_URL;
 
-  const { data: watches } = useQuery<Watch[]>({
+  const { data: watches, isLoading: watchesLoading } = useQuery<Watch[]>({
     queryKey: ['public', 'watches', tenant.user],
     queryFn: async () => {
       const res = await fetch(
@@ -39,7 +40,7 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     },
   });
 
-  const { data: posts } = useQuery<RepairPost[]>({
+  const { data: posts, isLoading: postsLoading } = useQuery<RepairPost[]>({
     queryKey: ['public', 'posts', tenant.user],
     queryFn: async () => {
       const res = await fetch(
@@ -58,6 +59,8 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     });
     return map;
   }, [posts]);
+
+  if (watchesLoading || postsLoading) return <PublicProfileSkeleton />;
 
   const initials = (tenant.display_name || tenant.subdomain || '?')
     .split(' ')

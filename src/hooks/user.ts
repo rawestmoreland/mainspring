@@ -1,13 +1,10 @@
 import { UserApi } from '#/lib/api/user';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import pb from '#/lib/pocketbase';
 
 export const useUser = () => {
-  const valid = pb.authStore.isValid;
   return useQuery({
     queryKey: ['user'],
     queryFn: () => UserApi.getUser(),
-    enabled: valid,
   });
 };
 

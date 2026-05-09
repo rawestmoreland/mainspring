@@ -77,6 +77,14 @@ export type InventoryItem = {
 
 export type CreateInventoryItem = Omit<InventoryItem, 'id'>;
 
+export type CreatePartUsed = {
+  watch: string;
+  inventory_item: string;
+  qty_used: number;
+  date_used?: string;
+  notes?: string;
+};
+
 export type Equipment = {
   id: string;
   name: string;

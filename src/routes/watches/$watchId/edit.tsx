@@ -5,9 +5,9 @@ import { useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { CreateWatch, WatchCondition, WatchStatus } from '#/types';
+import type { WatchCondition, WatchStatus } from '#/types';
 import { numberField } from '#/lib/helpers';
-import { useCreateWatch } from '#/hooks/watches';
+import { useGetWatchById, useUpdateWatch } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
 import {
   Field,
@@ -25,12 +25,9 @@ import {
 } from '#/components/ui/select';
 import { Button } from '#/components/ui/button';
 import TiptapEditor, { TiptapEditorRef } from '#/components/TipTap';
-import { FormSkeleton } from '#/components/skeletons';
-import { requireAuth } from '#/lib/auth';
 
-export const Route = createFileRoute('/watches/new')({
-  beforeLoad: requireAuth,
-  component: NewWatchRoute,
+export const Route = createFileRoute('/watches/$watchId/edit')({
+  component: EditWatchRoute,
 });
 
 const WATCH_STATUSES: readonly WatchStatus[] = [
@@ -75,32 +72,49 @@ const formSchema = z.object({
 
 type FormValues = z.input<typeof formSchema>;
 
-function NewWatchRoute() {
+function EditWatchRoute() {
+  const { watchId } = Route.useParams();
   const navigate = useNavigate();
-  const createWatch = useCreateWatch();
+  const { data: watch, isLoading: isWatchLoading } = useGetWatchById(watchId);
+  const { data: user, isLoading: isUserLoading } = useUser();
+  const updateWatch = useUpdateWatch();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const editorRef = useRef<TiptapEditorRef>(null);
 
-  const { isPending: isUserPending } = useUser();
-
-  const defaultValues = useMemo<FormValues>(
-    () => ({
-      make: '',
-      model: '',
-      reference: '',
-      year: new Date().getFullYear(),
-      status: 'in_progress',
-      condition_bought: 'good',
-      bought_price: 0,
-      parts_cost: 0,
-      hours_spent: 0,
-      bought_date: '',
-      sold_price: null,
-      sold_date: null,
-      notes: '',
-    }),
-    [],
-  );
+  const defaultValues = useMemo<FormValues>(() => {
+    if (!watch) {
+      return {
+        make: '',
+        model: '',
+        reference: '',
+        year: new Date().getFullYear(),
+        status: 'in_progress',
+        condition_bought: 'good',
+        bought_price: 0,
+        parts_cost: 0,
+        hours_spent: 0,
+        bought_date: '',
+        sold_price: null,
+        sold_date: null,
+        notes: '',
+      };
+    }
+    return {
+      make: watch.make,
+      model: watch.model,
+      reference: watch.reference ?? '',
+      year: watch.year,
+      status: watch.status,
+      condition_bought: watch.condition_bought,
+      bought_price: watch.bought_price,
+      parts_cost: watch.parts_cost,
+      hours_spent: watch.hours_spent,
+      bought_date: watch.bought_date?.slice(0, 10) ?? '',
+      sold_price: watch.sold_price,
+      sold_date: watch.sold_date?.slice(0, 10) ?? null,
+      notes: watch.notes ?? '',
+    };
+  }, [watch]);
 
   const {
     control,
@@ -111,8 +125,28 @@ function NewWatchRoute() {
     defaultValues,
   });
 
-  if (isUserPending) {
-    return <FormSkeleton />;
+  if (isWatchLoading || isUserLoading) {
+    return (
+      <div className='text-sm text-muted-foreground font-mono'>Loading…</div>
+    );
+  }
+
+  if (!watch) {
+    return (
+      <div className='space-y-3'>
+        <Link
+          to='/watches'
+          className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
+        >
+          ← Back to Watches
+        </Link>
+        <div className='text-sm text-red-400 font-mono'>Watch not found.</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <div className='text-sm text-red-400 font-mono'>Unauthorized</div>;
   }
 
   const onSubmit = handleSubmit(async (raw) => {
@@ -121,7 +155,8 @@ function NewWatchRoute() {
     const parsed = formSchema.safeParse(raw);
     if (!parsed.success) return;
 
-    const payload: CreateWatch = {
+    const payload = {
+      ...watch,
       ...parsed.data,
       reference: parsed.data.reference?.trim() ?? '',
       sold_date: parsed.data.sold_date?.trim() ? parsed.data.sold_date : null,
@@ -129,13 +164,13 @@ function NewWatchRoute() {
     };
 
     try {
-      const created = await createWatch.mutateAsync(payload);
+      await updateWatch.mutateAsync(payload);
       navigate({
         to: '/watches/$watchId',
-        params: { watchId: created.id },
+        params: { watchId },
       });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Failed to create watch.';
+      const msg = e instanceof Error ? e.message : 'Failed to save watch.';
       setSubmitError(msg);
     }
   });
@@ -144,16 +179,17 @@ function NewWatchRoute() {
     <div className='max-w-3xl'>
       <div className='mb-6'>
         <Link
-          to='/watches'
+          to='/watches/$watchId'
+          params={{ watchId }}
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Watches
+          ← Back to watch
         </Link>
         <h1 className='mt-3 text-2xl font-serif font-semibold text-foreground'>
-          Add Watch
+          Edit Watch
         </h1>
         <p className='mt-1 text-xs font-mono text-muted-foreground tracking-wide'>
-          Create a new watch record.
+          {watch.make} {watch.model}
         </p>
       </div>
 
@@ -489,8 +525,6 @@ function NewWatchRoute() {
                   toolbarConfig={{
                     headings: [true, true, true],
                     bold: true,
-                    italic: true,
-                    strike: true,
                     bulletList: true,
                     orderedList: true,
                     blockquote: true,
@@ -509,12 +543,14 @@ function NewWatchRoute() {
         <div className='flex items-center gap-2 pt-2'>
           <Button
             type='submit'
-            disabled={isSubmitting || createWatch.isPending}
+            disabled={isSubmitting || updateWatch.isPending}
           >
-            {createWatch.isPending ? 'Creating…' : 'Create watch'}
+            {updateWatch.isPending ? 'Saving…' : 'Save changes'}
           </Button>
           <Button asChild variant='outline'>
-            <Link to='/watches'>Cancel</Link>
+            <Link to='/watches/$watchId' params={{ watchId }}>
+              Cancel
+            </Link>
           </Button>
         </div>
       </form>

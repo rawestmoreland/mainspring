@@ -15,7 +15,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '#/components/ui/sidebar';
-import HSBrass from '../../../public/hairspring-mark-brass.svg';
+import HSBrass from '#/lib/assets/hairspring-mark-brass.svg';
 
 export function AppSidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });

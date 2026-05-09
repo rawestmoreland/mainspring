@@ -1,15 +1,16 @@
 'use client';
 
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { CreateInventoryItem, InventoryCategory } from '#/types';
+import type { Inventory, InventoryCategory } from '#/types';
 import { Btn } from '#/components/primitives/Button';
 import { numberField } from '#/lib/helpers';
 import { useUser } from '#/hooks/user';
-import { useCreateInventory } from '#/hooks/inventory';
+import { useGetInventoryById, useUpdateInventory } from '#/hooks/inventory';
+import type { RecordModel } from 'pocketbase';
 import {
   Field,
   FieldContent,
@@ -24,12 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '#/components/ui/select';
-import { FormSkeleton } from '#/components/skeletons';
-import { requireAuth } from '#/lib/auth';
 
-export const Route = createFileRoute('/inventory/new')({
-  beforeLoad: requireAuth,
-  component: NewInventoryRoute,
+export const Route = createFileRoute('/inventory/$inventoryId/edit')({
+  component: EditInventoryRoute,
 });
 
 const INVENTORY_CATEGORIES: readonly InventoryCategory[] = [
@@ -57,61 +55,80 @@ const formSchema = z.object({
     .max(256, 'Must be fewer than 256 characters'),
   category: z.enum(INVENTORY_CATEGORIES),
   qty: numberField({ min: 0, message: 'Quantity must be 0 or more' }),
-  unit_cost: numberField({
-    min: 0,
-    message: 'Unit cost must be 0 or more',
-  }),
+  unit_cost: numberField({ min: 0, message: 'Unit cost must be 0 or more' }),
   supplier: z.string(),
   notes: z.string(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
-function NewInventoryRoute() {
-  const navigate = useNavigate();
-  const createInventory = useCreateInventory();
-  const [submitError, setSubmitError] = useState<string | null>(null);
+function EditInventoryRoute() {
+  const { inventoryId } = Route.useParams();
+  const { data: item, isLoading: isItemLoading } = useGetInventoryById(inventoryId);
+  const { data: user, isLoading: isUserLoading } = useUser();
 
-  const { isPending: isUserPending } = useUser();
-
-  const defaultValues = useMemo<FormData>(
-    () => ({
-      name: '',
-      category: 'movement',
-      qty: 1,
-      unit_cost: 0,
-      supplier: '',
-      notes: '',
-    }),
-    [],
-  );
-
-  const {
-    control,
-    handleSubmit,
-    formState: { isSubmitting },
-  } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues,
-  });
-
-  if (isUserPending) {
-    return <FormSkeleton />;
+  if (isItemLoading || isUserLoading) {
+    return <div className='text-sm text-muted-foreground font-mono'>Loading…</div>;
   }
 
-  const onSubmit = async (data: FormData) => {
+  if (!item) {
+    return (
+      <div className='space-y-3'>
+        <Link
+          to='/inventory'
+          className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
+        >
+          ← Back to Inventory
+        </Link>
+        <div className='text-sm text-red-400 font-mono'>Item not found.</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <div className='text-sm text-red-400 font-mono'>Unauthorized</div>;
+  }
+
+  return <EditInventoryForm item={item} />;
+}
+
+function EditInventoryForm({ item }: { item: RecordModel }) {
+  const navigate = useNavigate();
+  const updateInventory = useUpdateInventory();
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const { control, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: item.name as string,
+      category: (item.category as InventoryCategory) ?? 'movement',
+      qty: item.qty as number,
+      unit_cost: item.unit_cost as number,
+      supplier: (item.supplier as string) ?? '',
+      notes: (item.notes as string) ?? '',
+    },
+  });
+
+  const onSubmit = handleSubmit(async (data) => {
     setSubmitError(null);
-
-    const payload: CreateInventoryItem = data;
-
+    const payload = {
+      id: item.id,
+      user: item['user'] as string,
+      name: data.name,
+      qty: data.qty,
+      unit_cost: data.unit_cost,
+      category: data.category,
+      supplier: data.supplier,
+      notes: data.notes,
+    } as Inventory;
     try {
-      await createInventory.mutateAsync(payload);
+      await updateInventory.mutateAsync(payload);
       navigate({ to: '/inventory' });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Failed to create item.';
+      const msg = e instanceof Error ? e.message : 'Failed to save item.';
       setSubmitError(msg);
     }
-  };
+  });
 
   return (
     <div className='max-w-3xl'>
@@ -123,10 +140,10 @@ function NewInventoryRoute() {
           ← Back to Inventory
         </Link>
         <h1 className='mt-3 text-2xl font-serif font-semibold text-foreground'>
-          Add Item
+          Edit Item
         </h1>
         <p className='mt-1 text-xs font-mono text-muted-foreground tracking-wide'>
-          Add a part to your inventory
+          {item.name as string}
         </p>
       </div>
 
@@ -139,11 +156,7 @@ function NewInventoryRoute() {
         </div>
       )}
 
-      <form
-        id='inventory-item-form'
-        onSubmit={handleSubmit(onSubmit)}
-        className='space-y-6'
-      >
+      <form onSubmit={onSubmit} className='space-y-6'>
         <section className='grid grid-cols-2 gap-4'>
           <Controller
             name='name'
@@ -154,6 +167,7 @@ function NewInventoryRoute() {
                 <Input
                   {...field}
                   id='name'
+                  autoFocus
                   aria-invalid={fieldState.invalid}
                   placeholder='Mainspring'
                   autoComplete='off'
@@ -298,9 +312,9 @@ function NewInventoryRoute() {
         <div className='flex items-center gap-2 pt-2'>
           <Btn
             type='submit'
-            disabled={isSubmitting || createInventory.isPending}
+            disabled={isSubmitting || updateInventory.isPending}
           >
-            {createInventory.isPending ? 'Creating…' : 'Create item'}
+            {updateInventory.isPending ? 'Saving…' : 'Save changes'}
           </Btn>
           <Link to='/inventory' className='inline-block'>
             <button
