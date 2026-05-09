@@ -79,7 +79,9 @@ export type Equipment = {
   id: string;
   name: string;
   cost: number;
-  date: string;
+  date_acquired: string;
+  supplier: string;
+  notes: string;
 };
 
 export type CreateEquipment = Omit<Equipment, 'id'>;

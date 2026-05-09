@@ -3,7 +3,6 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
-import { marked } from 'marked';
 import { format } from 'date-fns/format';
 import {
   useGetPostById,
@@ -271,7 +270,7 @@ function PostPage() {
           {post.body ? (
             <div
               className='prose max-w-none'
-              dangerouslySetInnerHTML={{ __html: marked(post.body) as string }}
+              dangerouslySetInnerHTML={{ __html: post.body }}
             />
           ) : (
             <p className='text-sm text-muted-foreground italic'>

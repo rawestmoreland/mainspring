@@ -2,7 +2,6 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { fmt } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
-import { Btn } from '#/components/primitives/Button';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { useEquipment } from '#/hooks/equipment';
 import { format } from 'date-fns';

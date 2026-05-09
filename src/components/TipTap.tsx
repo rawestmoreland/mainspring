@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { TextStyleKit } from '@tiptap/extension-text-style';
 import Image from '@tiptap/extension-image';
+import { TaskItem, TaskList } from '@tiptap/extension-list';
 import {
   Editor,
   EditorContent,
@@ -18,6 +19,7 @@ import {
   Heading5Icon,
   Heading6Icon,
   ItalicIcon,
+  ListCheckIcon,
   ListIcon,
   ListOrderedIcon,
   MinusIcon,
@@ -47,6 +49,7 @@ export interface ToolbarConfig {
   paragraph?: boolean;
   headings?: boolean[];
   bulletList?: boolean;
+  taskList?: boolean;
   orderedList?: boolean;
   codeBlock?: boolean;
   blockquote?: boolean;
@@ -69,8 +72,6 @@ export interface TiptapEditorProps {
   autofocus?: boolean;
   minHeight?: string;
   maxHeight?: string;
-  blog?: boolean;
-  blogImages?: { secure_url: string; public_id: string }[];
 }
 
 const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = {
@@ -83,6 +84,7 @@ const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = {
   paragraph: true,
   headings: [true, true, true, false, false, false],
   bulletList: true,
+  taskList: true,
   orderedList: true,
   codeBlock: true,
   blockquote: true,
@@ -126,6 +128,7 @@ function MenuBar({
         isOrderedList: ctx.editor.isActive('orderedList') ?? false,
         isCodeBlock: ctx.editor.isActive('codeBlock') ?? false,
         isBlockquote: ctx.editor.isActive('blockquote') ?? false,
+        isTaskList: ctx.editor.isActive('taskList') ?? false,
         canUndo: ctx.editor.can().chain().undo().run() ?? false,
         canRedo: ctx.editor.can().chain().redo().run() ?? false,
       };
@@ -312,6 +315,18 @@ function MenuBar({
             <ListOrderedIcon className='size-4' />
           </button>
         )}
+        {toolbarConfig.taskList && (
+          <button
+            type='button'
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            className={cn(
+              'rounded-md border border-gray-200 px-2 py-1 text-sm hover:bg-gray-50',
+              editorState.isTaskList && 'bg-gray-100',
+            )}
+          >
+            <ListCheckIcon className='size-4' />
+          </button>
+        )}
         {toolbarConfig.codeBlock && (
           <button
             type='button'
@@ -371,7 +386,15 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
     ref,
   ) => {
     const editor = useEditor({
-      extensions: [StarterKit, TextStyleKit, Image],
+      extensions: [
+        StarterKit,
+        TextStyleKit,
+        Image,
+        TaskList,
+        TaskItem.configure({
+          nested: true,
+        }),
+      ],
       content: value || '',
       editable: !disabled,
       autofocus,
