@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { createFileRoute, redirect, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
+import { SectionLabel } from '#/components/primitives/SectionLabel';
 import type { UserProfile, Watch, RepairPost } from '#/types';
 
 export const Route = createFileRoute('/')({
@@ -48,70 +50,173 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     },
   });
 
-  return (
-    <div className='space-y-10'>
-      <section>
-        <h2 className='font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4'>
-          Watch Projects
-        </h2>
-        {watches?.length ? (
-          <div className='grid gap-3 sm:grid-cols-2'>
-            {watches.map((w) => (
-              <div
-                key={w.id}
-                className='bg-card border border-border rounded-md px-4 py-3'
-              >
-                <div className='flex items-center justify-between gap-2'>
-                  <span className='font-medium text-sm text-foreground'>
-                    {w.make} {w.model}
-                  </span>
-                  <StatusBadge status={w.status} />
-                </div>
-                {w.reference && (
-                  <span className='font-mono text-[11px] text-muted-foreground'>
-                    {w.reference}
-                    {w.year ? ` · ${w.year}` : ''}
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className='text-sm text-muted-foreground'>No projects yet.</p>
-        )}
-      </section>
+  const postsByWatch = useMemo(() => {
+    const map: Record<string, RepairPost[]> = {};
+    (posts ?? []).forEach((p) => {
+      const key = p.watch ?? '__none__';
+      (map[key] ??= []).push(p);
+    });
+    return map;
+  }, [posts]);
 
-      <section>
-        <h2 className='font-mono text-xs uppercase tracking-widest text-muted-foreground mb-4'>
-          Repair Posts
-        </h2>
-        {posts?.length ? (
+  const initials = (tenant.display_name || tenant.subdomain || '?')
+    .split(' ')
+    .slice(0, 2)
+    .map((s) => s[0])
+    .join('')
+    .toUpperCase();
+
+  return (
+    <div className='min-h-screen'>
+      {/* Nav — mirrors the AppShell header */}
+      <header className='fixed top-0 inset-x-0 z-50 h-14 flex items-center gap-3 px-5 border-b border-border bg-background/90 backdrop-blur-md'>
+        <span className='font-serif font-bold text-foreground'>Hairspring</span>
+        <span className='text-border'>·</span>
+        <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+          {tenant.display_name || tenant.subdomain}
+        </span>
+      </header>
+
+      <div className='max-w-3xl mx-auto px-5 pt-24 pb-16'>
+        {/* Profile header */}
+        <div className='flex items-center gap-4 mb-8 pb-7 border-b border-border'>
+          <div className='w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0'>
+            <span className='font-mono text-sm font-bold text-primary'>
+              {initials}
+            </span>
+          </div>
+          <div>
+            <h1 className='font-serif text-xl font-bold text-foreground'>
+              {tenant.display_name || tenant.subdomain}
+            </h1>
+            {tenant.bio && (
+              <p className='text-sm text-muted-foreground mt-0.5 leading-relaxed'>
+                {tenant.bio}
+              </p>
+            )}
+            <div className='flex items-center gap-2 mt-1.5'>
+              <span className='font-mono text-[10px] text-muted-foreground'>
+                {watches?.length ?? 0} project{watches?.length !== 1 ? 's' : ''}
+              </span>
+              <span className='text-border'>·</span>
+              <span className='font-mono text-[10px] text-muted-foreground'>
+                {posts?.length ?? 0} repair log{posts?.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Watch projects */}
+        <div className='mb-3.5'>
+          <SectionLabel>Watch Projects</SectionLabel>
+        </div>
+
+        {!watches?.length ? (
+          <p className='text-sm text-muted-foreground'>No projects yet.</p>
+        ) : (
           <div className='space-y-3'>
-            {posts.map((p) => (
-              <div
-                key={p.id}
-                className='bg-card border border-border rounded-md px-4 py-3'
-              >
-                <div className='font-medium text-sm text-foreground'>
-                  {p.title}
-                </div>
-                {p.session_date && (
-                  <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
-                    {new Date(p.session_date).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </div>
-                )}
-              </div>
+            {watches.map((w) => (
+              <WatchProjectCard
+                key={w.id}
+                watch={w}
+                posts={postsByWatch[w.id] ?? []}
+              />
             ))}
           </div>
-        ) : (
-          <p className='text-sm text-muted-foreground'>No posts yet.</p>
         )}
-      </section>
+
+        {/* Repair posts not linked to any watch */}
+        {(postsByWatch['__none__'] ?? []).length > 0 && (
+          <div className='mt-8'>
+            <div className='mb-3.5'>
+              <SectionLabel>Other Repair Logs</SectionLabel>
+            </div>
+            <div className='bg-card border border-border rounded overflow-hidden'>
+              {postsByWatch['__none__'].map((p) => (
+                <PostRow key={p.id} post={p} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      <footer className='border-t border-border py-6'>
+        <div className='max-w-3xl mx-auto px-5'>
+          <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+            Powered by Hairspring
+          </span>
+        </div>
+      </footer>
     </div>
+  );
+}
+
+function WatchProjectCard({
+  watch: w,
+  posts,
+}: {
+  watch: Watch;
+  posts: RepairPost[];
+}) {
+  const meta = [w.reference, w.year].filter(Boolean).join(' · ');
+  return (
+    <div className='bg-card border border-border rounded overflow-hidden'>
+      {/* Watch header row */}
+      <Link
+        to='/watch/$watchId'
+        params={{ watchId: w.id }}
+        className='flex items-start justify-between gap-3 px-3.5 py-3 border-b border-border bg-muted/40 hover:bg-muted/60 transition-colors no-underline'
+      >
+        <div>
+          <div className='flex flex-wrap items-center gap-2'>
+            <span className='font-serif font-semibold text-foreground text-sm'>
+              {w.make} {w.model}
+            </span>
+            <StatusBadge status={w.status} />
+          </div>
+          {meta && (
+            <span className='font-mono text-[10px] text-muted-foreground mt-0.5 block'>
+              {meta}
+            </span>
+          )}
+        </div>
+        {posts.length > 0 && (
+          <span className='font-mono text-[10px] text-muted-foreground shrink-0 pt-0.5'>
+            {posts.length} log{posts.length !== 1 ? 's' : ''}
+          </span>
+        )}
+      </Link>
+
+      {/* Repair posts */}
+      {posts.length > 0 ? (
+        posts.map((p) => <PostRow key={p.id} post={p} />)
+      ) : (
+        <div className='px-3.5 py-2.5 text-xs text-muted-foreground italic'>
+          No repair logs yet.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PostRow({ post: p }: { post: RepairPost }) {
+  return (
+    <Link
+      to='/post/$postId'
+      params={{ postId: p.id }}
+      className='flex justify-between items-start gap-3 px-3.5 py-2.5 border-b border-border last:border-0 text-sm hover:bg-muted/40 transition-colors no-underline'
+    >
+      <span className='text-foreground'>{p.title}</span>
+      {p.session_date && (
+        <span className='font-mono text-xs text-muted-foreground shrink-0'>
+          {new Date(p.session_date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+          })}
+        </span>
+      )}
+    </Link>
   );
 }
 
@@ -159,15 +264,15 @@ const STATS = [
 
 function LandingPage() {
   return (
-    <div className='min-h-screen bg-zinc-950 text-zinc-100'>
+    <div className='min-h-screen bg-background text-foreground'>
       <style>{`
         @keyframes ms-fade-up {
           from { opacity: 0; transform: translateY(18px); }
           to   { opacity: 1; transform: translateY(0); }
         }
         @keyframes ms-ring-pulse {
-          0%, 100% { opacity: 0.04; transform: scale(1); }
-          50%       { opacity: 0.08; transform: scale(1.04); }
+          0%, 100% { opacity: 0.06; transform: scale(1); }
+          50%       { opacity: 0.14; transform: scale(1.04); }
         }
         .ms-fade-up-1 { animation: ms-fade-up 0.6s ease both 0.05s; }
         .ms-fade-up-2 { animation: ms-fade-up 0.6s ease both 0.15s; }
@@ -179,21 +284,21 @@ function LandingPage() {
       `}</style>
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <nav className='fixed top-0 inset-x-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800'>
+      <nav className='fixed top-0 inset-x-0 z-50 bg-background/90 backdrop-blur-md border-b border-border'>
         <div className='max-w-6xl mx-auto px-5 h-14 flex items-center justify-between'>
-          <span className='font-serif text-lg font-bold text-amber-400 tracking-tight'>
+          <span className='font-serif text-lg font-bold text-primary tracking-tight'>
             Hairspring
           </span>
           <div className='flex items-center gap-3'>
             <Link
               to='/login'
-              className='font-mono text-xs text-zinc-400 hover:text-zinc-100 transition-colors px-3 py-1.5'
+              className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5'
             >
               Sign in
             </Link>
             <Link
               to='/signup'
-              className='font-mono text-xs bg-amber-400 text-zinc-950 font-semibold px-4 py-1.5 rounded hover:bg-amber-300 transition-colors'
+              className='font-mono text-xs bg-primary text-primary-foreground font-semibold px-4 py-1.5 rounded hover:bg-primary/90 transition-colors'
             >
               Waitlist
             </Link>
@@ -205,23 +310,23 @@ function LandingPage() {
       <section className='relative flex flex-col items-center justify-center text-center pt-40 pb-28 px-5 overflow-hidden'>
         {/* Decorative dial rings */}
         <div className='pointer-events-none absolute inset-0 flex items-center justify-center'>
-          <div className='ms-ring-a absolute w-175 h-175 rounded-full border border-amber-400' />
-          <div className='ms-ring-b absolute w-125 h-125 rounded-full border border-amber-400' />
-          <div className='ms-ring-c absolute w-80 h-80 rounded-full border border-amber-400' />
+          <div className='ms-ring-a absolute w-175 h-175 rounded-full border border-primary' />
+          <div className='ms-ring-b absolute w-125 h-125 rounded-full border border-primary' />
+          <div className='ms-ring-c absolute w-80 h-80 rounded-full border border-primary' />
         </div>
         {/* Radial fade overlay */}
-        <div className='pointer-events-none absolute inset-0 bg-radial-[ellipse_at_center] from-transparent via-zinc-950/60 to-zinc-950' />
+        <div className='pointer-events-none absolute inset-0 bg-radial-[ellipse_at_center] from-transparent via-background/60 to-background' />
 
         <div className='relative z-10 max-w-3xl mx-auto'>
-          <p className='ms-fade-up-1 font-mono text-xs uppercase tracking-[0.2em] text-amber-400 mb-5'>
+          <p className='ms-fade-up-1 font-mono text-xs uppercase tracking-[0.2em] text-primary mb-5'>
             For the hobbyist watchmaker
           </p>
-          <h1 className='ms-fade-up-2 font-serif font-bold text-white leading-tight text-4xl sm:text-5xl lg:text-6xl mb-6'>
+          <h1 className='ms-fade-up-2 font-serif font-bold text-foreground leading-tight text-4xl sm:text-5xl lg:text-6xl mb-6'>
             Six watches in pieces.
             <br />
-            <span className='text-amber-400'>Zero spreadsheets.</span>
+            <span className='text-primary'>Zero spreadsheets.</span>
           </h1>
-          <p className='ms-fade-up-3 text-zinc-400 text-lg max-w-xl mx-auto mb-10 leading-relaxed'>
+          <p className='ms-fade-up-3 text-muted-foreground text-lg max-w-xl mx-auto mb-10 leading-relaxed'>
             Hairspring keeps track of every project on your bench — movement
             details, parts on hand, repair notes, and photos. Built for the
             people who actually love this stuff.
@@ -229,13 +334,13 @@ function LandingPage() {
           <div className='ms-fade-up-4 flex flex-col sm:flex-row items-center justify-center gap-3'>
             <Link
               to='/signup'
-              className='font-mono text-sm bg-amber-400 text-zinc-950 font-bold px-7 py-3 rounded hover:bg-amber-300 transition-colors w-full sm:w-auto text-center'
+              className='font-mono text-sm bg-primary text-primary-foreground font-bold px-7 py-3 rounded hover:bg-primary/90 transition-colors w-full sm:w-auto text-center'
             >
               Join the waitlist →
             </Link>
             <Link
               to='/login'
-              className='font-mono text-sm border border-zinc-700 text-zinc-300 px-7 py-3 rounded hover:border-zinc-500 hover:text-zinc-100 transition-colors w-full sm:w-auto text-center'
+              className='font-mono text-sm border border-border text-muted-foreground px-7 py-3 rounded hover:border-foreground/40 hover:text-foreground transition-colors w-full sm:w-auto text-center'
             >
               Sign in
             </Link>
@@ -244,14 +349,14 @@ function LandingPage() {
       </section>
 
       {/* ── Stats strip ─────────────────────────────────────────────────── */}
-      <div className='bg-zinc-900 border-y border-zinc-800'>
-        <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-zinc-800'>
+      <div className='bg-card border-y border-border'>
+        <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-border'>
           {STATS.map((s) => (
             <div key={s.label} className='flex flex-col items-center sm:px-8'>
-              <span className='font-mono text-2xl font-bold text-amber-400'>
+              <span className='font-mono text-2xl font-bold text-primary'>
                 {s.value}
               </span>
-              <span className='font-mono text-[11px] uppercase tracking-widest text-zinc-400 mt-1'>
+              <span className='font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
                 {s.label}
               </span>
             </div>
@@ -262,10 +367,10 @@ function LandingPage() {
       {/* ── Features ────────────────────────────────────────────────────── */}
       <section className='max-w-6xl mx-auto px-5 py-20'>
         <div className='mb-12 text-center'>
-          <p className='font-mono text-xs uppercase tracking-[0.2em] text-zinc-500 mb-3'>
+          <p className='font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3'>
             Everything you need
           </p>
-          <h2 className='font-serif font-bold text-white text-3xl sm:text-4xl'>
+          <h2 className='font-serif font-bold text-foreground text-3xl sm:text-4xl'>
             For the hobbyist who takes the craft seriously.
           </h2>
         </div>
@@ -274,17 +379,19 @@ function LandingPage() {
           {FEATURES.map((f) => (
             <div
               key={f.title}
-              className='bg-zinc-900 border border-zinc-800 rounded-lg p-6 group hover:border-zinc-700 transition-colors'
+              className='bg-card border border-border rounded-lg p-6 group hover:border-primary/30 transition-colors'
             >
               <div className='flex items-center gap-3 mb-3'>
-                <span className='font-mono text-lg text-amber-400 group-hover:scale-110 transition-transform inline-block'>
+                <span className='font-mono text-lg text-primary group-hover:scale-110 transition-transform inline-block'>
                   {f.symbol}
                 </span>
-                <span className='font-serif font-semibold text-white text-base'>
+                <span className='font-serif font-semibold text-foreground text-base'>
                   {f.title}
                 </span>
               </div>
-              <p className='text-zinc-400 text-sm leading-relaxed'>{f.desc}</p>
+              <p className='text-muted-foreground text-sm leading-relaxed'>
+                {f.desc}
+              </p>
             </div>
           ))}
         </div>
@@ -292,13 +399,13 @@ function LandingPage() {
 
       {/* ── Pitch quote ─────────────────────────────────────────────────── */}
       <div className='max-w-3xl mx-auto px-5 my-8'>
-        <div className='bg-zinc-900 border-l-2 border-amber-400 pl-8 pr-8 py-8'>
-          <p className='font-serif text-xl sm:text-2xl text-zinc-100 leading-relaxed italic'>
+        <div className='bg-card border-l-2 border-primary pl-8 pr-8 py-8'>
+          <p className='font-serif text-xl sm:text-2xl text-foreground leading-relaxed italic'>
             &ldquo;Built for people who&apos;d rather be at the bench than on a
             spreadsheet &mdash; and who have more movements in ziplock bags than
             they&apos;d like to admit.&rdquo;
           </p>
-          <p className='font-mono text-xs text-zinc-400 mt-5 uppercase tracking-widest'>
+          <p className='font-mono text-xs text-muted-foreground mt-5 uppercase tracking-widest'>
             &mdash; Hairspring
           </p>
         </div>
@@ -307,10 +414,10 @@ function LandingPage() {
       {/* ── How it works ────────────────────────────────────────────────── */}
       <section className='max-w-6xl mx-auto px-5 py-20'>
         <div className='mb-12 text-center'>
-          <p className='font-mono text-xs uppercase tracking-[0.2em] text-zinc-500 mb-3'>
+          <p className='font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3'>
             Simple by design
           </p>
-          <h2 className='font-serif font-bold text-white text-3xl sm:text-4xl'>
+          <h2 className='font-serif font-bold text-foreground text-3xl sm:text-4xl'>
             Three steps to a cleaner bench.
           </h2>
         </div>
@@ -334,14 +441,14 @@ function LandingPage() {
             },
           ].map((step) => (
             <div key={step.n} className='flex flex-col gap-3'>
-              <span className='font-mono text-4xl font-bold text-zinc-600 leading-none'>
+              <span className='font-mono text-4xl font-bold text-muted-foreground leading-none'>
                 {step.n}
               </span>
-              <div className='w-8 h-px bg-amber-400' />
-              <h3 className='font-serif font-semibold text-white text-lg'>
+              <div className='w-8 h-px bg-primary' />
+              <h3 className='font-serif font-semibold text-foreground text-lg'>
                 {step.title}
               </h3>
-              <p className='text-zinc-400 text-sm leading-relaxed'>
+              <p className='text-muted-foreground text-sm leading-relaxed'>
                 {step.desc}
               </p>
             </div>
@@ -351,19 +458,19 @@ function LandingPage() {
 
       {/* ── CTA block ───────────────────────────────────────────────────── */}
       <div className='px-5 my-8'>
-        <div className='bg-zinc-900 rounded-2xl p-10 sm:p-14 mx-auto max-w-2xl text-center border border-zinc-800'>
-          <p className='font-mono text-xs uppercase tracking-[0.2em] text-amber-400 mb-4'>
+        <div className='bg-card rounded-2xl p-10 sm:p-14 mx-auto max-w-2xl text-center border border-border'>
+          <p className='font-mono text-xs uppercase tracking-[0.2em] text-primary mb-4'>
             Free to start
           </p>
-          <h2 className='font-serif font-bold text-white text-3xl sm:text-4xl mb-3'>
+          <h2 className='font-serif font-bold text-foreground text-3xl sm:text-4xl mb-3'>
             Ready to bring order to the bench?
           </h2>
-          <p className='text-zinc-400 text-base mb-8'>
+          <p className='text-muted-foreground text-base mb-8'>
             Free to use. No credit card required.
           </p>
           <Link
             to='/signup'
-            className='inline-block font-mono text-sm bg-amber-400 text-zinc-950 font-bold px-10 py-3.5 rounded hover:bg-amber-300 transition-colors'
+            className='inline-block font-mono text-sm bg-primary text-primary-foreground font-bold px-10 py-3.5 rounded hover:bg-primary/90 transition-colors'
           >
             Join the waitlist →
           </Link>
@@ -371,26 +478,26 @@ function LandingPage() {
       </div>
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
-      <footer className='max-w-6xl mx-auto px-5 py-10 mt-8 border-t border-zinc-900'>
+      <footer className='max-w-6xl mx-auto px-5 py-10 mt-8 border-t border-border'>
         <div className='flex flex-col sm:flex-row items-center justify-between gap-3'>
           <div className='flex items-center gap-4'>
-            <span className='font-serif font-bold text-zinc-400 text-sm'>
+            <span className='font-serif font-bold text-muted-foreground text-sm'>
               Hairspring
             </span>
-            <span className='font-mono text-xs text-zinc-500'>
+            <span className='font-mono text-xs text-muted-foreground'>
               &copy; {new Date().getFullYear()} · Built for bench hobbyists.
             </span>
           </div>
           <div className='flex items-center gap-5'>
             <Link
               to='/login'
-              className='font-mono text-xs text-zinc-400 hover:text-zinc-200 transition-colors'
+              className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors'
             >
               Sign in
             </Link>
             <Link
               to='/signup'
-              className='font-mono text-xs text-zinc-400 hover:text-zinc-200 transition-colors'
+              className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors'
             >
               Waitlist
             </Link>

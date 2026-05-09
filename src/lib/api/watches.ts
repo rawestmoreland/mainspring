@@ -10,7 +10,7 @@ export const WatchesApi = {
     if (!userId) return [];
     const watches = await pb.collection('watches').getList<Watch>(page, limit, {
       filter: `user = "${userId}"`,
-      expand: 'watch_photos_via_watch,parts_used_via_watch',
+      expand: 'watch_photos_via_watch,parts_used_via_watch.inventory_item',
     });
     return watches.items.map((w) => ({
       ...w,
@@ -24,7 +24,7 @@ export const WatchesApi = {
         })) ?? [],
       parts_cost:
         w.expand?.parts_used_via_watch?.reduce(
-          (sum, p: PartUsed) => sum + (p.qty_used ?? 0) * (p.unit_cost ?? 0),
+          (sum, p: PartUsed) => sum + (p.qty_used ?? 0) * (p.expand?.inventory_item?.unit_cost ?? 0),
           0,
         ) ?? 0,
     }));
@@ -81,7 +81,7 @@ export const WatchesApi = {
   },
   getWatchById: async (id: string): Promise<Watch> => {
     const watch = await pb.collection('watches').getOne<Watch>(id, {
-      expand: 'watch_photos_via_watch,parts_used_via_watch',
+      expand: 'watch_photos_via_watch,parts_used_via_watch.inventory_item',
     });
     return {
       ...watch,
@@ -95,7 +95,7 @@ export const WatchesApi = {
         })) ?? [],
       parts_cost:
         watch.expand?.parts_used_via_watch?.reduce(
-          (sum, p: PartUsed) => sum + (p.qty_used ?? 0) * (p.unit_cost ?? 0),
+          (sum, p: PartUsed) => sum + (p.qty_used ?? 0) * (p.expand?.inventory_item?.unit_cost ?? 0),
           0,
         ) ?? 0,
     };

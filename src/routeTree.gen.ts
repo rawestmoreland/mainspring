@@ -18,7 +18,9 @@ import { Route as WatchesIndexRouteImport } from './routes/watches/index'
 import { Route as InventoryIndexRouteImport } from './routes/inventory/index'
 import { Route as EquipmentIndexRouteImport } from './routes/equipment/index'
 import { Route as WatchesNewRouteImport } from './routes/watches/new'
+import { Route as WatchWatchIdRouteImport } from './routes/watch/$watchId'
 import { Route as SettingsProfileRouteImport } from './routes/settings/profile'
+import { Route as PostPostIdRouteImport } from './routes/post/$postId'
 import { Route as InventoryNewRouteImport } from './routes/inventory/new'
 import { Route as EquipmentNewRouteImport } from './routes/equipment/new'
 import { Route as WatchesWatchIdIndexRouteImport } from './routes/watches/$watchId/index'
@@ -72,9 +74,19 @@ const WatchesNewRoute = WatchesNewRouteImport.update({
   path: '/watches/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WatchWatchIdRoute = WatchWatchIdRouteImport.update({
+  id: '/watch/$watchId',
+  path: '/watch/$watchId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsProfileRoute = SettingsProfileRouteImport.update({
   id: '/settings/profile',
   path: '/settings/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PostPostIdRoute = PostPostIdRouteImport.update({
+  id: '/post/$postId',
+  path: '/post/$postId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InventoryNewRoute = InventoryNewRouteImport.update({
@@ -123,7 +135,9 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/equipment/new': typeof EquipmentNewRoute
   '/inventory/new': typeof InventoryNewRoute
+  '/post/$postId': typeof PostPostIdRoute
   '/settings/profile': typeof SettingsProfileRoute
+  '/watch/$watchId': typeof WatchWatchIdRoute
   '/watches/new': typeof WatchesNewRoute
   '/equipment/': typeof EquipmentIndexRoute
   '/inventory/': typeof InventoryIndexRoute
@@ -142,7 +156,9 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/equipment/new': typeof EquipmentNewRoute
   '/inventory/new': typeof InventoryNewRoute
+  '/post/$postId': typeof PostPostIdRoute
   '/settings/profile': typeof SettingsProfileRoute
+  '/watch/$watchId': typeof WatchWatchIdRoute
   '/watches/new': typeof WatchesNewRoute
   '/equipment': typeof EquipmentIndexRoute
   '/inventory': typeof InventoryIndexRoute
@@ -162,7 +178,9 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/equipment/new': typeof EquipmentNewRoute
   '/inventory/new': typeof InventoryNewRoute
+  '/post/$postId': typeof PostPostIdRoute
   '/settings/profile': typeof SettingsProfileRoute
+  '/watch/$watchId': typeof WatchWatchIdRoute
   '/watches/new': typeof WatchesNewRoute
   '/equipment/': typeof EquipmentIndexRoute
   '/inventory/': typeof InventoryIndexRoute
@@ -183,7 +201,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/equipment/new'
     | '/inventory/new'
+    | '/post/$postId'
     | '/settings/profile'
+    | '/watch/$watchId'
     | '/watches/new'
     | '/equipment/'
     | '/inventory/'
@@ -202,7 +222,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/equipment/new'
     | '/inventory/new'
+    | '/post/$postId'
     | '/settings/profile'
+    | '/watch/$watchId'
     | '/watches/new'
     | '/equipment'
     | '/inventory'
@@ -221,7 +243,9 @@ export interface FileRouteTypes {
     | '/signup'
     | '/equipment/new'
     | '/inventory/new'
+    | '/post/$postId'
     | '/settings/profile'
+    | '/watch/$watchId'
     | '/watches/new'
     | '/equipment/'
     | '/inventory/'
@@ -241,7 +265,9 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   EquipmentNewRoute: typeof EquipmentNewRoute
   InventoryNewRoute: typeof InventoryNewRoute
+  PostPostIdRoute: typeof PostPostIdRoute
   SettingsProfileRoute: typeof SettingsProfileRoute
+  WatchWatchIdRoute: typeof WatchWatchIdRoute
   WatchesNewRoute: typeof WatchesNewRoute
   EquipmentIndexRoute: typeof EquipmentIndexRoute
   InventoryIndexRoute: typeof InventoryIndexRoute
@@ -318,11 +344,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WatchesNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/watch/$watchId': {
+      id: '/watch/$watchId'
+      path: '/watch/$watchId'
+      fullPath: '/watch/$watchId'
+      preLoaderRoute: typeof WatchWatchIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings/profile': {
       id: '/settings/profile'
       path: '/settings/profile'
       fullPath: '/settings/profile'
       preLoaderRoute: typeof SettingsProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/post/$postId': {
+      id: '/post/$postId'
+      path: '/post/$postId'
+      fullPath: '/post/$postId'
+      preLoaderRoute: typeof PostPostIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inventory/new': {
@@ -385,7 +425,9 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   EquipmentNewRoute: EquipmentNewRoute,
   InventoryNewRoute: InventoryNewRoute,
+  PostPostIdRoute: PostPostIdRoute,
   SettingsProfileRoute: SettingsProfileRoute,
+  WatchWatchIdRoute: WatchWatchIdRoute,
   WatchesNewRoute: WatchesNewRoute,
   EquipmentIndexRoute: EquipmentIndexRoute,
   InventoryIndexRoute: InventoryIndexRoute,

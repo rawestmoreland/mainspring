@@ -33,11 +33,12 @@ export type PartUsed = {
   id: string;
   watch: string;
   inventory_item?: string;
-  part_name: string;
   qty_used: number;
-  unit_cost: number;
   date_used?: string;
   notes?: string;
+  expand?: {
+    inventory_item?: InventoryItem;
+  };
 };
 
 export type Watch = {

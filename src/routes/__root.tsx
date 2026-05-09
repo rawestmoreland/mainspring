@@ -24,6 +24,14 @@ type RouterContext = { queryClient: QueryClient };
 
 const PUBLIC_PATHS = new Set(['/', '/login', '/signup']);
 
+function isPublicPath(pathname: string): boolean {
+  return (
+    PUBLIC_PATHS.has(pathname) ||
+    pathname.startsWith('/watch/') ||
+    pathname.startsWith('/post/')
+  );
+}
+
 const getHost = createIsomorphicFn()
   .client(() => window.location.host)
   .server(async () => {
@@ -44,7 +52,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     // Public subdomain routes are accessible without authentication.
     if (typeof window !== 'undefined' && tenant === null) {
       const pb = (await import('#/lib/pocketbase')).default;
-      if (!PUBLIC_PATHS.has(location.pathname) && !pb.authStore.isValid) {
+      if (!isPublicPath(location.pathname) && !pb.authStore.isValid) {
         throw redirect({ to: '/login', search: { from: location.pathname } });
       }
     }
@@ -67,28 +75,15 @@ function RootComponent() {
     tenant: UserProfile | null;
   };
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isPublicRoute = PUBLIC_PATHS.has(pathname);
+  const isPublicRoute = isPublicPath(pathname);
 
   if (tenant) {
-    // Public subdomain: render without sidebar/auth shell
+    // Public subdomain: render without sidebar/auth shell.
+    // PublicProfile owns its own layout entirely.
     return (
       <RootDocument>
         <QueryClientProvider client={queryClient}>
-          <div className='min-h-screen bg-zinc-950'>
-            <header className='border-b border-border px-6 py-5'>
-              <h1 className='font-serif text-xl font-bold text-primary'>
-                {tenant.display_name}
-              </h1>
-              {tenant.bio && (
-                <p className='text-sm text-muted-foreground mt-1'>
-                  {tenant.bio}
-                </p>
-              )}
-            </header>
-            <main className='px-6 py-7 max-w-4xl mx-auto'>
-              <Outlet />
-            </main>
-          </div>
+          <Outlet />
         </QueryClientProvider>
       </RootDocument>
     );

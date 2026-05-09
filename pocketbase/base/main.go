@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 	"regexp"
 	"slices"
@@ -78,6 +77,20 @@ func main() {
 		if err := validateSubdomain(e.Record.GetString("subdomain")); err != nil {
 			return err
 		}
+		return e.Next()
+	})
+
+	app.OnRecordCreate("parts_used").BindFunc(func(e *core.RecordEvent) error {
+		quantityUsed := e.Record.GetInt("qty_used")
+		errs := e.App.ExpandRecord(e.Record, []string{"inventory_item"}, nil)
+
+		if len(errs) == 0 {
+			inventoryRecord := e.Record.ExpandedOne("inventory_item")
+			newQty := max(0, inventoryRecord.GetInt("qty")-quantityUsed)
+			inventoryRecord.Set("qty", newQty)
+			e.App.Save(inventoryRecord)
+		}
+
 		return e.Next()
 	})
 
