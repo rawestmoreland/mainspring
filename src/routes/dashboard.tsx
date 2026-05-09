@@ -70,7 +70,7 @@ function Dashboard() {
           highlight
           label='Total Profit (sold)'
           value={fmt(totalProfit)}
-          valueClass={totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}
+          valueClass={totalProfit >= 0 ? 'text-forest' : 'text-wax'}
           sub={`net after parts · ${sold.length} watches`}
         />
         <KpiCard
@@ -81,7 +81,7 @@ function Dashboard() {
         <KpiCard
           label='Avg ROI (sold)'
           value={fmtPct(avgRoi)}
-          valueClass='text-primary'
+          valueClass='text-brass-deep'
           sub='per sold watch'
         />
         <KpiCard
@@ -164,8 +164,8 @@ function Dashboard() {
                     p === null
                       ? ''
                       : p >= 0
-                        ? 'text-green-400'
-                        : 'text-red-400',
+                        ? 'text-forest'
+                        : 'text-wax',
                   )}
                 >
                   {fmt(p)}
@@ -176,8 +176,8 @@ function Dashboard() {
                     r === null
                       ? ''
                       : parseFloat(r) >= 0
-                        ? 'text-green-400'
-                        : 'text-red-400',
+                        ? 'text-forest'
+                        : 'text-wax',
                   )}
                 >
                   {fmtPct(r)}
@@ -268,7 +268,7 @@ function Dashboard() {
             ))}
             <div className='flex justify-between items-center px-3.5 py-2.5 border-t-2 border-border text-sm'>
               <span className='font-medium text-foreground'>Total</span>
-              <span className='font-mono text-xs text-primary font-semibold'>
+              <span className='font-mono text-xs text-brass font-semibold'>
                 {fmt(equipCost)}
               </span>
             </div>
