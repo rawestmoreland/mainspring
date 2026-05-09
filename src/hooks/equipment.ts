@@ -15,8 +15,11 @@ export const useEquipment = (page: number = 1, limit: number = 100) => {
 export const useCreateEquipment = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (equipment: CreateEquipment) =>
-      EquipmentApi.createEquipment(equipment),
+    mutationFn: (equipment: CreateEquipment) => {
+      const pbUser = pb.authStore.record?.id;
+      if (!pbUser) throw new Error('Not logged in');
+      return EquipmentApi.createEquipment({ ...equipment, user: pbUser });
+    },
     onError: (error) => {
       console.error(error);
     },

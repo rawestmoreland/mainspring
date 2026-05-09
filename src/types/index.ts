@@ -79,6 +79,7 @@ export type CreateInventoryItem = Omit<InventoryItem, 'id'>;
 export type Equipment = {
   id: string;
   name: string;
+  user: string;
   cost: number;
   date_acquired: string;
   supplier: string;
