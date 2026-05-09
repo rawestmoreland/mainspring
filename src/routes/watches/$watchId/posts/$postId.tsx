@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { format } from 'date-fns/format';
 import {
   useGetPostById,
@@ -10,8 +10,10 @@ import {
   useDeletePostImage,
 } from '#/hooks/posts';
 import { useUser } from '#/hooks/user';
-import { MarkdownEditor } from '#/components/posts/MarkdownEditor';
-import { WatchPhotoPicker } from '#/components/posts/WatchPhotoPicker';
+import { useGetWatchById } from '#/hooks/watches';
+import { PostsApi } from '#/lib/api/posts';
+import TiptapEditor, { type TiptapEditorRef } from '#/components/TipTap';
+import type { WatchPhoto, WatchStage } from '#/types';
 
 export const Route = createFileRoute('/watches/$watchId/posts/$postId')({
   component: PostPage,
@@ -27,50 +29,76 @@ type FormData = z.infer<typeof schema>;
 function PostPage() {
   const { watchId, postId } = Route.useParams();
   const { data: post, isLoading } = useGetPostById(postId);
+  const { data: watch } = useGetWatchById(watchId);
   const { data: user } = useUser();
   const updatePost = useUpdatePost(watchId, postId);
   const deleteImage = useDeletePostImage(watchId, postId);
   const [editing, setEditing] = useState(false);
-  const [newImages, setNewImages] = useState<File[]>([]);
-  const [copied, setCopied] = useState<string | null>(null);
+  const [photosOpen, setPhotosOpen] = useState(false);
+  const editorRef = useRef<TiptapEditorRef>(null);
+  const pendingImagesRef = useRef<Map<string, File>>(new Map());
 
   const {
     register,
     control,
     handleSubmit,
     reset,
-    getValues,
-    setValue,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     values: post
-      ? { title: post.title, session_date: post.session_date, body: post.body }
+      ? {
+          title: post.title,
+          // Slice to YYYY-MM-DD in case PocketBase returns a full datetime string
+          session_date: post.session_date.slice(0, 10),
+          body: post.body,
+        }
       : undefined,
   });
 
+  const handleImageUpload = async (file: File): Promise<string> => {
+    const blobUrl = URL.createObjectURL(file);
+    pendingImagesRef.current.set(blobUrl, file);
+    return blobUrl;
+  };
+
   const onSubmit = async (data: FormData) => {
-    await updatePost.mutateAsync({ data, newImages });
-    setNewImages([]);
+    const pendingEntries = Array.from(pendingImagesRef.current.entries());
+    const imageFiles = pendingEntries.map(([, file]) => file);
+
+    const updatedPost = await updatePost.mutateAsync({ data, newImages: imageFiles });
+
+    // Rewrite body HTML: replace local blob URLs with real PocketBase URLs
+    if (pendingEntries.length > 0 && updatedPost.imageUrls.length > 0) {
+      let updatedBody = data.body;
+      const existingCount = updatedPost.images.length - pendingEntries.length;
+      pendingEntries.forEach(([blobUrl], i) => {
+        if (updatedPost.imageUrls[existingCount + i]) {
+          updatedBody = updatedBody
+            .split(blobUrl)
+            .join(updatedPost.imageUrls[existingCount + i]);
+        }
+      });
+      if (updatedBody !== data.body) {
+        await PostsApi.updatePost(updatedPost.id, { body: updatedBody }, []);
+      }
+    }
+
+    pendingEntries.forEach(([blobUrl]) => URL.revokeObjectURL(blobUrl));
+    pendingImagesRef.current.clear();
+
+    setPhotosOpen(false);
     setEditing(false);
   };
 
   const handleCancel = () => {
+    pendingImagesRef.current.forEach((_, blobUrl) =>
+      URL.revokeObjectURL(blobUrl),
+    );
+    pendingImagesRef.current.clear();
     reset();
-    setNewImages([]);
+    setPhotosOpen(false);
     setEditing(false);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    setNewImages((prev) => [...prev, ...files]);
-    e.target.value = '';
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(text);
-    setTimeout(() => setCopied(null), 1500);
   };
 
   if (isLoading) {
@@ -138,32 +166,7 @@ function PostPage() {
             </div>
           </div>
 
-          {/* Existing image URLs panel */}
-          {post.imageUrls.length > 0 && (
-            <div className='space-y-2 rounded-md border border-border bg-card px-4 py-3'>
-              <p className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-                Attached images — click to copy embed snippet
-              </p>
-              <ul className='space-y-1.5'>
-                {post.images.map((filename, i) => {
-                  const url = post.imageUrls[i];
-                  const snippet = `![${filename}](${url})`;
-                  return (
-                    <li key={filename}>
-                      <button
-                        type='button'
-                        onClick={() => copyToClipboard(snippet)}
-                        className='w-full text-left rounded px-2 py-1.5 bg-background border border-border text-[11px] font-mono text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors truncate'
-                      >
-                        {copied === snippet ? '✓ Copied!' : snippet}
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-
+          {/* Body */}
           <div className='space-y-1.5'>
             <label className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
               Notes
@@ -172,57 +175,33 @@ function PostPage() {
               name='body'
               control={control}
               render={({ field }) => (
-                <MarkdownEditor value={field.value} onChange={field.onChange} />
+                <TiptapEditor
+                  ref={editorRef}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onImageUpload={handleImageUpload}
+                  minHeight='200px'
+                  toolbarConfig={{
+                    headings: [true, true, true],
+                    bold: true,
+                    italic: true,
+                    strike: true,
+                    bulletList: true,
+                    orderedList: true,
+                    blockquote: true,
+                    image: true,
+                    undo: true,
+                    redo: true,
+                  }}
+                />
               )}
             />
-          </div>
-
-          {/* Watch photo picker */}
-          <WatchPhotoPicker
-            watchId={watchId}
-            onInsert={(embed) => {
-              const current = getValues('body');
-              setValue('body', current ? `${current}\n\n${embed}` : embed);
-            }}
-          />
-
-          {/* Add more images */}
-          <div className='space-y-2'>
-            <label className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-              Add More Images
-            </label>
-            <label className='inline-flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border bg-card px-4 py-2 text-xs font-mono text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors'>
-              + Add images
-              <input
-                type='file'
-                multiple
-                accept='image/*'
-                onChange={handleFileChange}
-                className='sr-only'
-              />
-            </label>
-            {newImages.length > 0 && (
-              <div className='flex flex-wrap gap-2 mt-2'>
-                {newImages.map((f, i) => (
-                  <div key={i} className='relative group'>
-                    <img
-                      src={URL.createObjectURL(f)}
-                      alt={f.name}
-                      className='h-16 w-16 rounded-md object-cover border border-border'
-                    />
-                    <button
-                      type='button'
-                      onClick={() =>
-                        setNewImages((prev) => prev.filter((_, j) => j !== i))
-                      }
-                      className='absolute -top-1 -right-1 hidden group-hover:flex items-center justify-center w-5 h-5 rounded-full bg-black/80 text-white/90 text-xs hover:text-red-400'
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <WatchPhotoPicker
+              photos={watch?.photos ?? []}
+              open={photosOpen}
+              onToggle={() => setPhotosOpen((o) => !o)}
+              onInsert={(url) => editorRef.current?.insertImage(url)}
+            />
           </div>
 
           <div className='flex gap-3'>
@@ -318,6 +297,115 @@ function PostPage() {
               </div>
             </section>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const STAGE_ORDER: WatchStage[] = ['before', 'during', 'after', 'listing'];
+const STAGE_LABELS: Record<WatchStage, string> = {
+  before: 'Before',
+  during: 'During',
+  after: 'After',
+  listing: 'Listing',
+};
+
+function WatchPhotoPicker({
+  photos,
+  open,
+  onToggle,
+  onInsert,
+}: {
+  photos: WatchPhoto[];
+  open: boolean;
+  onToggle: () => void;
+  onInsert: (url: string) => void;
+}) {
+  const [recentlyInserted, setRecentlyInserted] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const grouped = STAGE_ORDER.map((stage) => ({
+    stage,
+    photos: photos.filter((ph) => ph.stage === stage),
+  })).filter((g) => g.photos.length > 0);
+
+  const handleInsert = (ph: WatchPhoto) => {
+    onInsert(ph.image);
+    setRecentlyInserted((prev) => new Set(prev).add(ph.id));
+    setTimeout(() => {
+      setRecentlyInserted((prev) => {
+        const next = new Set(prev);
+        next.delete(ph.id);
+        return next;
+      });
+    }, 1500);
+  };
+
+  if (photos.length === 0) return null;
+
+  return (
+    <div className='mt-2 space-y-1.5'>
+      <button
+        type='button'
+        onClick={onToggle}
+        className='flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80 hover:text-foreground transition-colors'
+      >
+        <span>{open ? '▾' : '▸'}</span>
+        Insert from Watch Photos ({photos.length})
+      </button>
+      {open && (
+        <div className='rounded-md border border-border bg-card px-3 py-3 space-y-3'>
+          {grouped.map(({ stage, photos: stagePhs }) => (
+            <div key={stage}>
+              <div className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-1.5'>
+                {STAGE_LABELS[stage]}
+              </div>
+              <div className='flex flex-wrap gap-2'>
+                {stagePhs.map((ph) => {
+                  const inserted = recentlyInserted.has(ph.id);
+                  return (
+                    <button
+                      key={ph.id}
+                      type='button'
+                      onClick={() => handleInsert(ph)}
+                      title={
+                        inserted
+                          ? 'Inserted!'
+                          : (ph.caption ||
+                            `Insert ${STAGE_LABELS[ph.stage]} photo`)
+                      }
+                      className={`relative group overflow-hidden rounded border w-14 h-14 shrink-0 transition-all ${
+                        inserted
+                          ? 'border-primary ring-1 ring-primary'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <img
+                        src={`${ph.image}?thumb=200x200`}
+                        alt={ph.caption || ph.stage}
+                        className='h-full w-full object-cover'
+                        loading='lazy'
+                      />
+                      <div
+                        className={`absolute inset-0 flex items-center justify-center text-[10px] font-mono transition-opacity ${
+                          inserted
+                            ? 'bg-primary/80 text-primary-foreground opacity-100'
+                            : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
+                        }`}
+                      >
+                        {inserted ? '✓' : '+'}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          <p className='text-[10px] font-mono text-muted-foreground/60'>
+            Click a photo to insert it into the notes.
+          </p>
         </div>
       )}
     </div>

@@ -19,6 +19,7 @@ import { UploadZone } from '#/components/watches/UploadZone';
 import type { PendingPhoto } from '#/components/watches/UploadZone';
 import { Lightbox } from '#/components/watches/Lightbox';
 import Tiptap from '#/components/TipTap';
+import { capitalize } from 'lodash';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
@@ -134,15 +135,6 @@ function RouteComponent() {
               className='text-primary hover:text-primary/80 no-underline'
             >
               View Gallery →
-            </Link>
-          )}
-          {user && (
-            <Link
-              to='/watches/$watchId/posts/new'
-              params={{ watchId }}
-              className='text-primary hover:text-primary/80 no-underline'
-            >
-              + New Session
             </Link>
           )}
         </div>
@@ -267,7 +259,10 @@ function RouteComponent() {
               </span>
             </div>
             {[
-              ['Condition', watch.condition_bought?.replace('_', ' ') ?? '—'],
+              [
+                'Condition',
+                capitalize(watch.condition_bought?.replace('_', ' ')) ?? '—',
+              ],
               ['Purchase Price', fmt(watch.bought_price)],
               ['Parts Cost', fmt(watch.parts_cost)],
               [

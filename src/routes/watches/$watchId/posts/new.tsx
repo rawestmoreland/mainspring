@@ -2,9 +2,13 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useRef, useState } from 'react';
 import { useCreatePost } from '#/hooks/posts';
 import { useUser } from '#/hooks/user';
-import TiptapEditor from '#/components/TipTap';
+import { useGetWatchById } from '#/hooks/watches';
+import { PostsApi } from '#/lib/api/posts';
+import TiptapEditor, { type TiptapEditorRef } from '#/components/TipTap';
+import type { WatchPhoto, WatchStage } from '#/types';
 
 export const Route = createFileRoute('/watches/$watchId/posts/new')({
   component: NewPostPage,
@@ -20,8 +24,13 @@ type FormData = z.infer<typeof schema>;
 function NewPostPage() {
   const { watchId } = Route.useParams();
   const { data: user } = useUser();
+  const { data: watch } = useGetWatchById(watchId);
   const navigate = useNavigate();
   const createPost = useCreatePost(watchId);
+  const editorRef = useRef<TiptapEditorRef>(null);
+  const [photosOpen, setPhotosOpen] = useState(false);
+  // Maps blob URL → File for images inserted while writing
+  const pendingImagesRef = useRef<Map<string, File>>(new Map());
 
   const {
     register,
@@ -33,11 +42,37 @@ function NewPostPage() {
     defaultValues: { title: '', session_date: '', body: '' },
   });
 
+  const handleImageUpload = async (file: File): Promise<string> => {
+    const blobUrl = URL.createObjectURL(file);
+    pendingImagesRef.current.set(blobUrl, file);
+    return blobUrl;
+  };
+
   const onSubmit = async (data: FormData) => {
+    const pendingEntries = Array.from(pendingImagesRef.current.entries());
+    const imageFiles = pendingEntries.map(([, file]) => file);
+
     const post = await createPost.mutateAsync({
       data: { watch: watchId, ...data },
-      images: [],
+      images: imageFiles,
     });
+
+    // Rewrite body HTML: replace local blob URLs with real PocketBase URLs
+    if (pendingEntries.length > 0 && post.imageUrls.length > 0) {
+      let updatedBody = data.body;
+      pendingEntries.forEach(([blobUrl], i) => {
+        if (post.imageUrls[i]) {
+          updatedBody = updatedBody.split(blobUrl).join(post.imageUrls[i]);
+        }
+      });
+      if (updatedBody !== data.body) {
+        await PostsApi.updatePost(post.id, { body: updatedBody }, []);
+      }
+    }
+
+    pendingEntries.forEach(([blobUrl]) => URL.revokeObjectURL(blobUrl));
+    pendingImagesRef.current.clear();
+
     navigate({
       to: '/watches/$watchId/posts/$postId',
       params: { watchId, postId: post.id },
@@ -113,8 +148,10 @@ function NewPostPage() {
             control={control}
             render={({ field }) => (
               <TiptapEditor
+                ref={editorRef}
                 value={field.value}
                 onChange={field.onChange}
+                onImageUpload={handleImageUpload}
                 minHeight='200px'
                 toolbarConfig={{
                   headings: [true, true, true],
@@ -124,11 +161,18 @@ function NewPostPage() {
                   bulletList: true,
                   orderedList: true,
                   blockquote: true,
+                  image: true,
                   undo: true,
                   redo: true,
                 }}
               />
             )}
+          />
+          <WatchPhotoPicker
+            photos={watch?.photos ?? []}
+            open={photosOpen}
+            onToggle={() => setPhotosOpen((o) => !o)}
+            onInsert={(url) => editorRef.current?.insertImage(url)}
           />
         </div>
 
@@ -150,6 +194,110 @@ function NewPostPage() {
           </Link>
         </div>
       </form>
+    </div>
+  );
+}
+
+const STAGE_ORDER: WatchStage[] = ['before', 'during', 'after', 'listing'];
+const STAGE_LABELS: Record<WatchStage, string> = {
+  before: 'Before',
+  during: 'During',
+  after: 'After',
+  listing: 'Listing',
+};
+
+function WatchPhotoPicker({
+  photos,
+  open,
+  onToggle,
+  onInsert,
+}: {
+  photos: WatchPhoto[];
+  open: boolean;
+  onToggle: () => void;
+  onInsert: (url: string) => void;
+}) {
+  const [recentlyInserted, setRecentlyInserted] = useState<Set<string>>(
+    new Set(),
+  );
+
+  const grouped = STAGE_ORDER.map((stage) => ({
+    stage,
+    photos: photos.filter((ph) => ph.stage === stage),
+  })).filter((g) => g.photos.length > 0);
+
+  const handleInsert = (ph: WatchPhoto) => {
+    onInsert(ph.image);
+    setRecentlyInserted((prev) => new Set(prev).add(ph.id));
+    setTimeout(() => {
+      setRecentlyInserted((prev) => {
+        const next = new Set(prev);
+        next.delete(ph.id);
+        return next;
+      });
+    }, 1500);
+  };
+
+  if (photos.length === 0) return null;
+
+  return (
+    <div className='mt-2 space-y-1.5'>
+      <button
+        type='button'
+        onClick={onToggle}
+        className='flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80 hover:text-foreground transition-colors'
+      >
+        <span>{open ? '▾' : '▸'}</span>
+        Insert from Watch Photos ({photos.length})
+      </button>
+      {open && (
+        <div className='rounded-md border border-border bg-card px-3 py-3 space-y-3'>
+          {grouped.map(({ stage, photos: stagePhs }) => (
+            <div key={stage}>
+              <div className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-1.5'>
+                {STAGE_LABELS[stage]}
+              </div>
+              <div className='flex flex-wrap gap-2'>
+                {stagePhs.map((ph) => {
+                  const inserted = recentlyInserted.has(ph.id);
+                  return (
+                    <button
+                      key={ph.id}
+                      type='button'
+                      onClick={() => handleInsert(ph)}
+                      title={inserted ? 'Inserted!' : (ph.caption || `Insert ${STAGE_LABELS[ph.stage]} photo`)}
+                      className={`relative group overflow-hidden rounded border w-14 h-14 shrink-0 transition-all ${
+                        inserted
+                          ? 'border-primary ring-1 ring-primary'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <img
+                        src={`${ph.image}?thumb=200x200`}
+                        alt={ph.caption || ph.stage}
+                        className='h-full w-full object-cover'
+                        loading='lazy'
+                      />
+                      <div
+                        className={`absolute inset-0 flex items-center justify-center text-[10px] font-mono transition-opacity ${
+                          inserted
+                            ? 'bg-primary/80 text-primary-foreground opacity-100'
+                            : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
+                        }`}
+                      >
+                        {inserted ? '✓' : '+'}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          <p className='text-[10px] font-mono text-muted-foreground/60'>
+            Click a photo to insert it into the notes.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

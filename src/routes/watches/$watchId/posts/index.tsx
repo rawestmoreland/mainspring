@@ -8,8 +8,16 @@ export const Route = createFileRoute('/watches/$watchId/posts/')({
   component: RepairLogPage,
 });
 
-function stripMarkdown(text: string): string {
-  return text.replace(/[#*`_~\[\]()>!]/g, '').replace(/\n+/g, ' ').trim();
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function RepairLogPage() {
@@ -94,12 +102,13 @@ function RepairLogPage() {
                     </div>
                     {post.body && (
                       <p className='mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed'>
-                        {stripMarkdown(post.body)}
+                        {stripHtml(post.body)}
                       </p>
                     )}
                     {post.images.length > 0 && (
                       <p className='mt-1.5 text-[11px] font-mono text-muted-foreground/70'>
-                        {post.images.length} image{post.images.length !== 1 ? 's' : ''} attached
+                        {post.images.length} image
+                        {post.images.length !== 1 ? 's' : ''} attached
                       </p>
                     )}
                   </Link>

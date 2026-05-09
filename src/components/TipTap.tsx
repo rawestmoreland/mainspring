@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { FileHandler } from '@tiptap/extension-file-handler';
 import { TextStyleKit } from '@tiptap/extension-text-style';
 import Image from '@tiptap/extension-image';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
@@ -18,6 +19,7 @@ import {
   Heading4Icon,
   Heading5Icon,
   Heading6Icon,
+  ImageIcon,
   ItalicIcon,
   ListCheckIcon,
   ListIcon,
@@ -28,7 +30,7 @@ import {
   SquareCodeIcon,
   StrikethroughIcon,
 } from 'lucide-react';
-import { forwardRef, useEffect, useImperativeHandle } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 export interface TiptapEditorRef {
   getContent: () => string;
@@ -37,6 +39,7 @@ export interface TiptapEditorRef {
   focus: () => void;
   blur: () => void;
   clear: () => void;
+  insertImage: (url: string) => void;
 }
 
 export interface ToolbarConfig {
@@ -55,6 +58,7 @@ export interface ToolbarConfig {
   blockquote?: boolean;
   horizontalRule?: boolean;
   hardBreak?: boolean;
+  image?: boolean;
   undo?: boolean;
   redo?: boolean;
 }
@@ -62,6 +66,7 @@ export interface ToolbarConfig {
 export interface TiptapEditorProps {
   value?: string;
   onChange?: (content: string) => void;
+  onImageUpload?: (file: File) => Promise<string>;
   placeholder?: string;
   className?: string;
   editorClassName?: string;
@@ -90,6 +95,7 @@ const DEFAULT_TOOLBAR_CONFIG: ToolbarConfig = {
   blockquote: true,
   horizontalRule: true,
   hardBreak: true,
+  image: false,
   undo: true,
   redo: true,
 };
@@ -98,12 +104,15 @@ function MenuBar({
   editor,
   toolbarClassName,
   toolbarConfig = DEFAULT_TOOLBAR_CONFIG,
+  onImageUpload,
 }: {
   editor: Editor;
   toolbarClassName?: string;
   toolbarConfig?: ToolbarConfig;
+  onImageUpload?: (file: File) => Promise<string>;
 }) {
-  // Read the current editor's state, and re-render the component when it changes
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
   const editorState = useEditorState({
     editor,
     selector: (ctx) => {
@@ -134,6 +143,16 @@ function MenuBar({
       };
     },
   });
+
+  const handleImageFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file || !onImageUpload) return;
+    const url = await onImageUpload(file);
+    editor.chain().focus().setImage({ src: url }).run();
+    e.target.value = '';
+  };
 
   return (
     <div
@@ -362,6 +381,28 @@ function MenuBar({
             <MinusIcon className='size-4' />
           </button>
         )}
+        {toolbarConfig.image && (
+          <>
+            <input
+              ref={imageInputRef}
+              type='file'
+              accept='image/*'
+              className='hidden'
+              onChange={handleImageFileChange}
+            />
+            <button
+              type='button'
+              onClick={() => imageInputRef.current?.click()}
+              disabled={!onImageUpload}
+              className={cn(
+                'rounded-md border border-gray-200 px-2 py-1 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50',
+              )}
+              title='Insert image'
+            >
+              <ImageIcon className='size-4' />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
@@ -372,6 +413,7 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
     {
       value,
       onChange,
+      onImageUpload,
       placeholder = 'Start typing...',
       className,
       editorClassName,
@@ -385,6 +427,12 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
     },
     ref,
   ) => {
+    // Keep a stable ref so FileHandler closures always call the latest version
+    const onImageUploadRef = useRef(onImageUpload);
+    useEffect(() => {
+      onImageUploadRef.current = onImageUpload;
+    }, [onImageUpload]);
+
     const editor = useEditor({
       extensions: [
         StarterKit,
@@ -393,6 +441,40 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
         TaskList,
         TaskItem.configure({
           nested: true,
+        }),
+        FileHandler.configure({
+          allowedMimeTypes: [
+            'image/png',
+            'image/jpeg',
+            'image/gif',
+            'image/webp',
+          ],
+          onDrop: (currentEditor, files, pos) => {
+            files.forEach(async (file) => {
+              const url = await onImageUploadRef.current?.(file);
+              if (url) {
+                currentEditor
+                  .chain()
+                  .insertContentAt(pos, { type: 'image', attrs: { src: url } })
+                  .focus()
+                  .run();
+              }
+            });
+          },
+          onPaste: (currentEditor, files, htmlContent) => {
+            files.forEach(async (file) => {
+              // If pasted HTML already has content let the default paste handle it
+              if (htmlContent) return;
+              const url = await onImageUploadRef.current?.(file);
+              if (url) {
+                currentEditor
+                  .chain()
+                  .insertContent({ type: 'image', attrs: { src: url } })
+                  .focus()
+                  .run();
+              }
+            });
+          },
         }),
       ],
       content: value || '',
@@ -433,6 +515,8 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
         focus: () => editor?.commands.focus(),
         blur: () => editor?.commands.blur(),
         clear: () => editor?.commands.clearContent(),
+        insertImage: (url: string) =>
+          editor?.chain().focus().setImage({ src: url }).run(),
       }),
       [editor],
     );
@@ -453,6 +537,7 @@ const TiptapEditor = forwardRef<TiptapEditorRef, TiptapEditorProps>(
             editor={editor}
             toolbarClassName={toolbarClassName}
             toolbarConfig={toolbarConfig}
+            onImageUpload={onImageUpload}
           />
         )}
         <div
