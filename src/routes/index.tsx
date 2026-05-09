@@ -259,9 +259,9 @@ const FEATURES = [
 ] as const;
 
 const STATS = [
-  { value: '147+', label: 'watches tracked' },
-  { value: '1,200+', label: 'parts catalogued' },
-  { value: '4,200+', label: 'bench hours recorded' },
+  { value: '12+', label: 'watches tracked' },
+  { value: '80+', label: 'parts catalogued' },
+  { value: '40+', label: 'bench hours recorded' },
   { value: 'free', label: 'to start' },
 ] as const;
 
