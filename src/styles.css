@@ -60,7 +60,7 @@
   --accent-foreground:    var(--ink);
   --destructive:          var(--wax);
   --border:               var(--rule);
-  --input:                var(--paper-bright);
+  --input:                var(--rule-strong);
   --ring:                 var(--brass);
   --radius: 0.375rem;
 
@@ -100,7 +100,7 @@
   --accent-foreground:          var(--ink);
   --destructive:                var(--wax);
   --border:                     var(--rule);
-  --input:                      var(--paper-bright);
+  --input:                      var(--rule-strong);
   --ring:                       var(--brass);
   --sidebar:                    var(--paper-warm);
   --sidebar-foreground:         var(--ink);
