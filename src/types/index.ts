@@ -8,6 +8,7 @@ export type WatchStatus =
 export type WatchCondition = 'worn' | 'parts_only' | 'good' | 'fair' | 'poor';
 export type InventoryCategory =
   | 'movement'
+  | 'mainspring'
   | 'crystal'
   | 'strap'
   | 'bracelet'

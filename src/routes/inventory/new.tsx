@@ -31,6 +31,7 @@ export const Route = createFileRoute('/inventory/new')({
 
 const INVENTORY_CATEGORIES: readonly InventoryCategory[] = [
   'movement',
+  'mainspring',
   'crystal',
   'strap',
   'bracelet',
@@ -139,7 +140,11 @@ function NewInventoryRoute() {
         </div>
       )}
 
-      <form id='inventory-item-form' onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+      <form
+        id='inventory-item-form'
+        onSubmit={handleSubmit(onSubmit)}
+        className='space-y-6'
+      >
         <section className='grid grid-cols-2 gap-4'>
           <Controller
             name='name'
@@ -165,10 +170,7 @@ function NewInventoryRoute() {
             name='category'
             control={control}
             render={({ fieldState, field }) => (
-              <Field
-                orientation='responsive'
-                data-invalid={fieldState.invalid}
-              >
+              <Field orientation='responsive' data-invalid={fieldState.invalid}>
                 <FieldContent>
                   <FieldLabel htmlFor='category'>Category</FieldLabel>
                   {fieldState.invalid && (
