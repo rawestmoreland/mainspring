@@ -5,7 +5,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { CreateWatch, WatchCondition, WatchStatus } from '#/types';
+import type { WatchCondition, WatchStatus } from '#/types';
 import { numberField } from '#/lib/helpers';
 import { useCreateWatch } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
@@ -26,10 +26,8 @@ import {
 import { Button } from '#/components/ui/button';
 import TiptapEditor, { TiptapEditorRef } from '#/components/TipTap';
 import { FormSkeleton } from '#/components/skeletons';
-import { requireAuth } from '#/lib/auth';
 
 export const Route = createFileRoute('/watches/new')({
-  beforeLoad: requireAuth,
   component: NewWatchRoute,
 });
 
@@ -64,16 +62,12 @@ const formSchema = z.object({
   parts_cost: numberField({ min: 0, message: 'Parts cost must be 0 or more' }),
   hours_spent: numberField({ min: 0, message: 'Hours must be 0 or more' }),
   bought_date: z.string().trim().min(1, 'Bought date is required'),
-  sold_price: z.preprocess((v) => {
-    if (v === '' || v === null || typeof v === 'undefined') return null;
-    const n = typeof v === 'number' ? v : Number(v);
-    return Number.isNaN(n) ? NaN : n;
-  }, z.number().min(0).nullable()),
+  sold_price: z.number().min(0).nullable(),
   sold_date: z.string().trim().nullable(),
   notes: z.string(),
 });
 
-type FormValues = z.input<typeof formSchema>;
+type FormData = z.infer<typeof formSchema>;
 
 function NewWatchRoute() {
   const navigate = useNavigate();
@@ -81,9 +75,9 @@ function NewWatchRoute() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const editorRef = useRef<TiptapEditorRef>(null);
 
-  const { isPending: isUserPending } = useUser();
+  const { data: user, isPending: isUserPending } = useUser();
 
-  const defaultValues = useMemo<FormValues>(
+  const defaultValues = useMemo<FormData>(
     () => ({
       make: '',
       model: '',
@@ -106,7 +100,7 @@ function NewWatchRoute() {
     control,
     handleSubmit,
     formState: { isSubmitting },
-  } = useForm<FormValues>({
+  } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues,
   });
@@ -115,21 +109,15 @@ function NewWatchRoute() {
     return <FormSkeleton />;
   }
 
-  const onSubmit = handleSubmit(async (raw) => {
+  const onSubmit = async (data: FormData) => {
     setSubmitError(null);
 
-    const parsed = formSchema.safeParse(raw);
-    if (!parsed.success) return;
-
-    const payload: CreateWatch = {
-      ...parsed.data,
-      reference: parsed.data.reference?.trim() ?? '',
-      sold_date: parsed.data.sold_date?.trim() ? parsed.data.sold_date : null,
-      notes: parsed.data.notes ?? '',
-    };
+    if (!user) return;
 
     try {
-      const created = await createWatch.mutateAsync(payload);
+      const created = await createWatch.mutateAsync({
+        watch: { ...data, user: user.id, reference: data.reference ?? '' },
+      });
       navigate({
         to: '/watches/$watchId',
         params: { watchId: created.id },
@@ -138,7 +126,7 @@ function NewWatchRoute() {
       const msg = e instanceof Error ? e.message : 'Failed to create watch.';
       setSubmitError(msg);
     }
-  });
+  };
 
   return (
     <div className='max-w-3xl'>
@@ -166,7 +154,11 @@ function NewWatchRoute() {
         </div>
       )}
 
-      <form onSubmit={onSubmit} className='space-y-6'>
+      <form
+        id='watch-form'
+        onSubmit={handleSubmit(onSubmit)}
+        className='space-y-6'
+      >
         <section className='grid grid-cols-2 gap-4'>
           <Controller
             name='make'

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useLogin } from '#/hooks/user';
+import { useLogin, useOauth2Login } from '#/hooks/user';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
@@ -39,6 +39,11 @@ function LoginPage() {
   const navigate = useNavigate();
   const { from } = Route.useSearch();
   const { mutateAsync: login, isPending, error } = useLogin();
+  const {
+    mutateAsync: oauthLogin,
+    isPending: oauthPending,
+    error: oauthError,
+  } = useOauth2Login();
   const [resetOpen, setResetOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -50,6 +55,15 @@ function LoginPage() {
   const onSubmit = async (data: FormData) => {
     await login(data);
     navigate({ to: from ?? '/', replace: true });
+  };
+
+  const onOauthSubmit = async (provider: 'google') => {
+    try {
+      await oauthLogin({ provider });
+      navigate({ to: from ?? '/', replace: true });
+    } catch {
+      toast.error('Google sign-in failed. Please try again.');
+    }
   };
 
   return (
@@ -65,6 +79,9 @@ function LoginPage() {
         </div>
 
         <div className='bg-card border border-border rounded-xl shadow-sm p-6'>
+          <Button onClick={() => onOauthSubmit('google')}>
+            Sign in with Google
+          </Button>
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
             <FieldGroup>
               <Controller

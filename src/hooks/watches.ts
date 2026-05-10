@@ -12,7 +12,8 @@ export const useWatches = () => {
 export const useCreateWatch = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (watch: CreateWatch) => WatchesApi.createWatch(watch),
+    mutationFn: ({ watch }: { watch: CreateWatch }) =>
+      WatchesApi.createWatch(watch),
     onError: (error) => {
       console.error(error);
     },

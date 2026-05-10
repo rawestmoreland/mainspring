@@ -1,5 +1,5 @@
+import { useEffect } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { requireAuth } from '#/lib/auth';
 import { cn, fmt, fmtPct, profit, roi } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
@@ -15,19 +15,31 @@ import { PlusIcon } from 'lucide-react';
 import { DashboardSkeleton } from '#/components/skeletons';
 
 export const Route = createFileRoute('/dashboard')({
-  beforeLoad: requireAuth,
   component: Dashboard,
 });
 
 function Dashboard() {
   const navigate = useNavigate();
 
+  useEffect(() => {
+    import('#/lib/pocketbase').then(({ default: pb }) => {
+      if (!pb.authStore.isValid) {
+        navigate({ to: '/login', replace: true });
+      }
+    });
+  }, [navigate]);
+
   const { data: watches, isPending: isWatchesPending } = useWatches();
   const { data: equipment, isPending: isEquipmentPending } = useEquipment();
   const { data: inventory, isPending: isInventoryPending } = useInventory();
   const { data: user, isPending: isUserPending } = useUser();
 
-  if (isWatchesPending || isEquipmentPending || isInventoryPending || isUserPending) {
+  if (
+    isWatchesPending ||
+    isEquipmentPending ||
+    isInventoryPending ||
+    isUserPending
+  ) {
     return <DashboardSkeleton />;
   }
 
@@ -83,7 +95,7 @@ function Dashboard() {
       {/* Watch ledger */}
       <div className='flex items-center justify-between mb-3.5'>
         <SectionLabel>Watch Ledger</SectionLabel>
-        {user && (
+        {user && !!watches?.length && (
           <Button variant='outline' asChild>
             <Link to='/watches/new'>
               <PlusIcon className='size-3' />
@@ -107,76 +119,89 @@ function Dashboard() {
           </tr>
         </thead>
         <tbody>
-          {watches?.map((w) => {
-            const p = profit(w);
-            const r = roi(w);
-            return (
-              <TableRow
-                key={w.id}
-                onClick={() =>
-                  navigate({
-                    to: '/watches/$watchId',
-                    params: { watchId: w.id },
-                  })
-                }
+          {watches?.length ? (
+            watches?.map((w) => {
+              const p = profit(w);
+              const r = roi(w);
+              return (
+                <TableRow
+                  key={w.id}
+                  onClick={() =>
+                    navigate({
+                      to: '/watches/$watchId',
+                      params: { watchId: w.id },
+                    })
+                  }
+                >
+                  <Td className='hidden sm:table-cell'>
+                    <ThumbStrip
+                      photos={w.photos}
+                      onClick={() =>
+                        navigate({
+                          to: '/watches/$watchId',
+                          params: { watchId: w.id },
+                        })
+                      }
+                    />
+                  </Td>
+                  <Td>
+                    <div className='font-medium text-foreground'>
+                      {w.make} {w.model}
+                    </div>
+                    <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
+                      {w.reference} · {w.year}
+                    </div>
+                  </Td>
+                  <Td>
+                    <StatusBadge status={w.status} />
+                  </Td>
+                  <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
+                  <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
+                    {fmt(w.parts_cost)}
+                  </Td>
+                  <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
+                  <Td
+                    className={cn(
+                      'font-mono text-xs',
+                      p === null ? '' : p >= 0 ? 'text-forest' : 'text-wax',
+                    )}
+                  >
+                    {fmt(p)}
+                  </Td>
+                  <Td
+                    className={cn(
+                      'font-mono text-xs',
+                      r === null
+                        ? ''
+                        : parseFloat(r) >= 0
+                          ? 'text-forest'
+                          : 'text-wax',
+                    )}
+                  >
+                    {fmtPct(r)}
+                  </Td>
+                  <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
+                    {w.hours_spent}h
+                  </Td>
+                </TableRow>
+              );
+            })
+          ) : (
+            <tr>
+              <td
+                colSpan={9}
+                className='py-10 text-center text-sm text-muted-foreground'
               >
-                <Td className='hidden sm:table-cell'>
-                  <ThumbStrip
-                    photos={w.photos}
-                    onClick={() =>
-                      navigate({
-                        to: '/watches/$watchId',
-                        params: { watchId: w.id },
-                      })
-                    }
-                  />
-                </Td>
-                <Td>
-                  <div className='font-medium text-foreground'>
-                    {w.make} {w.model}
-                  </div>
-                  <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
-                    {w.reference} · {w.year}
-                  </div>
-                </Td>
-                <Td>
-                  <StatusBadge status={w.status} />
-                </Td>
-                <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
-                <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
-                  {fmt(w.parts_cost)}
-                </Td>
-                <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
-                <Td
-                  className={cn(
-                    'font-mono text-xs',
-                    p === null
-                      ? ''
-                      : p >= 0
-                        ? 'text-forest'
-                        : 'text-wax',
-                  )}
+                No watches yet.{' '}
+                <Link
+                  to='/watches/new'
+                  className='text-foreground underline underline-offset-2'
                 >
-                  {fmt(p)}
-                </Td>
-                <Td
-                  className={cn(
-                    'font-mono text-xs',
-                    r === null
-                      ? ''
-                      : parseFloat(r) >= 0
-                        ? 'text-forest'
-                        : 'text-wax',
-                  )}
-                >
-                  {fmtPct(r)}
-                </Td>
-                <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
-                  {w.hours_spent}h
-                </Td>
-              </TableRow>
-            );
-          })}
+                  Add your first watch
+                </Link>
+              </td>
+            </tr>
+          )}
         </tbody>
       </TableWrap>
 
@@ -190,7 +215,7 @@ function Dashboard() {
               <span className='font-mono text-[10px] text-muted-foreground'>
                 {fmt(inventoryValue)} value
               </span>
-              {user && (
+              {user && !!inventory?.length && (
                 <Button variant='outline' asChild>
                   <Link to='/inventory/new'>
                     <PlusIcon className='size-3' />
@@ -210,22 +235,39 @@ function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {inventory?.map((i) => (
-                <TableRow key={i.id}>
-                  <Td className='text-xs'>{i.name}</Td>
-                  <Td>
-                    <span className='font-mono text-[9px] uppercase tracking-widest text-muted-foreground px-1.5 py-0.5 border border-border rounded'>
-                      {i.category}
-                    </span>
-                  </Td>
-                  <Td className='font-mono text-xs text-muted-foreground'>
-                    {i.qty}
-                  </Td>
-                  <Td className='font-mono text-xs'>
-                    {fmt(i.qty * i.unit_cost)}
-                  </Td>
-                </TableRow>
-              ))}
+              {inventory?.length ? (
+                inventory?.map((i) => (
+                  <TableRow key={i.id}>
+                    <Td className='text-xs'>{i.name}</Td>
+                    <Td>
+                      <span className='font-mono text-[9px] uppercase tracking-widest text-muted-foreground px-1.5 py-0.5 border border-border rounded'>
+                        {i.category}
+                      </span>
+                    </Td>
+                    <Td className='font-mono text-xs text-muted-foreground'>
+                      {i.qty}
+                    </Td>
+                    <Td className='font-mono text-xs'>
+                      {fmt(i.qty * i.unit_cost)}
+                    </Td>
+                  </TableRow>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={9}
+                    className='py-10 text-center text-sm text-muted-foreground'
+                  >
+                    No inventory yet.{' '}
+                    <Link
+                      to='/inventory/new'
+                      className='text-foreground underline underline-offset-2'
+                    >
+                      Add your first item
+                    </Link>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </TableWrap>
         </div>
@@ -234,7 +276,7 @@ function Dashboard() {
         <div>
           <div className='flex items-center justify-between mb-3.5'>
             <SectionLabel>Tools &amp; Equipment</SectionLabel>
-            {user && (
+            {user && !!equipment?.length && (
               <Button variant='outline' asChild>
                 <Link to='/equipment/new'>
                   <PlusIcon className='size-3' />
@@ -243,25 +285,49 @@ function Dashboard() {
               </Button>
             )}
           </div>
-          <div className='bg-card border border-border rounded overflow-hidden'>
-            {equipment?.map((e) => (
-              <div
-                key={e.id}
-                className='flex justify-between items-center px-3.5 py-2.5 border-b border-border last:border-0 text-sm'
-              >
-                <span className='text-foreground'>{e.name}</span>
-                <span className='font-mono text-xs text-muted-foreground'>
-                  {fmt(e.cost)}
-                </span>
-              </div>
-            ))}
-            <div className='flex justify-between items-center px-3.5 py-2.5 border-t-2 border-border text-sm'>
-              <span className='font-medium text-foreground'>Total</span>
-              <span className='font-mono text-xs text-brass font-semibold'>
-                {fmt(equipCost)}
-              </span>
-            </div>
-          </div>
+          <TableWrap>
+            <thead>
+              <tr>
+                <Th>Name</Th>
+                <Th>Cost</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {equipment?.length ? (
+                equipment?.map((e) => (
+                  <TableRow key={e.id}>
+                    <Td className='text-xs'>{e.name}</Td>
+                    <Td className='font-mono text-xs'>{fmt(e.cost)}</Td>
+                  </TableRow>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={2}
+                    className='py-10 text-center text-sm text-muted-foreground'
+                  >
+                    No tools yet.{' '}
+                    <Link
+                      to='/equipment/new'
+                      className='text-foreground underline underline-offset-2'
+                    >
+                      Add your first item
+                    </Link>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+            {!!equipCost && (
+              <tfoot>
+                <tr className='border-t-2 border-border'>
+                  <Td className='font-medium text-foreground text-xs'>Total</Td>
+                  <Td className='font-mono text-xs text-brass font-semibold'>
+                    {fmt(equipCost)}
+                  </Td>
+                </tr>
+              </tfoot>
+            )}
+          </TableWrap>
         </div>
       </div>
     </>

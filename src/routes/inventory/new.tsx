@@ -25,10 +25,8 @@ import {
   SelectValue,
 } from '#/components/ui/select';
 import { FormSkeleton } from '#/components/skeletons';
-import { requireAuth } from '#/lib/auth';
 
 export const Route = createFileRoute('/inventory/new')({
-  beforeLoad: requireAuth,
   component: NewInventoryRoute,
 });
 
@@ -72,7 +70,7 @@ function NewInventoryRoute() {
   const createInventory = useCreateInventory();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const { isPending: isUserPending } = useUser();
+  const { data: user, isPending: isUserPending } = useUser();
 
   const defaultValues = useMemo<FormData>(
     () => ({
@@ -102,10 +100,12 @@ function NewInventoryRoute() {
   const onSubmit = async (data: FormData) => {
     setSubmitError(null);
 
-    const payload: CreateInventoryItem = data;
+    if (!user) return;
 
     try {
-      await createInventory.mutateAsync(payload);
+      await createInventory.mutateAsync({
+        inventory: { ...data, user: user.id },
+      });
       navigate({ to: '/inventory' });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to create item.';

@@ -1,5 +1,4 @@
 import { InventoryApi } from '#/lib/api/inventory';
-import pb from '#/lib/pocketbase';
 import type { CreateInventoryItem, Inventory } from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -13,10 +12,8 @@ export const useInventory = () => {
 export const useCreateInventory = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (inventory: CreateInventoryItem) => {
-      const pbUser = pb.authStore.record?.id;
-      if (!pbUser) throw new Error('Not logged in');
-      return InventoryApi.createInventory({ ...inventory, user: pbUser });
+    mutationFn: ({ inventory }: { inventory: CreateInventoryItem }) => {
+      return InventoryApi.createInventory(inventory);
     },
     onError: (error) => {
       console.error(error);

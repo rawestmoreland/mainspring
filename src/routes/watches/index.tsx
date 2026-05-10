@@ -10,9 +10,10 @@ import { Button } from '#/components/ui/button';
 import { useUser } from '#/hooks/user';
 import { PlusIcon } from 'lucide-react';
 import { WatchesListSkeleton } from '#/components/skeletons';
-import { requireAuth } from '#/lib/auth';
 
-export const Route = createFileRoute('/watches/')({ beforeLoad: requireAuth, component: WatchesPage });
+export const Route = createFileRoute('/watches/')({
+  component: WatchesPage,
+});
 
 type FilterValue = 'all' | WatchStatus;
 const FILTERS: [FilterValue, string][] = [
@@ -35,7 +36,9 @@ function WatchesPage() {
 
   const allWatches = watches ?? [];
   const filtered =
-    filter === 'all' ? allWatches : allWatches.filter((w) => w.status === filter);
+    filter === 'all'
+      ? allWatches
+      : allWatches.filter((w) => w.status === filter);
 
   return (
     <>

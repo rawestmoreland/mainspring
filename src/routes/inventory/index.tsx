@@ -8,10 +8,8 @@ import { useUser } from '#/hooks/user';
 import { Button } from '#/components/ui/button';
 import { PencilIcon, PlusIcon } from 'lucide-react';
 import { InventorySkeleton } from '#/components/skeletons';
-import { requireAuth } from '#/lib/auth';
 
 export const Route = createFileRoute('/inventory/')({
-  beforeLoad: requireAuth,
   component: InventoryPage,
 });
 

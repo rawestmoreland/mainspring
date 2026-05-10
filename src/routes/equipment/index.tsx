@@ -9,10 +9,8 @@ import { useUser } from '#/hooks/user';
 import { Button } from '#/components/ui/button';
 import { PencilIcon, PlusIcon } from 'lucide-react';
 import { EquipmentSkeleton } from '#/components/skeletons';
-import { requireAuth } from '#/lib/auth';
 
 export const Route = createFileRoute('/equipment/')({
-  beforeLoad: requireAuth,
   component: EquipmentPage,
 });
 

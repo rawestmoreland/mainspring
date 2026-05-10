@@ -26,7 +26,13 @@ import loraUrl from '@fontsource/lora/files/lora-latin-400-normal.woff2?url';
 
 type RouterContext = { queryClient: QueryClient };
 
-const PUBLIC_PATHS = new Set(['/', '/login', '/signup', '/privacy-policy', '/terms-of-service']);
+const PUBLIC_PATHS = new Set([
+  '/',
+  '/login',
+  '/signup',
+  '/privacy-policy',
+  '/terms-of-service',
+]);
 
 function isPublicPath(pathname: string): boolean {
   return (
@@ -86,20 +92,39 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { title: 'Hairspring' },
     ],
     links: [
-      { rel: 'preload', as: 'font', type: 'font/woff2', href: dmMonoUrl, crossOrigin: 'anonymous' },
-      { rel: 'preload', as: 'font', type: 'font/woff2', href: playfairUrl, crossOrigin: 'anonymous' },
-      { rel: 'preload', as: 'font', type: 'font/woff2', href: loraUrl, crossOrigin: 'anonymous' },
+      {
+        rel: 'preload',
+        as: 'font',
+        type: 'font/woff2',
+        href: dmMonoUrl,
+        crossOrigin: 'anonymous',
+      },
+      {
+        rel: 'preload',
+        as: 'font',
+        type: 'font/woff2',
+        href: playfairUrl,
+        crossOrigin: 'anonymous',
+      },
+      {
+        rel: 'preload',
+        as: 'font',
+        type: 'font/woff2',
+        href: loraUrl,
+        crossOrigin: 'anonymous',
+      },
     ],
   }),
   component: RootComponent,
 });
 
 function RootComponent() {
-  const { queryClient, tenant, subdomainNotFound } = Route.useRouteContext() as {
-    queryClient: QueryClient;
-    tenant: UserProfile | null;
-    subdomainNotFound: boolean;
-  };
+  const { queryClient, tenant, subdomainNotFound } =
+    Route.useRouteContext() as {
+      queryClient: QueryClient;
+      tenant: UserProfile | null;
+      subdomainNotFound: boolean;
+    };
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isPublicRoute = isPublicPath(pathname);
 

@@ -5,22 +5,15 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { CreateEquipment } from '#/types';
 import { Btn } from '#/components/primitives/Button';
 import { numberField } from '#/lib/helpers';
 import { useUser } from '#/hooks/user';
 import { useCreateEquipment } from '#/hooks/equipment';
-import {
-  Field,
-  FieldError,
-  FieldLabel,
-} from '#/components/ui/field';
+import { Field, FieldError, FieldLabel } from '#/components/ui/field';
 import { Input } from '#/components/ui/input';
 import { FormSkeleton } from '#/components/skeletons';
-import { requireAuth } from '#/lib/auth';
 
 export const Route = createFileRoute('/equipment/new')({
-  beforeLoad: requireAuth,
   component: NewEquipmentRoute,
 });
 
@@ -43,7 +36,7 @@ function NewEquipmentRoute() {
   const createEquipment = useCreateEquipment();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const { isPending: isUserPending } = useUser();
+  const { data: user, isPending: isUserPending } = useUser();
 
   const defaultValues = useMemo<FormData>(
     () => ({
@@ -72,10 +65,12 @@ function NewEquipmentRoute() {
   const onSubmit = async (data: FormData) => {
     setSubmitError(null);
 
-    const payload: CreateEquipment = data;
+    if (!user) return;
 
     try {
-      await createEquipment.mutateAsync(payload);
+      await createEquipment.mutateAsync({
+        equipment: { ...data, user: user.id },
+      });
       navigate({ to: '/equipment' });
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to create item.';
@@ -109,7 +104,11 @@ function NewEquipmentRoute() {
         </div>
       )}
 
-      <form id='equipment-form' onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
+      <form
+        id='equipment-form'
+        onSubmit={handleSubmit(onSubmit)}
+        className='space-y-6'
+      >
         <section className='grid grid-cols-2 gap-4'>
           <Controller
             name='name'

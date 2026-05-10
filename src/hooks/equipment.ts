@@ -1,7 +1,6 @@
 import { EquipmentApi } from '#/lib/api/equipment';
 import type { CreateEquipment, Equipment } from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import pb from '#/lib/pocketbase';
 
 export const useEquipment = (page: number = 1, limit: number = 100) => {
   return useQuery({
@@ -13,10 +12,8 @@ export const useEquipment = (page: number = 1, limit: number = 100) => {
 export const useCreateEquipment = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (equipment: CreateEquipment) => {
-      const pbUser = pb.authStore.record?.id;
-      if (!pbUser) throw new Error('Not logged in');
-      return EquipmentApi.createEquipment({ ...equipment, user: pbUser });
+    mutationFn: ({ equipment }: { equipment: CreateEquipment }) => {
+      return EquipmentApi.createEquipment(equipment);
     },
     onError: (error) => {
       console.error(error);

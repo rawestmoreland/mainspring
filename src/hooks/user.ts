@@ -23,6 +23,20 @@ export const useLogin = () => {
   });
 };
 
+export const useOauth2Login = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ provider }: { provider: 'google' }) => {
+      console.log(provider);
+      return UserApi.oauthLogin(provider);
+    },
+    onError: (error) => console.error(error),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+};
+
 export const useLogout = () => {
   const queryClient = useQueryClient();
   return useMutation({

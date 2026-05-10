@@ -9,6 +9,11 @@ export const UserApi = {
     const user = await pb.collection('users').authWithPassword(email, password);
     return user;
   },
+  oauthLogin: async (provider: 'google') => {
+    pb.authStore.clear();
+    const user = await pb.collection('users').authWithOAuth2({ provider });
+    return user;
+  },
   signup: async (email: string, password: string, displayName: string) => {
     await pb
       .collection('users')

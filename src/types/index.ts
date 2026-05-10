@@ -44,6 +44,7 @@ export type PartUsed = {
 
 export type Watch = {
   id: string;
+  user: string;
   make: string;
   model: string;
   reference: string;
@@ -69,6 +70,7 @@ export type CreateWatch = Omit<Watch, 'id' | 'photos'>;
 export type InventoryItem = {
   id: string;
   name: string;
+  user: string;
   qty: number;
   unit_cost: number;
   category: InventoryCategory;
