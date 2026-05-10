@@ -5,6 +5,7 @@ import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
 import { PublicProfileSkeleton } from '#/components/skeletons';
 import type { UserProfile, Watch, RepairPost } from '#/types';
+import { Skeleton } from '#/components/ui/skeleton';
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
@@ -362,44 +363,55 @@ function LandingPage() {
       </section>
 
       {/* ── Stats strip ─────────────────────────────────────────────────── */}
-      {!!landingData && !isPending && (
-        <div className='bg-card border-y border-border'>
-          <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-border'>
-            <div className='flex flex-col items-center sm:px-8'>
+
+      <div className='bg-card border-y border-border'>
+        <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-border'>
+          <div className='flex flex-col items-center justify-center sm:px-8'>
+            {!landingData || isPending ? (
+              <Skeleton className='size-10 rounded-full' />
+            ) : (
               <span className='font-mono text-2xl font-bold text-primary'>
-                {landingData.watch_count}+
+                {landingData?.watch_count}+
               </span>
-              <span className='font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
-                Watches Tracked
-              </span>
-            </div>
-            <div className='flex flex-col items-center sm:px-8'>
+            )}
+            <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+              Watches Tracked
+            </span>
+          </div>
+          <div className='flex flex-col items-center justify-center sm:px-8'>
+            {!landingData || isPending ? (
+              <Skeleton className='size-10 rounded-full' />
+            ) : (
               <span className='font-mono text-2xl font-bold text-primary'>
-                {landingData.equipment_count}+
+                {landingData?.equipment_count}+
               </span>
-              <span className='font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
-                Parts Catalogued
-              </span>
-            </div>
-            <div className='flex flex-col items-center sm:px-8'>
+            )}
+            <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+              Parts Catalogued
+            </span>
+          </div>
+          <div className='flex flex-col items-center justify-center sm:px-8'>
+            {!landingData || isPending ? (
+              <Skeleton className='size-10 rounded-full' />
+            ) : (
               <span className='font-mono text-2xl font-bold text-primary'>
-                {landingData.total_hours}+
+                {landingData?.total_hours}+
               </span>
-              <span className='font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
-                Bench Hours Recorded
-              </span>
-            </div>
-            <div className='flex flex-col items-center sm:px-8'>
-              <span className='font-mono text-2xl font-bold text-primary'>
-                free
-              </span>
-              <span className='font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
-                To Start
-              </span>
-            </div>
+            )}
+            <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+              Bench Hours Recorded
+            </span>
+          </div>
+          <div className='flex flex-col items-center justify-center sm:px-8'>
+            <span className='font-mono text-2xl font-bold text-primary'>
+              free
+            </span>
+            <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+              To Start
+            </span>
           </div>
         </div>
-      )}
+      </div>
 
       {/* ── Features ────────────────────────────────────────────────────── */}
       <section className='max-w-6xl mx-auto px-5 py-20'>
