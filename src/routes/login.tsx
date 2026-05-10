@@ -22,6 +22,8 @@ import {
 } from '#/components/ui/dialog';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { AppleSignInButton } from '#/components/primitives/AppleSignInButton';
+import { DiscordSignInButton } from '#/components/primitives/DiscordSignInButton';
 
 const schema = z.object({
   email: z.email('Enter a valid email'),
@@ -40,11 +42,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const { from } = Route.useSearch();
   const { mutateAsync: login, isPending, error } = useLogin();
-  const {
-    mutateAsync: oauthLogin,
-    isPending: oauthPending,
-    error: oauthError,
-  } = useOauth2Login();
+  const { mutateAsync: oauthLogin, isPending: oauthPending } = useOauth2Login();
   const [resetOpen, setResetOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -58,7 +56,7 @@ function LoginPage() {
     navigate({ to: from ?? '/', replace: true });
   };
 
-  const onOauthSubmit = async (provider: 'google') => {
+  const onOauthSubmit = async (provider: 'google' | 'apple' | 'discord') => {
     try {
       await oauthLogin({ provider });
       navigate({ to: from ?? '/', replace: true });
@@ -80,10 +78,17 @@ function LoginPage() {
         </div>
 
         <div className='bg-card border border-border rounded-xl shadow-sm p-6'>
-          <GoogleSignInButton
-            onClick={() => onOauthSubmit('google')}
-            loading={oauthPending}
-          />
+          <div className='flex flex-col gap-2'>
+            <GoogleSignInButton
+              onClick={() => onOauthSubmit('google')}
+              loading={oauthPending}
+            />
+            <AppleSignInButton
+              onClick={() => onOauthSubmit('apple')}
+              loading={oauthPending}
+            />
+            <DiscordSignInButton />
+          </div>
           <div className='flex items-center my-4'>
             <div className='h-0.5 w-full border' />
             <span className='px-4 text-sm'>OR</span>

@@ -26,7 +26,11 @@ export const useLogin = () => {
 export const useOauth2Login = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ provider }: { provider: 'google' }) => {
+    mutationFn: ({
+      provider,
+    }: {
+      provider: 'google' | 'apple' | 'discord';
+    }) => {
       console.log(provider);
       return UserApi.oauthLogin(provider);
     },
