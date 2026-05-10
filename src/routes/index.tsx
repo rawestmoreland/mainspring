@@ -268,6 +268,14 @@ const STATS = [
 ] as const;
 
 function LandingPage() {
+  const { data: landingData, isPending } = useQuery({
+    queryKey: ['landingstats'],
+    queryFn: async () => {
+      const pb = (await import('#/lib/pocketbase')).default;
+      return await pb.collection('homepage_stats').getOne('1');
+    },
+  });
+
   return (
     <div className='min-h-screen bg-background text-foreground'>
       <style>{`
@@ -354,20 +362,44 @@ function LandingPage() {
       </section>
 
       {/* ── Stats strip ─────────────────────────────────────────────────── */}
-      <div className='bg-card border-y border-border'>
-        <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-border'>
-          {STATS.map((s) => (
-            <div key={s.label} className='flex flex-col items-center sm:px-8'>
+      {!!landingData && !isPending && (
+        <div className='bg-card border-y border-border'>
+          <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-border'>
+            <div className='flex flex-col items-center sm:px-8'>
               <span className='font-mono text-2xl font-bold text-primary'>
-                {s.value}
+                {landingData.watch_count}+
               </span>
               <span className='font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
-                {s.label}
+                Watches Tracked
               </span>
             </div>
-          ))}
+            <div className='flex flex-col items-center sm:px-8'>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                {landingData.equipment_count}+
+              </span>
+              <span className='font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                Parts Catalogued
+              </span>
+            </div>
+            <div className='flex flex-col items-center sm:px-8'>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                {landingData.total_hours}+
+              </span>
+              <span className='font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                Bench Hours Recorded
+              </span>
+            </div>
+            <div className='flex flex-col items-center sm:px-8'>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                free
+              </span>
+              <span className='font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                To Start
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Features ────────────────────────────────────────────────────── */}
       <section className='max-w-6xl mx-auto px-5 py-20'>
