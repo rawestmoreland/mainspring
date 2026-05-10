@@ -11,6 +11,7 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Field, FieldError, FieldGroup } from '#/components/ui/field';
+import { Textarea } from '#/components/ui/textarea';
 
 export const Route = createFileRoute('/settings/profile')({
   component: ProfileSettingsPage,
@@ -43,7 +44,11 @@ function ProfileSettingsPage() {
     'idle' | 'checking' | 'available' | 'taken' | 'invalid'
   >('idle');
 
-  const { mutateAsync: save, isPending, error } = useMutation({
+  const {
+    mutateAsync: save,
+    isPending,
+    error,
+  } = useMutation({
     mutationFn: async (data: FormData) => {
       if (!profile?.id) return;
       await pb.collection('user_profiles').update(profile.id, {
@@ -80,6 +85,7 @@ function ProfileSettingsPage() {
 
   const subdomainValue = watch('subdomain');
   const isPublic = watch('is_public');
+  const bioWatch = watch('bio');
 
   // Debounced subdomain availability check
   useEffect(() => {
@@ -113,7 +119,8 @@ function ProfileSettingsPage() {
     return () => clearTimeout(timer);
   }, [subdomainValue, profile?.subdomain, profile?.id]);
 
-  if (isLoading) return <div className='text-muted-foreground text-sm'>Loading…</div>;
+  if (isLoading)
+    return <div className='text-muted-foreground text-sm'>Loading…</div>;
   if (!user) return null;
 
   return (
@@ -140,7 +147,15 @@ function ProfileSettingsPage() {
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <Label htmlFor='bio'>Bio</Label>
-                <Input id='bio' {...field} placeholder='A few words about you…' />
+                <div className='flex flex-col gap-2'>
+                  <Textarea
+                    id='bio'
+                    {...field}
+                    maxLength={500}
+                    placeholder='A few words about you…'
+                  />
+                  <span className='text-xs text-muted-foreground'>{`${bioWatch?.length ?? 0} / 500 characters`}</span>
+                </div>
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}
@@ -152,7 +167,13 @@ function ProfileSettingsPage() {
             name='subdomain'
             control={control}
             render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid || subdomainStatus === 'taken' || subdomainStatus === 'invalid'}>
+              <Field
+                data-invalid={
+                  fieldState.invalid ||
+                  subdomainStatus === 'taken' ||
+                  subdomainStatus === 'invalid'
+                }
+              >
                 <Label htmlFor='subdomain'>
                   Subdomain
                   <span className='ml-1.5 font-mono text-[10px] text-muted-foreground'>
@@ -183,8 +204,8 @@ function ProfileSettingsPage() {
                   <FieldError errors={[fieldState.error]} />
                 )}
                 <p className='font-mono text-[10px] text-muted-foreground mt-1'>
-                  Lowercase letters, numbers, and hyphens only (3–63 chars). Setting a subdomain
-                  enables your public profile page.
+                  Lowercase letters, numbers, and hyphens only (3–63 chars).
+                  Setting a subdomain enables your public profile page.
                 </p>
               </Field>
             )}
@@ -230,7 +251,10 @@ function ProfileSettingsPage() {
           </p>
         )}
 
-        <Button type='submit' disabled={isPending || subdomainStatus === 'taken'}>
+        <Button
+          type='submit'
+          disabled={isPending || subdomainStatus === 'taken'}
+        >
           {isPending ? 'Saving…' : 'Save profile'}
         </Button>
       </form>
