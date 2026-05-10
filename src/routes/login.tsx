@@ -87,7 +87,10 @@ function LoginPage() {
               onClick={() => onOauthSubmit('apple')}
               loading={oauthPending}
             />
-            <DiscordSignInButton />
+            <DiscordSignInButton
+              onClick={() => onOauthSubmit('discord')}
+              loading={oauthPending}
+            />
           </div>
           <div className='flex items-center my-4'>
             <div className='h-0.5 w-full border' />
