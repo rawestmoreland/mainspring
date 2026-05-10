@@ -26,7 +26,7 @@ import loraUrl from '@fontsource/lora/files/lora-latin-400-normal.woff2?url';
 
 type RouterContext = { queryClient: QueryClient };
 
-const PUBLIC_PATHS = new Set(['/', '/login', '/signup']);
+const PUBLIC_PATHS = new Set(['/', '/login', '/signup', '/privacy-policy', '/terms-of-service']);
 
 function isPublicPath(pathname: string): boolean {
   return (

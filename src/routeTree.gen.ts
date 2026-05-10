@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AboutRouteImport } from './routes/about'
@@ -32,9 +34,19 @@ import { Route as WatchesWatchIdPostsIndexRouteImport } from './routes/watches/$
 import { Route as WatchesWatchIdPostsNewRouteImport } from './routes/watches/$watchId/posts/new'
 import { Route as WatchesWatchIdPostsPostIdRouteImport } from './routes/watches/$watchId/posts/$postId'
 
+const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -152,7 +164,9 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/signup': typeof SignupRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/equipment/new': typeof EquipmentNewRoute
   '/inventory/new': typeof InventoryNewRoute
   '/post/$postId': typeof PostPostIdRoute
@@ -176,7 +190,9 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/signup': typeof SignupRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/equipment/new': typeof EquipmentNewRoute
   '/inventory/new': typeof InventoryNewRoute
   '/post/$postId': typeof PostPostIdRoute
@@ -201,7 +217,9 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/signup': typeof SignupRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/equipment/new': typeof EquipmentNewRoute
   '/inventory/new': typeof InventoryNewRoute
   '/post/$postId': typeof PostPostIdRoute
@@ -227,7 +245,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/dashboard'
     | '/login'
+    | '/privacy-policy'
     | '/signup'
+    | '/terms-of-service'
     | '/equipment/new'
     | '/inventory/new'
     | '/post/$postId'
@@ -251,7 +271,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/dashboard'
     | '/login'
+    | '/privacy-policy'
     | '/signup'
+    | '/terms-of-service'
     | '/equipment/new'
     | '/inventory/new'
     | '/post/$postId'
@@ -275,7 +297,9 @@ export interface FileRouteTypes {
     | '/about'
     | '/dashboard'
     | '/login'
+    | '/privacy-policy'
     | '/signup'
+    | '/terms-of-service'
     | '/equipment/new'
     | '/inventory/new'
     | '/post/$postId'
@@ -300,7 +324,9 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   SignupRoute: typeof SignupRoute
+  TermsOfServiceRoute: typeof TermsOfServiceRoute
   EquipmentNewRoute: typeof EquipmentNewRoute
   InventoryNewRoute: typeof InventoryNewRoute
   PostPostIdRoute: typeof PostPostIdRoute
@@ -322,11 +348,25 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms-of-service': {
+      id: '/terms-of-service'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service'
+      preLoaderRoute: typeof TermsOfServiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/signup': {
       id: '/signup'
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -484,7 +524,9 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   SignupRoute: SignupRoute,
+  TermsOfServiceRoute: TermsOfServiceRoute,
   EquipmentNewRoute: EquipmentNewRoute,
   InventoryNewRoute: InventoryNewRoute,
   PostPostIdRoute: PostPostIdRoute,

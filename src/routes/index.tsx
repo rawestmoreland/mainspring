@@ -73,7 +73,9 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     <div className='min-h-screen'>
       {/* Nav — mirrors the AppShell header */}
       <header className='fixed top-0 inset-x-0 z-50 h-14 flex items-center gap-3 px-5 border-b border-border bg-background/90 backdrop-blur-md'>
-        <span className='font-serif font-bold text-foreground'>Hairspring</span>
+        <Link to='/' className='font-serif font-bold text-foreground'>
+          Hairspring
+        </Link>
         <span className='text-border'>·</span>
         <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
           {tenant.display_name || tenant.subdomain}
