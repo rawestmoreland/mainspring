@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useLogin, useOauth2Login } from '#/hooks/user';
 import { Button } from '#/components/ui/button';
+import { GoogleSignInButton } from '#/components/primitives/GoogleSignInButton';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Field, FieldError, FieldGroup } from '#/components/ui/field';
@@ -79,9 +80,15 @@ function LoginPage() {
         </div>
 
         <div className='bg-card border border-border rounded-xl shadow-sm p-6'>
-          <Button onClick={() => onOauthSubmit('google')}>
-            Sign in with Google
-          </Button>
+          <GoogleSignInButton
+            onClick={() => onOauthSubmit('google')}
+            loading={oauthPending}
+          />
+          <div className='flex items-center my-4'>
+            <div className='h-0.5 w-full border' />
+            <span className='px-4 text-sm'>OR</span>
+            <div className='h-0.5 w-full border' />
+          </div>
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
             <FieldGroup>
               <Controller

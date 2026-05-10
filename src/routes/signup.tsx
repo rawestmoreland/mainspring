@@ -46,8 +46,8 @@ function SignupPage() {
             Hairspring Waitlist
           </h1>
           <p className='font-mono text-xs text-muted-foreground tracking-widest uppercase'>
-            Hairspring is going public soon. Join the waitlist to be notified
-            when you can officially create an account.
+            Hairspring is opening to the public soon. Join the waitlist to be
+            notified when you can officially create an account.
           </p>
         </div>
 
