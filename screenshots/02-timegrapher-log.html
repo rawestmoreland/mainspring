@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=1280" />
+<title>Hairspring — Timegrapher Logging</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --paper:       oklch(0.988 0.01 190);
+    --paper-warm:  oklch(0.978 0.008 190);
+    --paper-aged:  oklch(0.965 0.008 190);
+    --paper-deep:  oklch(0.945 0.008 190);
+    --paper-bright:#ffffff;
+    --ink:         #221a12;
+    --ink-soft:    #5a4a35;
+    --ink-faded:   #9a8b73;
+    --ink-ghost:   #c5b9a1;
+    --brass:       #b8893f;
+    --brass-deep:  #8c6624;
+    --brass-light: #d9b072;
+    --forest:      #3a5a3a;
+    --forest-bg:   rgba(58,90,58,0.09);
+    --wax:         #963a2e;
+    --wax-bg:      rgba(150,58,46,0.09);
+    --indigo:      #2c4a6b;
+    --rule:        rgba(34,26,18,0.14);
+    --rule-soft:   rgba(34,26,18,0.07);
+  }
+
+  body {
+    font-family: 'Lora', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 14px;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--paper-warm);
+    border-right: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-header {
+    padding: 18px 16px 14px;
+    border-bottom: 1px solid var(--rule-soft);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-mark {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--brass);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-family: 'Playfair Display', serif;
+    font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .sidebar-title { font-family: 'Playfair Display',serif; font-size:15px; font-weight:700; color:var(--brass); }
+  .sidebar-sub { font-family:'DM Mono',monospace; font-size:8.5px; color:var(--ink-faded); text-transform:uppercase; letter-spacing:0.15em; margin-top:2px; }
+  .sidebar-group-label { font-family:'DM Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:0.18em; color:var(--ink-ghost); padding:16px 16px 6px; }
+  .nav-item { display:flex; align-items:center; gap:9px; padding:7px 16px; cursor:pointer; text-decoration:none; color:var(--ink-faded); font-family:'DM Mono',monospace; font-size:12px; }
+  .nav-item.active { color:var(--brass); font-weight:500; background:rgba(184,137,63,0.07); }
+  .nav-icon { font-size:13px; }
+  .sidebar-footer { margin-top:auto; padding:12px 16px; border-top:1px solid var(--rule-soft); display:flex; align-items:center; gap:9px; }
+  .user-avatar { width:26px; height:26px; border-radius:50%; background:rgba(184,137,63,0.18); border:1px solid rgba(184,137,63,0.3); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:10px; color:var(--brass); flex-shrink:0; }
+  .user-email { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink-faded); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ── Main ── */
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .topbar { height:52px; display:flex; align-items:center; gap:10px; padding:0 28px; border-bottom:1px solid var(--rule); background:var(--paper-bright); flex-shrink:0; }
+  .topbar-sep { width:1px; height:20px; background:var(--rule); margin:0 2px; }
+  .breadcrumb-page { font-family:'Playfair Display',serif; font-size:15px; font-weight:600; color:var(--ink); }
+  .breadcrumb-sub { font-family:'DM Mono',monospace; font-size:9px; color:var(--ink-faded); text-transform:uppercase; letter-spacing:0.2em; }
+  .premium-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:99px; background:linear-gradient(135deg,rgba(184,137,63,0.15),rgba(217,176,114,0.1)); border:1px solid rgba(184,137,63,0.32); font-family:'DM Mono',monospace; font-size:9px; color:var(--brass-deep); text-transform:uppercase; letter-spacing:0.14em; }
+
+  .content { flex:1; overflow-y:auto; padding:28px 36px; }
+
+  /* ── Watch header ── */
+  .watch-name { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; color:var(--ink); line-height:1.15; }
+  .watch-meta { font-family:'DM Mono',monospace; font-size:10.5px; color:var(--ink-faded); margin-top:4px; display:flex; align-items:center; gap:12px; }
+  .meta-sep { color:var(--ink-ghost); }
+  .status-badge { display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:99px; font-family:'DM Mono',monospace; font-size:10px; background:rgba(44,74,107,0.09); color:#2c4a6b; border:1px solid rgba(44,74,107,0.22); }
+  .status-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+  .btn-primary { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:var(--brass); color:white; border:none; border-radius:5px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; }
+  .btn-ghost { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:transparent; color:var(--ink-faded); border:1px solid var(--rule); border-radius:5px; font-family:'DM Mono',monospace; font-size:11px; cursor:pointer; }
+  .section-label { font-family:'DM Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.2em; color:var(--ink-faded); margin-bottom:12px; }
+
+  /* ── KPI strip ── */
+  .kpi-row { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:24px; }
+  .kpi-card {
+    background: var(--paper-bright);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 14px 16px 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card.highlight::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--brass);
+  }
+  .kpi-label { font-family:'DM Mono',monospace; font-size:8.5px; text-transform:uppercase; letter-spacing:0.2em; color:var(--ink-faded); margin-bottom:6px; }
+  .kpi-value { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:var(--ink); line-height:1; }
+  .kpi-value.good { color:var(--forest); }
+  .kpi-value.warn { color:var(--wax); }
+  .kpi-value.brass { color:var(--brass-deep); }
+  .kpi-sub { font-family:'Lora',serif; font-style:italic; font-size:10px; color:var(--ink-faded); margin-top:5px; }
+
+  /* ── Positions chart ── */
+  .chart-card { background:var(--paper-bright); border:1px solid var(--rule); border-radius:8px; padding:18px 20px; margin-bottom:22px; }
+  .chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .chart-title { font-family:'Playfair Display',serif; font-size:14px; font-weight:600; color:var(--ink); }
+  .chart-legend { display:flex; gap:16px; }
+  .legend-item { display:flex; align-items:center; gap:5px; font-family:'DM Mono',monospace; font-size:9px; color:var(--ink-faded); }
+  .legend-dot { width:8px; height:8px; border-radius:50%; }
+
+  .positions-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; }
+  .position-block { display:flex; flex-direction:column; align-items:center; gap:6px; }
+  .position-label { font-family:'DM Mono',monospace; font-size:8.5px; color:var(--ink-faded); text-transform:uppercase; letter-spacing:0.1em; }
+  .position-bar-wrap { width:100%; height:80px; background:var(--paper-aged); border-radius:6px; display:flex; align-items:flex-end; overflow:hidden; position:relative; border:1px solid var(--rule-soft); }
+  .position-bar { width:100%; border-radius:4px 4px 0 0; transition:height 0.3s; }
+  .bar-good { background:linear-gradient(180deg,rgba(58,90,58,0.55),rgba(58,90,58,0.25)); }
+  .bar-warn { background:linear-gradient(180deg,rgba(150,58,46,0.55),rgba(150,58,46,0.25)); }
+  .bar-brass { background:linear-gradient(180deg,rgba(184,137,63,0.55),rgba(184,137,63,0.25)); }
+  .position-rate { font-family:'DM Mono',monospace; font-size:11px; font-weight:500; color:var(--ink-soft); }
+  .rate-good { color:var(--forest); }
+  .rate-warn { color:var(--wax); }
+
+  /* zero line */
+  .zero-line { position:absolute; left:0; right:0; height:1px; background:rgba(34,26,18,0.18); bottom:50%; }
+
+  /* ── Log entry form ── */
+  .form-card { background:var(--paper-bright); border:1px solid var(--rule); border-radius:8px; padding:18px 20px; margin-bottom:22px; }
+  .form-grid { display:grid; grid-template-columns:repeat(5,1fr) auto; gap:12px; align-items:end; }
+  .form-field { display:flex; flex-direction:column; gap:5px; }
+  .form-label { font-family:'DM Mono',monospace; font-size:8.5px; text-transform:uppercase; letter-spacing:0.16em; color:var(--ink-faded); }
+  .form-input {
+    font-family:'DM Mono',monospace; font-size:13px; color:var(--ink);
+    background:var(--paper-aged); border:1px solid var(--rule);
+    border-radius:5px; padding:7px 10px; outline:none; width:100%;
+  }
+  .form-input:focus { border-color:rgba(184,137,63,0.5); background:var(--paper-bright); }
+  .form-select {
+    font-family:'DM Mono',monospace; font-size:13px; color:var(--ink);
+    background:var(--paper-aged); border:1px solid var(--rule);
+    border-radius:5px; padding:7px 10px; cursor:pointer; width:100%;
+  }
+  .form-input.highlight-active { border-color:rgba(184,137,63,0.5); background:rgba(184,137,63,0.04); }
+
+  /* ── Readings table ── */
+  .table-wrap { background:var(--paper-bright); border:1px solid var(--rule); border-radius:8px; overflow:hidden; }
+  table { width:100%; border-collapse:collapse; }
+  thead th {
+    background: var(--paper-aged);
+    padding: 9px 14px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 8.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--ink-faded);
+    border-bottom: 1px solid var(--rule);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 9px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--rule-soft);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--paper-aged); }
+  .td-rate-good { color:var(--forest); font-weight:500; }
+  .td-rate-warn { color:var(--wax); font-weight:500; }
+  .td-rate-ok { color:var(--ink); }
+  .td-muted { color:var(--ink-faded); }
+  .td-pos { font-size:10px; color:var(--ink-faded); }
+
+  .note-cell { font-family:'Lora',serif; font-style:italic; font-size:11px; color:var(--ink-soft); max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .delta-chip { display:inline-flex; align-items:center; gap:3px; padding:1px 6px; border-radius:99px; font-family:'DM Mono',monospace; font-size:9px; }
+  .delta-good { background:var(--forest-bg); color:var(--forest); }
+  .delta-warn { background:var(--wax-bg); color:var(--wax); }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-mark">H</div>
+    <div>
+      <div class="sidebar-title">Hairspring</div>
+      <div class="sidebar-sub">Watch Flip Tracker</div>
+    </div>
+  </div>
+  <div class="sidebar-group-label">Navigation</div>
+  <a class="nav-item" href="#"><span class="nav-icon">◈</span> Dashboard</a>
+  <a class="nav-item active" href="#"><span class="nav-icon">◷</span> Watches</a>
+  <a class="nav-item" href="#"><span class="nav-icon">⊡</span> Inventory</a>
+  <a class="nav-item" href="#"><span class="nav-icon">⚙</span> Equipment</a>
+  <div class="sidebar-footer">
+    <div class="user-avatar">RW</div>
+    <div class="user-email">r.westmoreland@mail.com</div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <span style="font-size:16px;color:var(--ink-faded);cursor:pointer;">☰</span>
+    <div class="topbar-sep"></div>
+    <div>
+      <div class="breadcrumb-page">Watches</div>
+      <div class="breadcrumb-sub">Timegrapher Log</div>
+    </div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+      <span class="premium-badge">★ Premium</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;">
+      <div>
+        <div class="watch-name">Rolex Datejust 36 · Ref. 16200</div>
+        <div class="watch-meta">
+          <span>Cal. 3135</span>
+          <span class="meta-sep">·</span>
+          <span>Lift Angle 52°</span>
+          <span class="meta-sep">·</span>
+          <span class="status-badge"><span class="status-dot"></span>Listed</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-ghost">⬇ Export CSV</button>
+        <button class="btn-primary">+ Log Reading</button>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="kpi-row">
+      <div class="kpi-card highlight">
+        <div class="kpi-label">Latest Rate</div>
+        <div class="kpi-value good">+2.1</div>
+        <div class="kpi-sub">s/d dial up</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Amplitude</div>
+        <div class="kpi-value brass">298°</div>
+        <div class="kpi-sub">target ≥ 270°</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Beat Error</div>
+        <div class="kpi-value good">0.3 ms</div>
+        <div class="kpi-sub">target ≤ 0.5</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Mean Rate</div>
+        <div class="kpi-value">+3.4</div>
+        <div class="kpi-sub">avg all positions</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Sessions</div>
+        <div class="kpi-value brass">3</div>
+        <div class="kpi-sub">over 14 days</div>
+      </div>
+    </div>
+
+    <!-- Position chart -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">Rate by Position — Latest Session</div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--forest);"></div>Within spec</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--wax);"></div>Out of spec</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--brass);"></div>Marginal</div>
+        </div>
+      </div>
+      <div class="positions-grid">
+
+        <div class="position-block">
+          <div class="position-label">Dial Up</div>
+          <div class="position-bar-wrap">
+            <div class="zero-line"></div>
+            <div class="position-bar bar-good" style="height:52%;"></div>
+          </div>
+          <div class="position-rate rate-good">+2.1</div>
+        </div>
+
+        <div class="position-block">
+          <div class="position-label">Dial Dn</div>
+          <div class="position-bar-wrap">
+            <div class="zero-line"></div>
+            <div class="position-bar bar-good" style="height:47%;"></div>
+          </div>
+          <div class="position-rate rate-good">+1.4</div>
+        </div>
+
+        <div class="position-block">
+          <div class="position-label">Crown Up</div>
+          <div class="position-bar-wrap">
+            <div class="zero-line"></div>
+            <div class="position-bar bar-brass" style="height:62%;"></div>
+          </div>
+          <div class="position-rate" style="color:var(--brass-deep);">+5.8</div>
+        </div>
+
+        <div class="position-block">
+          <div class="position-label">Crown Dn</div>
+          <div class="position-bar-wrap">
+            <div class="zero-line"></div>
+            <div class="position-bar bar-good" style="height:44%;"></div>
+          </div>
+          <div class="position-rate rate-good">+0.9</div>
+        </div>
+
+        <div class="position-block">
+          <div class="position-label">Crown L</div>
+          <div class="position-bar-wrap">
+            <div class="zero-line"></div>
+            <div class="position-bar bar-good" style="height:50%;"></div>
+          </div>
+          <div class="position-rate rate-good">+1.8</div>
+        </div>
+
+        <div class="position-block">
+          <div class="position-label">Crown R</div>
+          <div class="position-bar-wrap">
+            <div class="zero-line"></div>
+            <div class="position-bar bar-warn" style="height:72%;"></div>
+          </div>
+          <div class="position-rate rate-warn">+9.2</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Log entry form -->
+    <div class="section-label">New Reading</div>
+    <div class="form-card" style="margin-bottom:22px;">
+      <div class="form-grid">
+        <div class="form-field">
+          <div class="form-label">Position</div>
+          <select class="form-select">
+            <option>Dial Up</option>
+            <option>Dial Down</option>
+            <option>Crown Up</option>
+            <option>Crown Down</option>
+            <option>Crown Left</option>
+            <option>Crown Right</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <div class="form-label">Rate (s/d)</div>
+          <input class="form-input highlight-active" type="text" value="+2.1" />
+        </div>
+        <div class="form-field">
+          <div class="form-label">Amplitude (°)</div>
+          <input class="form-input" type="text" value="298" />
+        </div>
+        <div class="form-field">
+          <div class="form-label">Beat Error (ms)</div>
+          <input class="form-input" type="text" value="0.3" />
+        </div>
+        <div class="form-field">
+          <div class="form-label">Notes</div>
+          <input class="form-input" type="text" placeholder="Optional note…" />
+        </div>
+        <div class="form-field">
+          <div class="form-label" style="opacity:0;">&nbsp;</div>
+          <button class="btn-primary" style="white-space:nowrap;">Save Reading</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Readings table -->
+    <div class="section-label">Reading History · 9 entries across 3 sessions</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Session</th>
+            <th>Position</th>
+            <th>Rate (s/d)</th>
+            <th>Amplitude</th>
+            <th>Beat Error</th>
+            <th>Δ from prev</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-muted">May 9, 2026</td>
+            <td class="td-muted">Post-service</td>
+            <td class="td-pos">Crown Right</td>
+            <td class="td-rate-warn">+9.2</td>
+            <td>291°</td>
+            <td>0.3 ms</td>
+            <td><span class="delta-warn">↑ +3.1</span></td>
+            <td class="note-cell">Needs minor regulation</td>
+          </tr>
+          <tr>
+            <td class="td-muted">May 9, 2026</td>
+            <td class="td-muted">Post-service</td>
+            <td class="td-pos">Crown Left</td>
+            <td class="td-rate-good">+1.8</td>
+            <td>295°</td>
+            <td>0.3 ms</td>
+            <td><span class="delta-good">↓ −1.2</span></td>
+            <td class="note-cell"></td>
+          </tr>
+          <tr>
+            <td class="td-muted">May 9, 2026</td>
+            <td class="td-muted">Post-service</td>
+            <td class="td-pos">Crown Down</td>
+            <td class="td-rate-good">+0.9</td>
+            <td>302°</td>
+            <td>0.4 ms</td>
+            <td><span class="delta-good">↓ −2.6</span></td>
+            <td class="note-cell"></td>
+          </tr>
+          <tr>
+            <td class="td-muted">May 9, 2026</td>
+            <td class="td-muted">Post-service</td>
+            <td class="td-pos">Crown Up</td>
+            <td style="color:var(--brass-deep);font-family:'DM Mono',monospace;font-size:12px;font-weight:500;">+5.8</td>
+            <td>288°</td>
+            <td>0.3 ms</td>
+            <td><span class="delta-warn">↑ +1.4</span></td>
+            <td class="note-cell">Hairspring coils touching?</td>
+          </tr>
+          <tr>
+            <td class="td-muted">May 9, 2026</td>
+            <td class="td-muted">Post-service</td>
+            <td class="td-pos">Dial Down</td>
+            <td class="td-rate-good">+1.4</td>
+            <td>298°</td>
+            <td>0.2 ms</td>
+            <td><span class="delta-good">↓ −0.8</span></td>
+            <td class="note-cell"></td>
+          </tr>
+          <tr>
+            <td class="td-muted">May 9, 2026</td>
+            <td class="td-muted">Post-service</td>
+            <td class="td-pos">Dial Up</td>
+            <td class="td-rate-good">+2.1</td>
+            <td>298°</td>
+            <td>0.3 ms</td>
+            <td><span class="delta-good">↓ −5.3</span></td>
+            <td class="note-cell">After ultrasonic + oiling</td>
+          </tr>
+          <tr style="background:var(--paper-aged);">
+            <td class="td-muted">Apr 28, 2026</td>
+            <td class="td-muted">Pre-service</td>
+            <td class="td-pos">Dial Up</td>
+            <td class="td-rate-warn">+7.4</td>
+            <td>241°</td>
+            <td>0.8 ms</td>
+            <td>—</td>
+            <td class="note-cell">Low amplitude, needs service</td>
+          </tr>
+          <tr style="background:var(--paper-aged);">
+            <td class="td-muted">Apr 28, 2026</td>
+            <td class="td-muted">Pre-service</td>
+            <td class="td-pos">Crown Up</td>
+            <td class="td-rate-warn">+4.4</td>
+            <td>228°</td>
+            <td>1.1 ms</td>
+            <td><span class="delta-warn">↑ +2.4</span></td>
+            <td class="note-cell">High beat error</td>
+          </tr>
+          <tr style="background:var(--paper-aged);">
+            <td class="td-muted">Apr 22, 2026</td>
+            <td class="td-muted">Incoming</td>
+            <td class="td-pos">Dial Up</td>
+            <td class="td-rate-warn">+14.2</td>
+            <td>205°</td>
+            <td>1.4 ms</td>
+            <td>—</td>
+            <td class="note-cell">As-received condition</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>
