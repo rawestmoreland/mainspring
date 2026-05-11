@@ -42,7 +42,7 @@ type FormData = z.infer<typeof schema>;
 
 function ProfileSettingsPage() {
   const { user, profile, isLoading } = useAuth();
-  const { subscriptionId, lsCustomerId, subscriptionStatus } =
+  const { subscriptionId, lsCustomerId, subscriptionStatus, renewsAt, endsAt } =
     useSubscription();
 
   const queryClient = useQueryClient();
@@ -282,6 +282,22 @@ function ProfileSettingsPage() {
                   {subscriptionStatus.replace('_', ' ')}
                 </span>
               </p>
+              {!!renewsAt && (
+                <p className='text-sm text-muted-foreground'>
+                  Subscription Renews:{' '}
+                  <span className='font-medium capitalize'>
+                    {new Date(renewsAt).toLocaleDateString()}
+                  </span>
+                </p>
+              )}
+              {!!endsAt && (
+                <p className='text-sm text-muted-foreground'>
+                  Subscription Ends:{' '}
+                  <span className='font-medium capitalize'>
+                    {new Date(endsAt).toLocaleDateString()}
+                  </span>
+                </p>
+              )}
               <Button
                 className='cursor-pointer mt-2'
                 onClick={async () => {

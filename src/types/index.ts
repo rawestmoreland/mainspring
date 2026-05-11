@@ -140,6 +140,45 @@ export type CreateRepairPost = Omit<
   'id' | 'user' | 'images' | 'imageUrls' | 'created' | 'updated'
 >;
 
+export type TimegrapherStatus =
+  | 'post_service'
+  | 'pre_service'
+  | 'incoming'
+  | 'routine';
+
+export type TimegrapherReading = {
+  id: string;
+  watch: string;
+  status: TimegrapherStatus;
+  lift_angle: number;
+  notes?: string;
+  du_rate?: number;
+  du_amp?: number;
+  du_be?: number;
+  dd_rate?: number;
+  dd_amp?: number;
+  dd_be?: number;
+  cu_rate?: number;
+  cu_amp?: number;
+  cu_be?: number;
+  cd_rate?: number;
+  cd_amp?: number;
+  cd_be?: number;
+  cl_rate?: number;
+  cl_amp?: number;
+  cl_be?: number;
+  cr_rate?: number;
+  cr_amp?: number;
+  cr_be?: number;
+  created: string;
+  updated: string;
+};
+
+export type CreateTimegrapherReading = Omit<
+  TimegrapherReading,
+  'id' | 'created' | 'updated'
+>;
+
 export const SubscriptionStatus = {
   ON_TRIAL: 'on_trial',
   PAUSED: 'paused',

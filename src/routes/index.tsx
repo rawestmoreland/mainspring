@@ -261,13 +261,6 @@ const FEATURES = [
   },
 ] as const;
 
-const STATS = [
-  { value: '12+', label: 'watches tracked' },
-  { value: '80+', label: 'parts catalogued' },
-  { value: '40+', label: 'bench hours recorded' },
-  { value: 'free', label: 'to start' },
-] as const;
-
 function LandingPage() {
   const { data: landingData, isPending } = useQuery({
     queryKey: ['landingstats'],

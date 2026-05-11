@@ -166,10 +166,8 @@ func main() {
 					status := payload.Data.Attributes.Status
 					record.Set("subscription_status", status)
 
-					// Update the renewal date in case they changed plans or resumed
-					if payload.Data.Attributes.RenewsAt != "" {
-						record.Set("renews_at", payload.Data.Attributes.RenewsAt)
-					}
+					// Always sync renewal date; null from LS unmarshals to "" which is correct
+					record.Set("renews_at", payload.Data.Attributes.RenewsAt)
 
 					// If the status is 'cancelled' but not yet expired,
 					// they are in the "grace period." You might want to log this.
@@ -187,10 +185,8 @@ func main() {
 					// Sync the current status (active, past_due, paused, etc.)
 					status := payload.Data.Attributes.Status
 					record.Set("subscription_status", status)
-
-					if payload.Data.Attributes.EndsAt != "" {
-						record.Set("ends_at", payload.Data.Attributes.EndsAt)
-					}
+					record.Set("renews_at", "")
+					record.Set("ends_at", payload.Data.Attributes.EndsAt)
 
 					app.Save(record)
 				}

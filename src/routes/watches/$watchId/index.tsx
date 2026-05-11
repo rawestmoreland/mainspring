@@ -22,9 +22,12 @@ import { Lightbox } from '#/components/watches/Lightbox';
 import { AddPartUsedDialog } from '#/components/watches/AddPartUsedDialog';
 import TipTapEditor from '#/components/TipTap';
 import { useDeletePartUsed } from '#/hooks/parts_used';
+import { useGetTimegrapherReadings } from '#/hooks/timegrapher';
+import { useSubscription } from '#/hooks/subscription';
+import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { capitalize } from 'lodash-es';
 import { Button } from '#/components/ui/button';
-import { Trash2Icon } from 'lucide-react';
+import { LockIcon, Trash2Icon } from 'lucide-react';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
@@ -42,6 +45,8 @@ function RouteComponent() {
   const updateWatch = useUpdateWatch();
   const deleteWatch = useDeleteWatch();
   const deletePartUsed = useDeletePartUsed(watchId);
+  const { data: timegrapherReadings = [] } = useGetTimegrapherReadings(watchId);
+  const { isPro } = useSubscription();
 
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [activeIdx, setActiveIdx] = useState(0);
@@ -341,6 +346,122 @@ function RouteComponent() {
                 </span>
               </div>
             ))}
+          </section>
+
+          {/* Timegrapher Log */}
+          <section className='rounded-xl border border-border bg-card overflow-hidden'>
+            <div className='flex items-center justify-between px-4 py-2.5 border-b border-border'>
+              <div className='flex items-center gap-2'>
+                <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+                  Timegrapher Log
+                </span>
+                {!isPro && (
+                  <span className='inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'>
+                    <LockIcon className='w-2.5 h-2.5' />
+                    Pro
+                  </span>
+                )}
+              </div>
+              {isPro && (
+                <Link
+                  to='/watches/$watchId/timegrapher'
+                  params={{ watchId }}
+                  className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
+                >
+                  View all ({timegrapherReadings.length})
+                </Link>
+              )}
+            </div>
+            {!isPro ? (
+              <div className='relative'>
+                <div className='divide-y divide-border blur-sm select-none pointer-events-none' aria-hidden>
+                  {[
+                    ['DU Rate', '+2.3 s/d'],
+                    ['DU Amplitude', '298°'],
+                    ['DU Beat Error', '0.3 ms'],
+                  ].map(([k, v]) => (
+                    <div
+                      key={String(k)}
+                      className='flex justify-between items-center px-4 py-2.5'
+                    >
+                      <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
+                        {k}
+                      </span>
+                      <span className='font-mono text-[11.5px] text-foreground'>
+                        {v}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className='absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-card/70 backdrop-blur-[2px]'>
+                  <LockIcon className='w-4 h-4 text-amber-400' />
+                  <p className='font-mono text-xs text-muted-foreground'>
+                    Timegrapher logging is a Pro feature
+                  </p>
+                  {user && <UpgradeButton pbUserId={user.id} />}
+                </div>
+              </div>
+            ) : timegrapherReadings.length === 0 ? (
+              <div className='text-center py-6 text-xs font-mono text-muted-foreground'>
+                No timegrapher sessions yet.{' '}
+                {user && (
+                  <Link
+                    to='/watches/$watchId/timegrapher'
+                    params={{ watchId }}
+                    className='text-primary'
+                  >
+                    Log the first one →
+                  </Link>
+                )}
+              </div>
+            ) : (
+              (() => {
+                const latest = timegrapherReadings[0];
+                return (
+                  <div className='divide-y divide-border'>
+                    {[
+                      [
+                        'DU Rate',
+                        latest.du_rate != null
+                          ? `${latest.du_rate >= 0 ? '+' : ''}${latest.du_rate.toFixed(1)} s/d`
+                          : '—',
+                      ],
+                      [
+                        'DU Amplitude',
+                        latest.du_amp != null ? `${latest.du_amp}°` : '—',
+                      ],
+                      [
+                        'DU Beat Error',
+                        latest.du_be != null
+                          ? `${latest.du_be.toFixed(1)} ms`
+                          : '—',
+                      ],
+                    ].map(([k, v]) => (
+                      <div
+                        key={String(k)}
+                        className='flex justify-between items-center px-4 py-2.5 hover:bg-white/2 transition-colors'
+                      >
+                        <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
+                          {k}
+                        </span>
+                        <span className='font-mono text-[11.5px] text-foreground'>
+                          {v}
+                        </span>
+                      </div>
+                    ))}
+                    <div className='px-4 py-2.5'>
+                      <Link
+                        to='/watches/$watchId/timegrapher'
+                        params={{ watchId }}
+                        className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
+                      >
+                        Full log →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })()
+            )}
           </section>
 
           {/* Parts Used */}
