@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns/format';
-import { capitalize } from 'lodash';
+import { capitalize } from 'lodash-es';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { StagePill } from '#/components/primitives/StagePill';
 import { StageTag } from '#/components/primitives/StageTag';

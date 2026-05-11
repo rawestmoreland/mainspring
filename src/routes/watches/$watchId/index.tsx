@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   useGetWatchById,
   useDeleteWatchPhoto,
   useUpdateWatch,
   useUploadWatchPhotos,
+  useDeleteWatch,
 } from '#/hooks/watches';
 import { useGetPostsByWatch } from '#/hooks/posts';
 import { useUser } from '#/hooks/user';
@@ -21,13 +22,16 @@ import { Lightbox } from '#/components/watches/Lightbox';
 import { AddPartUsedDialog } from '#/components/watches/AddPartUsedDialog';
 import TipTapEditor from '#/components/TipTap';
 import { useDeletePartUsed } from '#/hooks/parts_used';
-import { capitalize } from 'lodash';
+import { capitalize } from 'lodash-es';
+import { Button } from '#/components/ui/button';
+import { Trash2Icon } from 'lucide-react';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const navigate = useNavigate();
   const { watchId } = Route.useParams();
   const { data: watch, isLoading } = useGetWatchById(watchId);
   const { data: user } = useUser();
@@ -36,6 +40,7 @@ function RouteComponent() {
   const deletePhoto = useDeleteWatchPhoto(watchId);
   const uploadPhotos = useUploadWatchPhotos(watchId);
   const updateWatch = useUpdateWatch();
+  const deleteWatch = useDeleteWatch();
   const deletePartUsed = useDeletePartUsed(watchId);
 
   const [stageFilter, setStageFilter] = useState<string>('all');
@@ -194,6 +199,26 @@ function RouteComponent() {
               <div className='absolute top-2 left-2'>
                 <StageTag stage={activePhoto.stage} />
               </div>
+              {user && (
+                <div className='absolute top-2 right-2'>
+                  <Button
+                    className='cursor-pointer'
+                    size='icon'
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (
+                        confirm('Are you sure you want to delete this photo?')
+                      ) {
+                        deletePhoto.mutate(activePhoto.id);
+                      } else {
+                        return;
+                      }
+                    }}
+                  >
+                    <Trash2Icon />
+                  </Button>
+                </div>
+              )}
               {activePhoto.caption && (
                 <div className='absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-3 pb-2.5 pt-6 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight'>
                   {activePhoto.caption}
@@ -225,25 +250,6 @@ function RouteComponent() {
                     alt={ph.caption}
                     className='w-full h-full object-cover'
                   />
-                  {user && (
-                    <div
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (
-                          confirm('Are you sure you want to delete this photo?')
-                        ) {
-                          deletePhoto.mutate(ph.id);
-                        } else {
-                          return;
-                        }
-                      }}
-                      className='absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover/thumb:opacity-100 transition-opacity cursor-pointer'
-                    >
-                      <span className='text-red-400 text-lg leading-none'>
-                        ×
-                      </span>
-                    </div>
-                  )}
                 </button>
               ))}
             </div>
@@ -354,19 +360,31 @@ function RouteComponent() {
                 <table className='w-full text-xs font-mono'>
                   <thead>
                     <tr className='border-b border-border bg-muted/40'>
-                      <th className='px-3.5 py-2 text-left text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>Part</th>
-                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>Qty</th>
-                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>Unit</th>
-                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>Total</th>
+                      <th className='px-3.5 py-2 text-left text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
+                        Part
+                      </th>
+                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
+                        Qty
+                      </th>
+                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
+                        Unit
+                      </th>
+                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
+                        Total
+                      </th>
                       {user && <th className='px-3.5 py-2 w-6' />}
                     </tr>
                   </thead>
                   <tbody className='divide-y divide-border'>
                     {partsUsed.map((part) => {
-                      const unitCost = part.expand?.inventory_item?.unit_cost ?? 0;
+                      const unitCost =
+                        part.expand?.inventory_item?.unit_cost ?? 0;
                       const total = (part.qty_used ?? 0) * unitCost;
                       return (
-                        <tr key={part.id} className='hover:bg-white/2 transition-colors'>
+                        <tr
+                          key={part.id}
+                          className='hover:bg-white/2 transition-colors'
+                        >
                           <td className='px-3.5 py-2.5 text-foreground'>
                             {part.expand?.inventory_item?.name ?? '—'}
                           </td>
@@ -383,7 +401,9 @@ function RouteComponent() {
                             <td className='px-3.5 py-2.5 text-right'>
                               <button
                                 onClick={() => {
-                                  if (confirm('Remove this part from the log?')) {
+                                  if (
+                                    confirm('Remove this part from the log?')
+                                  ) {
                                     deletePartUsed.mutate(part.id);
                                   }
                                 }}
@@ -400,7 +420,10 @@ function RouteComponent() {
                   </tbody>
                   <tfoot>
                     <tr className='border-t border-border bg-muted/20'>
-                      <td colSpan={user ? 3 : 3} className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
+                      <td
+                        colSpan={user ? 3 : 3}
+                        className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'
+                      >
                         Total
                       </td>
                       <td className='px-3.5 py-2 text-right font-semibold text-foreground'>
@@ -550,6 +573,29 @@ function RouteComponent() {
                 </p>
               )}
             </div>
+          </section>
+          <section className='flex justify-end'>
+            <Button
+              disabled={deleteWatch.isPending}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (
+                  confirm(
+                    'Are you sure you want to delete this watch? All associated photos, and part usage will also be deleted.',
+                  )
+                ) {
+                  await deleteWatch.mutateAsync(watch.id);
+                  navigate({ to: '/dashboard' });
+                } else {
+                  return;
+                }
+              }}
+              size='sm'
+              variant='link'
+            >
+              <Trash2Icon />
+              Delete this watch
+            </Button>
           </section>
         </div>
       </div>

@@ -157,6 +157,10 @@ body {
   a:hover {
     color: #1d3148;
   }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 code {

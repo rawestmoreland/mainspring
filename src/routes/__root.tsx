@@ -190,6 +190,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Toaster />
+        <script src='https://assets.lemonsqueezy.com/lemon.js' defer></script>
         <Scripts />
       </body>
     </html>

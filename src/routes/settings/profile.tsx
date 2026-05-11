@@ -12,6 +12,10 @@ import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Field, FieldError, FieldGroup } from '#/components/ui/field';
 import { Textarea } from '#/components/ui/textarea';
+import { getCustomerPortalUrl, getSignedUrl } from '#/server/ls-url';
+import { useSubscription } from '#/hooks/subscription';
+import { Separator } from '#/components/ui/separator';
+import { canModifySubscription } from '#/lib/helpers';
 
 export const Route = createFileRoute('/settings/profile')({
   component: ProfileSettingsPage,
@@ -38,6 +42,9 @@ type FormData = z.infer<typeof schema>;
 
 function ProfileSettingsPage() {
   const { user, profile, isLoading } = useAuth();
+  const { subscriptionId, lsCustomerId, subscriptionStatus } =
+    useSubscription();
+
   const queryClient = useQueryClient();
 
   const [subdomainStatus, setSubdomainStatus] = useState<
@@ -124,140 +131,190 @@ function ProfileSettingsPage() {
   if (!user) return null;
 
   return (
-    <div className='max-w-lg'>
-      <form onSubmit={handleSubmit((d) => save(d))} className='space-y-5'>
-        <FieldGroup>
-          <Controller
-            name='display_name'
-            control={control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <Label htmlFor='display_name'>Display name</Label>
-                <Input id='display_name' {...field} />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name='bio'
-            control={control}
-            render={({ field, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <Label htmlFor='bio'>Bio</Label>
-                <div className='flex flex-col gap-2'>
-                  <Textarea
-                    id='bio'
-                    {...field}
-                    maxLength={500}
-                    placeholder='A few words about you…'
-                  />
-                  <span className='text-xs text-muted-foreground'>{`${bioWatch?.length ?? 0} / 500 characters`}</span>
-                </div>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name='subdomain'
-            control={control}
-            render={({ field, fieldState }) => (
-              <Field
-                data-invalid={
-                  fieldState.invalid ||
-                  subdomainStatus === 'taken' ||
-                  subdomainStatus === 'invalid'
-                }
-              >
-                <Label htmlFor='subdomain'>
-                  Subdomain
-                  <span className='ml-1.5 font-mono text-[10px] text-muted-foreground'>
-                    your-name.hairspring.app
-                  </span>
-                </Label>
-                <div className='flex items-center gap-2'>
-                  <Input
-                    id='subdomain'
-                    {...field}
-                    placeholder='your-name'
-                    className='font-mono text-sm'
-                  />
-                  <span className='font-mono text-[11px] text-muted-foreground whitespace-nowrap'>
-                    {subdomainStatus === 'checking' && 'checking…'}
-                    {subdomainStatus === 'available' && (
-                      <span className='text-green-400'>✓ available</span>
-                    )}
-                    {subdomainStatus === 'taken' && (
-                      <span className='text-red-400'>✗ taken</span>
-                    )}
-                    {subdomainStatus === 'invalid' && (
-                      <span className='text-amber-400'>invalid format</span>
-                    )}
-                  </span>
-                </div>
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-                <p className='font-mono text-[10px] text-muted-foreground mt-1'>
-                  Lowercase letters, numbers, and hyphens only (3–63 chars).
-                  Setting a subdomain enables your public profile page.
-                </p>
-              </Field>
-            )}
-          />
-
-          <div className='flex items-center gap-3'>
+    <div className='max-w-lg flex flex-col gap-4'>
+      <div className='space-y-4'>
+        <h1 className='text-xl font-extrabold'>Profile Details</h1>
+        <form onSubmit={handleSubmit((d) => save(d))} className='space-y-5'>
+          <FieldGroup>
             <Controller
-              name='is_public'
+              name='display_name'
               control={control}
-              render={({ field }) => (
-                <button
-                  type='button'
-                  role='switch'
-                  aria-checked={field.value}
-                  disabled={!subdomainValue || subdomainStatus !== 'available'}
-                  onClick={() => field.onChange(!field.value)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                    field.value ? 'bg-primary' : 'bg-muted'
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-background shadow-lg transition-transform ${
-                      field.value ? 'translate-x-4' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <Label htmlFor='display_name'>Display name</Label>
+                  <Input id='display_name' {...field} />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
               )}
             />
-            <div>
-              <Label className='cursor-pointer'>Public profile</Label>
-              <p className='font-mono text-[10px] text-muted-foreground'>
-                {isPublic
-                  ? `Your profile is visible at ${subdomainValue}.hairspring.app`
-                  : 'Set a subdomain first to enable your public profile'}
-              </p>
+
+            <Controller
+              name='bio'
+              control={control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <Label htmlFor='bio'>Bio</Label>
+                  <div className='flex flex-col gap-2'>
+                    <Textarea
+                      id='bio'
+                      {...field}
+                      maxLength={500}
+                      placeholder='A few words about you…'
+                    />
+                    <span className='text-xs text-muted-foreground'>{`${bioWatch?.length ?? 0} / 500 characters`}</span>
+                  </div>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Controller
+              name='subdomain'
+              control={control}
+              render={({ field, fieldState }) => (
+                <Field
+                  data-invalid={
+                    fieldState.invalid ||
+                    subdomainStatus === 'taken' ||
+                    subdomainStatus === 'invalid'
+                  }
+                >
+                  <Label htmlFor='subdomain'>
+                    Subdomain
+                    <span className='ml-1.5 font-mono text-[10px] text-muted-foreground'>
+                      your-name.hairspring.app
+                    </span>
+                  </Label>
+                  <div className='flex items-center gap-2'>
+                    <Input
+                      id='subdomain'
+                      {...field}
+                      placeholder='your-name'
+                      className='font-mono text-sm'
+                    />
+                    <span className='font-mono text-[11px] text-muted-foreground whitespace-nowrap'>
+                      {subdomainStatus === 'checking' && 'checking…'}
+                      {subdomainStatus === 'available' && (
+                        <span className='text-green-400'>✓ available</span>
+                      )}
+                      {subdomainStatus === 'taken' && (
+                        <span className='text-red-400'>✗ taken</span>
+                      )}
+                      {subdomainStatus === 'invalid' && (
+                        <span className='text-amber-400'>invalid format</span>
+                      )}
+                    </span>
+                  </div>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                  <p className='font-mono text-[10px] text-muted-foreground mt-1'>
+                    Lowercase letters, numbers, and hyphens only (3–63 chars).
+                    Setting a subdomain enables your public profile page.
+                  </p>
+                </Field>
+              )}
+            />
+
+            <div className='flex items-center gap-3'>
+              <Controller
+                name='is_public'
+                control={control}
+                render={({ field }) => (
+                  <button
+                    type='button'
+                    role='switch'
+                    aria-checked={field.value}
+                    disabled={
+                      !subdomainValue || subdomainStatus !== 'available'
+                    }
+                    onClick={() => field.onChange(!field.value)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                      field.value ? 'bg-primary' : 'bg-muted'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-background shadow-lg transition-transform ${
+                        field.value ? 'translate-x-4' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                )}
+              />
+              <div>
+                <Label className='cursor-pointer'>Public profile</Label>
+                <p className='font-mono text-[10px] text-muted-foreground'>
+                  {isPublic
+                    ? `Your profile is visible at ${subdomainValue}.hairspring.app`
+                    : 'Set a subdomain first to enable your public profile'}
+                </p>
+              </div>
             </div>
-          </div>
-        </FieldGroup>
+          </FieldGroup>
 
-        {error && (
-          <p className='text-sm text-red-400'>
-            {(error as Error).message ?? 'Save failed. Please try again.'}
-          </p>
-        )}
+          {error && (
+            <p className='text-sm text-red-400'>
+              {(error as Error).message ?? 'Save failed. Please try again.'}
+            </p>
+          )}
 
-        <Button
-          type='submit'
-          disabled={isPending || subdomainStatus === 'taken'}
-        >
-          {isPending ? 'Saving…' : 'Save profile'}
-        </Button>
-      </form>
+          <Button
+            type='submit'
+            disabled={isPending || subdomainStatus === 'taken'}
+          >
+            {isPending ? 'Saving…' : 'Save profile'}
+          </Button>
+        </form>
+        <Separator />
+      </div>
+      {!!lsCustomerId && (
+        <div className='space-y-4'>
+          <h1 className='text-xl font-extrabold'>Billing & Subscription</h1>
+          {subscriptionId && canModifySubscription(subscriptionStatus) ? (
+            <>
+              <p className='text-sm text-muted-foreground'>
+                Current Plan:{' '}
+                <span className='font-medium capitalize'>
+                  {subscriptionStatus.replace('_', ' ')}
+                </span>
+              </p>
+              <Button
+                className='cursor-pointer mt-2'
+                onClick={async () => {
+                  // Priority 1: Manage the specific subscription
+                  const url = await getSignedUrl({ data: subscriptionId });
+                  if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+              >
+                Modify Subscription
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className='text-sm text-muted-foreground'>
+                No active subscription found.
+              </p>
+              <Button
+                variant='outline'
+                className='cursor-pointer mt-2'
+                onClick={async () => {
+                  // Priority 1: Manage the specific subscription
+                  const url = await getCustomerPortalUrl({
+                    data: lsCustomerId,
+                  });
+                  if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+              >
+                View Billing History
+              </Button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -139,3 +139,16 @@ export type CreateRepairPost = Omit<
   RepairPost,
   'id' | 'user' | 'images' | 'imageUrls' | 'created' | 'updated'
 >;
+
+export const SubscriptionStatus = {
+  ON_TRIAL: 'on_trial',
+  PAUSED: 'paused',
+  PAST_DUE: 'past_due',
+  UNPAID: 'unpaid',
+  CANCELLED: 'cancelled',
+  ACTIVE: 'active',
+  EXPIRED: 'expired',
+} as const;
+
+export type SubscriptionStatus =
+  (typeof SubscriptionStatus)[keyof typeof SubscriptionStatus];
