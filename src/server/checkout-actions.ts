@@ -13,18 +13,23 @@ lemonSqueezySetup({
 export const startProCheckout = createServerFn({
   method: 'POST',
 })
-  .inputValidator((userId: string) => userId)
-  .handler(async ({ data: userId }) => {
+  .inputValidator(
+    ({ userId, pathname }: { userId: string; pathname: string }) => ({
+      userId,
+      pathname,
+    }),
+  )
+  .handler(async ({ data: { userId, pathname } }) => {
     const storeId = process.env.LEMONSQUEEZY_STORE_ID!;
     const variantId = '1622808';
 
     const appUrl = !!process.env.APP_URL
-      ? `${process.env.APP_URL}?checkout_success=true`
-      : 'http://localhost:3000?checkout_success=true';
+      ? `${process.env.APP_URL}`
+      : 'http://localhost:3000';
 
     const { data, error } = await createCheckout(storeId, variantId, {
       productOptions: {
-        redirectUrl: `${appUrl}/dashboard`,
+        redirectUrl: `${appUrl}${pathname}?checkout_success=true`,
       },
       checkoutData: {
         custom: {

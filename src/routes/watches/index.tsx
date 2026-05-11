@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { cn, fmt, profit } from '#/lib/helpers';
-import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { ThumbStrip } from '#/components/watches/ThumbStrip';
 import type { WatchStatus } from '#/types';
@@ -10,6 +9,7 @@ import { Button } from '#/components/ui/button';
 import { useUser } from '#/hooks/user';
 import { PlusIcon } from 'lucide-react';
 import { WatchesListSkeleton } from '#/components/skeletons';
+import { StatusPicker } from '#/components/watches/StatusPicker';
 
 export const Route = createFileRoute('/watches/')({
   component: WatchesPage,
@@ -117,7 +117,7 @@ function WatchesPage() {
                   {w.year}
                 </Td>
                 <Td>
-                  <StatusBadge status={w.status} />
+                  <StatusPicker watch={w} />
                 </Td>
                 <Td className='text-xs text-muted-foreground capitalize'>
                   {w.condition_bought.replace('_', ' ')}

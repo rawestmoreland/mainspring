@@ -186,6 +186,7 @@ export const SubscriptionStatus = {
   UNPAID: 'unpaid',
   CANCELLED: 'cancelled',
   ACTIVE: 'active',
+  PAID: 'paid',
   EXPIRED: 'expired',
 } as const;
 

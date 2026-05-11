@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import {
   Outlet,
   createRootRouteWithContext,
@@ -23,6 +23,12 @@ import { Toaster } from 'sonner';
 import dmMonoUrl from '@fontsource/dm-mono/files/dm-mono-latin-400-normal.woff2?url';
 import playfairUrl from '@fontsource/playfair-display/files/playfair-display-latin-600-normal.woff2?url';
 import loraUrl from '@fontsource/lora/files/lora-latin-400-normal.woff2?url';
+
+declare global {
+  interface Window {
+    createLemonSqueezy?: () => void;
+  }
+}
 
 type RouterContext = { queryClient: QueryClient };
 
@@ -182,6 +188,11 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.createLemonSqueezy?.();
+    }
+  }, []);
   return (
     <html lang='en' className='light'>
       <head>
@@ -190,7 +201,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Toaster />
-        <script src='https://assets.lemonsqueezy.com/lemon.js' defer></script>
+        <script src='https://app.lemonsqueezy.com/js/lemon.js' defer></script>
         <Scripts />
       </body>
     </html>

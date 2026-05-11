@@ -8,6 +8,10 @@ import { StageTag } from '#/components/primitives/StageTag';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
 import { Lightbox } from '#/components/watches/Lightbox';
 import { UploadZone, type PendingPhoto } from '#/components/watches/UploadZone';
+import { useSubscription } from '#/hooks/subscription';
+import { useUser } from '#/hooks/user';
+import { LockIcon } from 'lucide-react';
+import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 
 type WatchModalProps = {
   watch: Watch;
@@ -20,6 +24,9 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [activeIdx, setActiveIdx] = useState(0);
   const [lightbox, setLightbox] = useState<{ photos: WatchPhoto[]; index: number } | null>(null);
+  const { isPro } = useSubscription();
+  const { data: user } = useUser();
+  const canViewPhotos = isPro || watch.photos.length > 0;
 
   const p = profit(watch);
   const r = roi(watch);
@@ -128,48 +135,58 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
             </div>
 
             {/* Main photo viewer */}
-            {activePhoto ? (
-              <div className="relative w-full aspect-[4/3] bg-zinc-950 overflow-hidden group shrink-0">
-                <img
-                  src={activePhoto.image}
-                  alt={activePhoto.caption}
-                  className="w-full h-full object-contain cursor-zoom-in"
-                  onClick={() => setLightbox({ photos: displayedPhotos, index: activeIdx })}
-                />
+            {canViewPhotos ? (
+              activePhoto ? (
+                <div className="relative w-full aspect-[4/3] bg-zinc-950 overflow-hidden group shrink-0">
+                  <img
+                    src={activePhoto.image}
+                    alt={activePhoto.caption}
+                    className="w-full h-full object-contain cursor-zoom-in"
+                    onClick={() => setLightbox({ photos: displayedPhotos, index: activeIdx })}
+                  />
 
-                {displayedPhotos.length > 1 && (
-                  <>
-                    <button
-                      onClick={prevPhoto}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      ‹
-                    </button>
-                    <button
-                      onClick={nextPhoto}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                      ›
-                    </button>
-                    <div className="absolute bottom-2 right-2 bg-black/60 text-white/70 font-mono text-[10px] px-2 py-0.5 rounded-full">
-                      {activeIdx + 1} / {displayedPhotos.length}
-                    </div>
-                  </>
-                )}
+                  {displayedPhotos.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevPhoto}
+                        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        onClick={nextPhoto}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        ›
+                      </button>
+                      <div className="absolute bottom-2 right-2 bg-black/60 text-white/70 font-mono text-[10px] px-2 py-0.5 rounded-full">
+                        {activeIdx + 1} / {displayedPhotos.length}
+                      </div>
+                    </>
+                  )}
 
-                <div className="absolute top-2 left-2">
-                  <StageTag stage={activePhoto.stage} />
-                </div>
-
-                {activePhoto.caption && (
-                  <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-3 pb-2.5 pt-6 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
-                    {activePhoto.caption}
+                  <div className="absolute top-2 left-2">
+                    <StageTag stage={activePhoto.stage} />
                   </div>
-                )}
-              </div>
+
+                  {activePhoto.caption && (
+                    <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-3 pb-2.5 pt-6 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
+                      {activePhoto.caption}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="w-full aspect-[4/3] flex items-center justify-center text-muted-foreground font-mono text-xs bg-zinc-950 shrink-0">
+                  No photos for this stage
+                </div>
+              )
             ) : (
-              <div className="w-full aspect-[4/3] flex items-center justify-center text-muted-foreground font-mono text-xs bg-zinc-950 shrink-0">
-                No photos for this stage
+              <div className="w-full aspect-[4/3] flex flex-col items-center justify-center gap-3 bg-zinc-950 shrink-0">
+                <LockIcon className="w-5 h-5 text-amber-400" />
+                <p className="font-mono text-xs text-muted-foreground text-center px-6">
+                  Photo documentation is a Pro feature
+                </p>
+                {user && <UpgradeButton pbUserId={user.id} />}
               </div>
             )}
 
@@ -198,7 +215,17 @@ export function WatchModal({ watch: init, onClose, onUpdatePhotos }: WatchModalP
               <div className="flex items-center justify-between mb-3">
                 <SectionLabel>Restoration Photos ({watch.photos.length})</SectionLabel>
               </div>
-              <UploadZone onUpload={handleUpload} />
+              {isPro ? (
+                <UploadZone onUpload={handleUpload} />
+              ) : (
+                <div className="flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6">
+                  <LockIcon className="w-4 h-4 text-amber-400" />
+                  <p className="font-mono text-xs text-muted-foreground">
+                    Photo uploads are a Pro feature
+                  </p>
+                  {user && <UpgradeButton pbUserId={user.id} />}
+                </div>
+              )}
             </div>
           </div>
 

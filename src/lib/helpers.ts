@@ -58,6 +58,7 @@ export const hasPro = ({
   if (
     subscriptionStatus === SubscriptionStatus.ACTIVE ||
     subscriptionStatus === SubscriptionStatus.ON_TRIAL ||
+    subscriptionStatus === SubscriptionStatus.PAID ||
     subscriptionStatus === SubscriptionStatus.CANCELLED
   ) {
     // Ensure the expiration date hasn't passed (important for CANCELLED)

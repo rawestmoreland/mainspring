@@ -6,14 +6,22 @@
     "enabled": true,
   },
   "main": "dist/server/server.js",
-  "assets": { "directory": "dist/client" },
+  "assets": {
+    "directory": "dist/client",
+  },
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "VITE_ASSET_URL": "https://ms-assets.westmorelandcreative.com",
     "VITE_POCKETBASE_URL": "https://api.hairspring.app",
   },
   "routes": [
-    { "pattern": "hairspring.app/*", "zone_name": "hairspring.app" },
-    { "pattern": "*.hairspring.app/*", "zone_name": "hairspring.app" },
+    {
+      "pattern": "hairspring.app/*",
+      "zone_name": "hairspring.app",
+    },
+    {
+      "pattern": "*.hairspring.app/*",
+      "zone_name": "hairspring.app",
+    },
   ],
 }

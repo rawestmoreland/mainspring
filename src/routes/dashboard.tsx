@@ -3,7 +3,6 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { cn, fmt, fmtPct, profit, roi } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
-import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { ThumbStrip } from '#/components/watches/ThumbStrip';
 import { useWatches } from '#/hooks/watches';
@@ -13,6 +12,7 @@ import { useUser } from '#/hooks/user';
 import { Button } from '#/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { DashboardSkeleton } from '#/components/skeletons';
+import { StatusPicker } from '#/components/watches/StatusPicker';
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -124,15 +124,7 @@ function Dashboard() {
               const p = profit(w);
               const r = roi(w);
               return (
-                <TableRow
-                  key={w.id}
-                  onClick={() =>
-                    navigate({
-                      to: '/watches/$watchId',
-                      params: { watchId: w.id },
-                    })
-                  }
-                >
+                <TableRow key={w.id}>
                   <Td className='hidden sm:table-cell'>
                     <ThumbStrip
                       photos={w.photos}
@@ -145,15 +137,25 @@ function Dashboard() {
                     />
                   </Td>
                   <Td>
-                    <div className='font-medium text-foreground'>
-                      {w.make} {w.model}
-                    </div>
-                    <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
-                      {w.reference} · {w.year}
+                    <div
+                      className='cursor-pointer'
+                      onClick={() =>
+                        navigate({
+                          to: '/watches/$watchId',
+                          params: { watchId: w.id },
+                        })
+                      }
+                    >
+                      <div className='font-medium text-foreground'>
+                        {w.make} {w.model}
+                      </div>
+                      <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
+                        {w.reference} · {w.year}
+                      </div>
                     </div>
                   </Td>
                   <Td>
-                    <StatusBadge status={w.status} />
+                    <StatusPicker watch={w} />
                   </Td>
                   <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
                   <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>

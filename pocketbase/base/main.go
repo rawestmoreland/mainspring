@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/pocketbase/pocketbase"
@@ -26,16 +27,9 @@ import (
 	_ "mainspring/migrations"
 )
 
-func goDot(key string) string {
-
-	// load .env file
-	err := godotenv.Load(".env")
-
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
-	return os.Getenv(key)
+func init() {
+	// Load .env in local dev; in production (Fly.io) secrets are already env vars
+	_ = godotenv.Load()
 }
 
 var (
@@ -52,10 +46,30 @@ var (
 	}
 )
 
+// hasPro mirrors the frontend hasPro() logic in src/lib/helpers.ts.
+func hasPro(user *core.Record) bool {
+	status := user.GetString("subscription_status")
+	now := time.Now()
+
+	switch status {
+	case "active", "on_trial", "cancelled":
+		endsAt := user.GetDateTime("ends_at")
+		return endsAt.IsZero() || endsAt.Time().After(now)
+	case "past_due":
+		renewsAt := user.GetDateTime("renews_at")
+		if renewsAt.IsZero() {
+			return false
+		}
+		return now.Before(renewsAt.Time().Add(48 * time.Hour))
+	default:
+		return false
+	}
+}
+
 func main() {
 	app := pocketbase.New()
 
-	LS_API_KEY := goDot("LEMONSQUEEZY_API_KEY")
+	LS_API_KEY := os.Getenv("LEMONSQUEEZY_API_KEY")
 
 	squeezyClient := lemonsqueezy.New(lemonsqueezy.WithAPIKey(LS_API_KEY))
 
@@ -91,7 +105,7 @@ func main() {
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		se.Router.POST("/api/lemonsqueezy/webhook", func(e *core.RequestEvent) error {
-			secret := goDot("LEMONSQUEEZY_WEBHOOK_SECRET")
+			secret := os.Getenv("LEMONSQUEEZY_WEBHOOK_SECRET")
 
 			body, err := io.ReadAll(e.Request.Body)
 			if err != nil {
@@ -135,6 +149,7 @@ func main() {
 				record, err := app.FindRecordById("users", userID)
 				if err == nil {
 					record.Set("subscription_status", "active")
+					record.Set("ends_at", payload.Data.Attributes.EndsAt)
 					if payload.Data.ID != "" {
 						record.Set("subscription_id", payload.Data.ID)
 					}
@@ -221,6 +236,26 @@ func main() {
 		if err := validateSubdomain(e.Record.GetString("subdomain")); err != nil {
 			return err
 		}
+		return e.Next()
+	})
+
+	app.OnRecordCreate("watch_photos").BindFunc(func(e *core.RecordEvent) error {
+		watchID := e.Record.GetString("watch")
+
+		watch, err := e.App.FindRecordById("watches", watchID)
+		if err != nil {
+			return apis.NewApiError(http.StatusBadRequest, "watch not found", nil)
+		}
+
+		user, err := e.App.FindRecordById("users", watch.GetString("user"))
+		if err != nil {
+			return apis.NewApiError(http.StatusForbidden, "user not found", nil)
+		}
+
+		if !hasPro(user) {
+			return apis.NewApiError(http.StatusForbidden, "pro subscription required to upload photos", nil)
+		}
+
 		return e.Next()
 	})
 

@@ -6,10 +6,13 @@ import {
   useUploadWatchPhotos,
 } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
+import { useSubscription } from '#/hooks/subscription';
 import { StageTag } from '#/components/primitives/StageTag';
 import { UploadZone } from '#/components/watches/UploadZone';
 import type { PendingPhoto } from '#/components/watches/UploadZone';
 import type { WatchStage } from '#/types';
+import { LockIcon } from 'lucide-react';
+import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 
 export const Route = createFileRoute('/watches/$watchId/gallery')({
   component: GalleryPage,
@@ -34,6 +37,7 @@ function GalleryPage() {
   const { watchId } = Route.useParams();
   const { data: watch, isLoading } = useGetWatchById(watchId);
   const { data: user } = useUser();
+  const { isPro } = useSubscription();
   const deletePhoto = useDeleteWatchPhoto(watchId);
   const uploadPhotos = useUploadWatchPhotos(watchId);
 
@@ -48,6 +52,7 @@ function GalleryPage() {
   };
 
   const allPhotos = watch?.photos ?? [];
+  const canViewPhotos = isPro || allPhotos.length > 0;
   const filtered =
     stageFilter === 'all'
       ? allPhotos
@@ -110,16 +115,38 @@ function GalleryPage() {
             {watch.make} {watch.model}
           </span>
         </Link>
-        {user && <UploadZone onUpload={handleUpload} />}
+        {user && (
+          isPro ? (
+            <UploadZone onUpload={handleUpload} />
+          ) : (
+            <div className='flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2'>
+              <LockIcon className='w-3.5 h-3.5 text-amber-400 shrink-0' />
+              <span className='font-mono text-xs text-muted-foreground'>
+                Photo uploads are a Pro feature
+              </span>
+              <UpgradeButton pbUserId={user.id} />
+            </div>
+          )
+        )}
       </div>
 
       {allPhotos.length === 0 ? (
-        <div className='flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-lg gap-3'>
-          <div className='text-4xl text-muted-foreground/20'>⬜</div>
-          <p className='text-xs font-mono text-muted-foreground'>
-            No photos yet.
-          </p>
-        </div>
+        canViewPhotos ? (
+          <div className='flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-lg gap-3'>
+            <div className='text-4xl text-muted-foreground/20'>⬜</div>
+            <p className='text-xs font-mono text-muted-foreground'>
+              No photos yet.
+            </p>
+          </div>
+        ) : (
+          <div className='flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-lg gap-3'>
+            <LockIcon className='w-6 h-6 text-amber-400' />
+            <p className='font-mono text-xs text-muted-foreground text-center px-6'>
+              Photo documentation is a Pro feature
+            </p>
+            {user && <UpgradeButton pbUserId={user.id} />}
+          </div>
+        )
       ) : (
         <>
           {/* Stage filter pills */}

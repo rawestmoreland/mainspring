@@ -28,6 +28,7 @@ import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { capitalize } from 'lodash-es';
 import { Button } from '#/components/ui/button';
 import { LockIcon, Trash2Icon } from 'lucide-react';
+import { StatusPicker } from '#/components/watches/StatusPicker';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
@@ -80,6 +81,7 @@ function RouteComponent() {
   }
 
   const photos = watch.photos ?? [];
+  const canViewPhotos = isPro || photos.length > 0;
   const displayedPhotos =
     stageFilter === 'all'
       ? photos
@@ -139,7 +141,11 @@ function RouteComponent() {
             <span className='text-muted-foreground/60'>·</span>
             <span>{watch.year}</span>
             <span className='text-muted-foreground/60'>·</span>
-            <StatusBadge status={watch.status} />
+            {user ? (
+              <StatusPicker watch={watch} />
+            ) : (
+              <StatusBadge status={watch.status} />
+            )}
           </div>
         </div>
         <div className='flex items-center gap-3 text-xs font-mono'>
@@ -172,67 +178,77 @@ function RouteComponent() {
           </div>
 
           {/* Main photo viewer */}
-          {activePhoto ? (
-            <div className='relative w-full aspect-4/3 bg-zinc-950 overflow-hidden group'>
-              <img
-                src={activePhoto.image}
-                alt={activePhoto.caption}
-                className='w-full h-full object-contain cursor-zoom-in'
-                onClick={() =>
-                  setLightbox({ photos: displayedPhotos, index: activeIdx })
-                }
-              />
-              {displayedPhotos.length > 1 && (
-                <>
-                  <button
-                    onClick={prevPhoto}
-                    className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100'
-                  >
-                    ‹
-                  </button>
-                  <button
-                    onClick={nextPhoto}
-                    className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100'
-                  >
-                    ›
-                  </button>
-                  <div className='absolute bottom-2 right-2 bg-black/60 text-white/70 font-mono text-[10px] px-2 py-0.5 rounded-full'>
-                    {activeIdx + 1} / {displayedPhotos.length}
+          {canViewPhotos ? (
+            activePhoto ? (
+              <div className='relative w-full aspect-4/3 bg-zinc-950 overflow-hidden group'>
+                <img
+                  src={activePhoto.image}
+                  alt={activePhoto.caption}
+                  className='w-full h-full object-contain cursor-zoom-in'
+                  onClick={() =>
+                    setLightbox({ photos: displayedPhotos, index: activeIdx })
+                  }
+                />
+                {displayedPhotos.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevPhoto}
+                      className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100'
+                    >
+                      ‹
+                    </button>
+                    <button
+                      onClick={nextPhoto}
+                      className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100'
+                    >
+                      ›
+                    </button>
+                    <div className='absolute bottom-2 right-2 bg-black/60 text-white/70 font-mono text-[10px] px-2 py-0.5 rounded-full'>
+                      {activeIdx + 1} / {displayedPhotos.length}
+                    </div>
+                  </>
+                )}
+                <div className='absolute top-2 left-2'>
+                  <StageTag stage={activePhoto.stage} />
+                </div>
+                {user && (
+                  <div className='absolute top-2 right-2'>
+                    <Button
+                      className='cursor-pointer'
+                      size='icon'
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (
+                          confirm('Are you sure you want to delete this photo?')
+                        ) {
+                          deletePhoto.mutate(activePhoto.id);
+                        } else {
+                          return;
+                        }
+                      }}
+                    >
+                      <Trash2Icon />
+                    </Button>
                   </div>
-                </>
-              )}
-              <div className='absolute top-2 left-2'>
-                <StageTag stage={activePhoto.stage} />
+                )}
+                {activePhoto.caption && (
+                  <div className='absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-3 pb-2.5 pt-6 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight'>
+                    {activePhoto.caption}
+                  </div>
+                )}
               </div>
-              {user && (
-                <div className='absolute top-2 right-2'>
-                  <Button
-                    className='cursor-pointer'
-                    size='icon'
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (
-                        confirm('Are you sure you want to delete this photo?')
-                      ) {
-                        deletePhoto.mutate(activePhoto.id);
-                      } else {
-                        return;
-                      }
-                    }}
-                  >
-                    <Trash2Icon />
-                  </Button>
-                </div>
-              )}
-              {activePhoto.caption && (
-                <div className='absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-3 pb-2.5 pt-6 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight'>
-                  {activePhoto.caption}
-                </div>
-              )}
-            </div>
+            ) : (
+              <div className='w-full aspect-4/3 flex items-center justify-center text-muted-foreground font-mono text-xs bg-zinc-950'>
+                No photos for this stage
+              </div>
+            )
           ) : (
-            <div className='w-full aspect-4/3 flex items-center justify-center text-muted-foreground font-mono text-xs bg-zinc-950'>
-              No photos for this stage
+            <div className='w-full aspect-4/3 flex flex-col items-center justify-center gap-3 bg-zinc-950'>
+              <LockIcon className='w-5 h-5 text-amber-400' />
+              <p className='font-mono text-xs text-muted-foreground text-center px-6'>
+                Photo documentation is a Pro feature
+              </p>
+              {user && <UpgradeButton pbUserId={user.id} />}
             </div>
           )}
 
@@ -266,7 +282,17 @@ function RouteComponent() {
               <div className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2.5'>
                 Restoration Photos ({photos.length})
               </div>
-              <UploadZone onUpload={handleUpload} />
+              {isPro ? (
+                <UploadZone onUpload={handleUpload} />
+              ) : (
+                <div className='flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6'>
+                  <LockIcon className='w-4 h-4 text-amber-400' />
+                  <p className='font-mono text-xs text-muted-foreground'>
+                    Photo uploads are a Pro feature
+                  </p>
+                  <UpgradeButton pbUserId={user.id} />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -374,7 +400,10 @@ function RouteComponent() {
             </div>
             {!isPro ? (
               <div className='relative'>
-                <div className='divide-y divide-border blur-sm select-none pointer-events-none' aria-hidden>
+                <div
+                  className='divide-y divide-border blur-sm select-none pointer-events-none'
+                  aria-hidden
+                >
                   {[
                     ['DU Rate', '+2.3 s/d'],
                     ['DU Amplitude', '298°'],
