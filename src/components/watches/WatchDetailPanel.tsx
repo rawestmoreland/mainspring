@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { XIcon, ArrowRightIcon } from 'lucide-react';
+import { XIcon, ArrowRightIcon, ChevronLeftIcon } from 'lucide-react';
 import { format } from 'date-fns/format';
 import { capitalize } from 'lodash-es';
 
@@ -8,6 +8,7 @@ import type { Watch } from '#/types';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { StatusPicker } from '#/components/watches/StatusPicker';
 import { useUser } from '#/hooks/user';
+import { useIsMobile } from '#/hooks/use-mobile';
 
 type WatchDetailPanelProps = {
   watch: Watch;
@@ -27,17 +28,32 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-export function WatchDetailPanel({ watch, onClose }: WatchDetailPanelProps) {
+type PanelContentProps = {
+  watch: Watch;
+  onClose: () => void;
+  isMobile: boolean;
+};
+
+function PanelContent({ watch, onClose, isMobile }: PanelContentProps) {
   const { data: user } = useUser();
   const p = profit(watch);
   const r = roi(watch);
   const firstPhoto = watch.photos?.[0];
 
   return (
-    <div className="w-[320px] shrink-0 border-l border-border bg-background self-start sticky top-0 max-h-[calc(100vh-7rem)] overflow-y-auto flex flex-col rounded-xl">
+    <>
       {/* Header */}
       <div className="flex items-start justify-between px-4 py-3 border-b border-border gap-3 sticky top-0 bg-background z-10">
-        <div className="min-w-0">
+        {isMobile ? (
+          <button
+            onClick={onClose}
+            className="flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0 shrink-0 mt-0.5"
+          >
+            <ChevronLeftIcon className="size-3.5" />
+            Back
+          </button>
+        ) : null}
+        <div className="min-w-0 flex-1">
           <div className="font-serif font-semibold text-foreground text-base leading-tight">
             {watch.make} {watch.model}
           </div>
@@ -45,13 +61,15 @@ export function WatchDetailPanel({ watch, onClose }: WatchDetailPanelProps) {
             {watch.reference} · {watch.year}
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0.5 mt-0.5"
-          aria-label="Close panel"
-        >
-          <XIcon className="size-4" />
-        </button>
+        {!isMobile ? (
+          <button
+            onClick={onClose}
+            className="shrink-0 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0.5 mt-0.5"
+            aria-label="Close panel"
+          >
+            <XIcon className="size-4" />
+          </button>
+        ) : null}
       </div>
 
       {/* Status */}
@@ -68,10 +86,18 @@ export function WatchDetailPanel({ watch, onClose }: WatchDetailPanelProps) {
         <img
           src={firstPhoto.image}
           alt=""
-          className="w-full aspect-video object-cover border-b border-border"
+          className={cn(
+            'w-full object-cover border-b border-border',
+            isMobile ? 'max-h-56' : 'aspect-video',
+          )}
         />
       ) : (
-        <div className="aspect-video bg-zinc-950 flex items-center justify-center border-b border-border">
+        <div
+          className={cn(
+            'bg-zinc-950 flex items-center justify-center border-b border-border',
+            isMobile ? 'h-32' : 'aspect-video',
+          )}
+        >
           <span className="font-mono text-[9px] text-muted-foreground/25 uppercase tracking-widest">
             No photos
           </span>
@@ -129,10 +155,7 @@ export function WatchDetailPanel({ watch, onClose }: WatchDetailPanelProps) {
           }
         />
         {watch.sold_date && (
-          <Row
-            label="Sold"
-            value={format(watch.sold_date, 'MMM d, yyyy')}
-          />
+          <Row label="Sold" value={format(watch.sold_date, 'MMM d, yyyy')} />
         )}
       </div>
 
@@ -147,6 +170,30 @@ export function WatchDetailPanel({ watch, onClose }: WatchDetailPanelProps) {
           <ArrowRightIcon className="size-3 group-hover:translate-x-0.5 transition-transform" />
         </Link>
       </div>
+    </>
+  );
+}
+
+export function WatchDetailPanel({ watch, onClose }: WatchDetailPanelProps) {
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return (
+      <>
+        <div
+          className="fixed inset-0 z-40 bg-black/60"
+          onClick={onClose}
+        />
+        <div className="fixed inset-x-0 top-14 bottom-0 z-50 bg-background overflow-y-auto flex flex-col">
+          <PanelContent watch={watch} onClose={onClose} isMobile={true} />
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <div className="w-[320px] shrink-0 border-l border-border bg-background self-start sticky top-0 max-h-[calc(100vh-7rem)] overflow-y-auto flex flex-col rounded-xl">
+      <PanelContent watch={watch} onClose={onClose} isMobile={false} />
     </div>
   );
 }
