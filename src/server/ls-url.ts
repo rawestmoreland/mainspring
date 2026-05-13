@@ -22,7 +22,7 @@ export const getSignedUrl = createServerFn({
       throw new Error(error.message);
     }
 
-    return data.data.attributes.urls.customer_portal;
+    return data.data.attributes.urls.customer_portal_update_subscription;
   });
 
 export const getCustomerPortalUrl = createServerFn({

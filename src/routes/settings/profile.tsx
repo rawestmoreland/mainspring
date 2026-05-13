@@ -301,7 +301,6 @@ function ProfileSettingsPage() {
               <Button
                 className='cursor-pointer mt-2'
                 onClick={async () => {
-                  // Priority 1: Manage the specific subscription
                   const url = await getSignedUrl({ data: subscriptionId });
                   if (url) window.open(url, '_blank', 'noopener,noreferrer');
                 }}
