@@ -52,7 +52,7 @@ export const WatchesApi = {
   uploadFeaturedImage: async (watchId: string, file: File): Promise<Watch> => {
     const fd = new FormData();
     fd.append('featured_image', file);
-    const updated = await pb.collection('watches').update<Watch>(watchId, fd);
+    const updated = await pb.collection('watches').update<Watch>(watchId, fd, { requestKey: null });
     return {
       ...updated,
       featured_image_url: updated.featured_image
