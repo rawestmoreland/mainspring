@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
   useGetWatchById,
@@ -6,6 +6,7 @@ import {
   useUpdateWatch,
   useUploadWatchPhotos,
   useDeleteWatch,
+  useUploadFeaturedImage,
 } from '#/hooks/watches';
 import { useGetPostsByWatch } from '#/hooks/posts';
 import { useUser } from '#/hooks/user';
@@ -18,7 +19,6 @@ import type { WatchPhoto } from '#/types';
 import { format } from 'date-fns/format';
 import { UploadZone } from '#/components/watches/UploadZone';
 import type { PendingPhoto } from '#/components/watches/UploadZone';
-import { FeaturedImageUpload } from '#/components/watches/FeaturedImageUpload';
 import { Lightbox } from '#/components/watches/Lightbox';
 import { AddPartUsedDialog } from '#/components/watches/AddPartUsedDialog';
 import TipTapEditor from '#/components/TipTap';
@@ -29,12 +29,14 @@ import { useSubscription } from '#/hooks/subscription';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { capitalize } from 'lodash-es';
 import { Button } from '#/components/ui/button';
-import { LockIcon, Trash2Icon } from 'lucide-react';
+import { LockIcon, Trash2Icon, ImagePlusIcon, UploadCloudIcon } from 'lucide-react';
 import { StatusPicker } from '#/components/watches/StatusPicker';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
 });
+
+type Tab = 'log' | 'timegrapher' | 'parts' | 'notes';
 
 function RouteComponent() {
   const navigate = useNavigate();
@@ -45,6 +47,7 @@ function RouteComponent() {
   const postCount = posts?.length ?? 0;
   const deletePhoto = useDeleteWatchPhoto(watchId);
   const uploadPhotos = useUploadWatchPhotos(watchId);
+  const uploadFeaturedImage = useUploadFeaturedImage(watchId);
   const updateWatch = useUpdateWatch();
   const deleteWatch = useDeleteWatch();
   const deletePartUsed = useDeletePartUsed(watchId);
@@ -54,18 +57,16 @@ function RouteComponent() {
 
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [activeIdx, setActiveIdx] = useState(0);
-  const [lightbox, setLightbox] = useState<{
-    photos: WatchPhoto[];
-    index: number;
-  } | null>(null);
+  const [lightbox, setLightbox] = useState<{ photos: WatchPhoto[]; index: number } | null>(null);
   const [editingNotes, setEditingNotes] = useState(false);
   const [draftNotes, setDraftNotes] = useState('');
+  const [showUpload, setShowUpload] = useState(false);
+  const [activeTab, setActiveTab] = useState<Tab>('log');
+  const featuredInputRef = useRef<HTMLInputElement>(null);
 
   if (isLoading) {
     return (
-      <div className='text-sm text-muted-foreground font-mono'>
-        Loading watch…
-      </div>
+      <div className='text-sm text-muted-foreground font-mono'>Loading watch…</div>
     );
   }
 
@@ -86,9 +87,7 @@ function RouteComponent() {
   const photos = watch.photos ?? [];
   const canViewPhotos = isPro || photos.length > 0;
   const displayedPhotos =
-    stageFilter === 'all'
-      ? photos
-      : photos.filter((ph) => ph.stage === stageFilter);
+    stageFilter === 'all' ? photos : photos.filter((ph) => ph.stage === stageFilter);
   const activePhoto = displayedPhotos[activeIdx] ?? null;
 
   const handleStageFilter = (s: string) => {
@@ -98,9 +97,7 @@ function RouteComponent() {
 
   const prevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setActiveIdx(
-      (i) => (i - 1 + displayedPhotos.length) % displayedPhotos.length,
-    );
+    setActiveIdx((i) => (i - 1 + displayedPhotos.length) % displayedPhotos.length);
   };
 
   const nextPhoto = (e: React.MouseEvent) => {
@@ -110,18 +107,27 @@ function RouteComponent() {
 
   const handleUpload = (pending: PendingPhoto[]) => {
     uploadPhotos.mutate(
-      pending.map((p) => ({
-        file: p.file,
-        stage: p.stage,
-        caption: p.caption,
-      })),
+      pending.map((p) => ({ file: p.file, stage: p.stage, caption: p.caption })),
     );
   };
 
-  const partsUsed = watch.expand?.parts_used_via_watch ?? [];
+  const handleFeaturedFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadFeaturedImage.mutate(file);
+    e.target.value = '';
+  };
 
+  const partsUsed = watch.expand?.parts_used_via_watch ?? [];
   const p = profit(watch);
   const r = roi(watch);
+
+  const tabs: { id: Tab; label: string; badge?: number }[] = [
+    { id: 'log', label: 'Repair Log', badge: postCount },
+    { id: 'timegrapher', label: 'Timegrapher' },
+    { id: 'parts', label: 'Parts' },
+    { id: 'notes', label: 'Notes' },
+  ];
 
   return (
     <div className='space-y-5 min-w-0'>
@@ -159,6 +165,15 @@ function RouteComponent() {
               className='text-primary hover:text-primary/80 no-underline'
             >
               View Gallery →
+            </Link>
+          )}
+          {user && (
+            <Link
+              to='/watches/$watchId/edit'
+              params={{ watchId }}
+              className='text-muted-foreground hover:text-foreground no-underline'
+            >
+              Edit Watch
             </Link>
           )}
         </div>
@@ -221,12 +236,8 @@ function RouteComponent() {
                       size='icon'
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (
-                          confirm('Are you sure you want to delete this photo?')
-                        ) {
+                        if (confirm('Are you sure you want to delete this photo?')) {
                           deletePhoto.mutate(activePhoto.id);
-                        } else {
-                          return;
                         }
                       }}
                     >
@@ -269,55 +280,116 @@ function RouteComponent() {
                       : 'border-border opacity-50 hover:opacity-100',
                   )}
                 >
-                  <img
-                    src={ph.image}
-                    alt={ph.caption}
-                    className='w-full h-full object-cover'
-                  />
+                  <img src={ph.image} alt={ph.caption} className='w-full h-full object-cover' />
                 </button>
               ))}
             </div>
           )}
 
-          {/* Featured image */}
+          {/* Compact photo-actions footer */}
           {user && (
-            <div className='px-4 pb-4 pt-3 border-t border-border'>
-              <div className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2.5'>
-                Featured Image
+            <>
+              <div className='flex items-center gap-3 px-4 py-2.5 border-t border-border'>
+                <input
+                  ref={featuredInputRef}
+                  type='file'
+                  accept='image/*'
+                  className='sr-only'
+                  onChange={handleFeaturedFileChange}
+                />
+                <button
+                  type='button'
+                  onClick={() => featuredInputRef.current?.click()}
+                  disabled={uploadFeaturedImage.isPending}
+                  className='flex items-center gap-1.5 text-[10.5px] font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0 disabled:opacity-50'
+                >
+                  {watch.featured_image_url ? (
+                    <img
+                      src={watch.featured_image_url}
+                      alt='Featured'
+                      className='w-6 h-4 rounded object-cover border border-border shrink-0'
+                    />
+                  ) : (
+                    <ImagePlusIcon className='w-3.5 h-3.5' />
+                  )}
+                  {uploadFeaturedImage.isPending
+                    ? 'Uploading…'
+                    : watch.featured_image_url
+                      ? 'Change featured'
+                      : 'Set featured image'}
+                </button>
+                <span className='text-border'>·</span>
+                <button
+                  type='button'
+                  onClick={() => setShowUpload((v) => !v)}
+                  className='flex items-center gap-1.5 text-[10.5px] font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0'
+                >
+                  <UploadCloudIcon className='w-3.5 h-3.5' />
+                  Upload photos ({photos.length})
+                </button>
               </div>
-              <FeaturedImageUpload
-                watchId={watchId}
-                imageUrl={watch.featured_image_url}
-              />
-            </div>
-          )}
-
-          {/* Upload zone */}
-          {user && (
-            <div className='px-4 pb-4 pt-3 border-t border-border'>
-              <div className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2.5'>
-                Restoration Photos ({photos.length})
-              </div>
-              {isPro ? (
-                <UploadZone onUpload={handleUpload} />
-              ) : (
-                <div className='flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6'>
-                  <LockIcon className='w-4 h-4 text-amber-400' />
-                  <p className='font-mono text-xs text-muted-foreground'>
-                    Photo uploads are a Pro feature
-                  </p>
-                  <UpgradeButton pbUserId={user.id} />
+              {showUpload && (
+                <div className='px-4 pb-4 border-t border-border'>
+                  {isPro ? (
+                    <UploadZone onUpload={handleUpload} />
+                  ) : (
+                    <div className='flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6 mt-3'>
+                      <LockIcon className='w-4 h-4 text-amber-400' />
+                      <p className='font-mono text-xs text-muted-foreground'>
+                        Photo uploads are a Pro feature
+                      </p>
+                      <UpgradeButton pbUserId={user.id} />
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
 
-        {/* RIGHT: Details panel */}
-        <div className='flex-1 space-y-5 min-w-0'>
-          {/* Financials */}
+        {/* RIGHT: Details + Tabs panel */}
+        <div className='flex-1 space-y-4 min-w-0'>
+          {/* Financial KPI grid */}
+          <div className='grid grid-cols-2 gap-2'>
+            {(
+              [
+                ['Invested', fmt(watch.bought_price + (watch.parts_cost ?? 0)), null],
+                ['Sale Price', fmt(watch.sold_price), null],
+                [
+                  'Profit',
+                  p !== null ? fmt(p) : '—',
+                  p !== null ? (p >= 0 ? 'text-green-400' : 'text-red-400') : null,
+                ],
+                [
+                  'ROI',
+                  r !== null ? fmtPct(r) : '—',
+                  r !== null
+                    ? parseFloat(r) >= 0
+                      ? 'text-green-400'
+                      : 'text-red-400'
+                    : null,
+                ],
+              ] as [string, string, string | null][]
+            ).map(([label, value, colorClass]) => (
+              <div key={label} className='rounded-lg border border-border bg-card px-3 py-2.5'>
+                <div className='font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground'>
+                  {label}
+                </div>
+                <div
+                  className={cn(
+                    'font-mono text-[13px] font-semibold mt-0.5',
+                    colorClass ?? 'text-foreground',
+                  )}
+                >
+                  {value}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Compact watch details */}
           <section className='rounded-xl border border-border bg-card overflow-hidden'>
-            <div className='flex justify-between px-4 py-2.5 border-b border-border'>
+            <div className='flex items-center justify-between px-4 py-2.5 border-b border-border'>
               <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
                 Details
               </span>
@@ -325,529 +397,501 @@ function RouteComponent() {
                 <Link
                   to='/watches/$watchId/edit'
                   params={{ watchId }}
-                  className='font-mono text-[10px] text-muted-foreground'
+                  className='font-mono text-[10px] text-muted-foreground hover:text-foreground no-underline'
                 >
                   Edit
                 </Link>
               )}
             </div>
-            {[
-              [
-                'Condition',
-                capitalize(watch.condition_bought?.replace('_', ' ')) ?? '—',
-              ],
-              ['Purchase Price', fmt(watch.bought_price)],
-              ['Parts Cost', fmt(watch.parts_cost)],
-              [
-                'Total Invested',
-                fmt(watch.bought_price + (watch.parts_cost ?? 0)),
-              ],
-              ['Sale Price', fmt(watch.sold_price)],
-              [
-                'Profit',
-                p !== null ? (
-                  <span className={p >= 0 ? 'text-green-400' : 'text-red-400'}>
-                    {fmt(p)}
-                  </span>
-                ) : (
-                  '—'
-                ),
-              ],
-              [
-                'ROI',
-                r !== null ? (
-                  <span
-                    className={
-                      parseFloat(r) >= 0 ? 'text-green-400' : 'text-red-400'
-                    }
-                  >
-                    {fmtPct(r)}
-                  </span>
-                ) : (
-                  '—'
-                ),
-              ],
-              ['Hours Spent', `${watch.hours_spent ?? 0} hrs`],
-              [
-                'Acquired',
-                watch.bought_date
-                  ? format(watch.bought_date, 'MMM d, yyyy')
-                  : '—',
-              ],
-              ['Sold', watch.sold_date ?? '—'],
-            ].map(([k, v]) => (
-              <div
-                key={String(k)}
-                className='flex justify-between items-center gap-4 px-4 py-2.5 border-b border-border last:border-0 hover:bg-white/2 transition-colors'
-              >
-                <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
-                  {k}
-                </span>
-                <span className='font-mono text-[11.5px] text-foreground'>
-                  {v}
-                </span>
+            <div className='grid grid-cols-2 divide-x divide-border'>
+              <div className='divide-y divide-border'>
+                {(
+                  [
+                    ['Condition', capitalize(watch.condition_bought?.replace('_', ' ')) ?? '—'],
+                    ['Purchase', fmt(watch.bought_price)],
+                    ['Parts Cost', fmt(watch.parts_cost)],
+                  ] as [string, string][]
+                ).map(([k, v]) => (
+                  <div key={k} className='flex flex-col px-3 py-2'>
+                    <span className='font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground'>
+                      {k}
+                    </span>
+                    <span className='font-mono text-[11px] text-foreground mt-0.5'>{v}</span>
+                  </div>
+                ))}
               </div>
-            ))}
+              <div className='divide-y divide-border'>
+                {(
+                  [
+                    ['Hours', `${watch.hours_spent ?? 0} hrs`],
+                    [
+                      'Acquired',
+                      watch.bought_date ? format(watch.bought_date, 'MMM d, yyyy') : '—',
+                    ],
+                    [
+                      'Sold',
+                      watch.sold_date
+                        ? format(new Date(watch.sold_date as string), 'MMM d, yyyy')
+                        : '—',
+                    ],
+                  ] as [string, string][]
+                ).map(([k, v]) => (
+                  <div key={k} className='flex flex-col px-3 py-2'>
+                    <span className='font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground'>
+                      {k}
+                    </span>
+                    <span className='font-mono text-[11px] text-foreground mt-0.5'>{v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
 
-          {/* Timegrapher Log */}
-          <section className='rounded-xl border border-border bg-card overflow-hidden'>
-            <div className='flex items-center justify-between px-4 py-2.5 border-b border-border'>
-              <div className='flex items-center gap-2'>
-                <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                  Timegrapher Log
-                </span>
-                {!isPro && (
-                  <span className='inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'>
-                    <LockIcon className='w-2.5 h-2.5' />
-                    Pro
-                  </span>
-                )}
-              </div>
-              {isPro && (
-                <Link
-                  to='/watches/$watchId/timegrapher'
-                  params={{ watchId }}
-                  className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
+          {/* Tabbed workflow sections */}
+          <div className='rounded-xl border border-border bg-card overflow-hidden'>
+            <div className='flex border-b border-border overflow-x-auto'>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    'flex-1 px-3 py-2.5 font-mono text-[9.5px] uppercase tracking-widest whitespace-nowrap transition-colors border-b-2 -mb-px cursor-pointer bg-transparent border-l-0 border-r-0 border-t-0',
+                    activeTab === tab.id
+                      ? 'border-amber-500 text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground',
+                  )}
                 >
-                  View all ({timegrapherReadings.length})
-                </Link>
-              )}
-            </div>
-            {!isPro ? (
-              <div className='relative'>
-                <div
-                  className='divide-y divide-border blur-sm select-none pointer-events-none'
-                  aria-hidden
-                >
-                  {[
-                    ['DU Rate', '+2.3 s/d'],
-                    ['DU Amplitude', '298°'],
-                    ['DU Beat Error', '0.3 ms'],
-                  ].map(([k, v]) => (
-                    <div
-                      key={String(k)}
-                      className='flex justify-between items-center px-4 py-2.5'
+                  {tab.label}
+                  {tab.badge !== undefined && tab.badge > 0 && (
+                    <span
+                      className={cn(
+                        'ml-1.5 text-[8px]',
+                        activeTab === tab.id
+                          ? 'text-amber-500'
+                          : 'text-muted-foreground/60',
+                      )}
                     >
-                      <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
-                        {k}
-                      </span>
-                      <span className='font-mono text-[11.5px] text-foreground'>
-                        {v}
-                      </span>
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Repair Log tab */}
+            {activeTab === 'log' && (
+              <div>
+                {postCount === 0 ? (
+                  <div className='text-center py-8 text-xs font-mono text-muted-foreground'>
+                    No repair sessions yet.{' '}
+                    {user && (
+                      <Link
+                        to='/watches/$watchId/posts/new'
+                        params={{ watchId }}
+                        className='text-primary'
+                      >
+                        Log the first one →
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    <ul className='divide-y divide-border'>
+                      {posts!.slice(0, 5).map((post) => (
+                        <li key={post.id}>
+                          <Link
+                            to='/watches/$watchId/posts/$postId'
+                            params={{ watchId, postId: post.id }}
+                            className='flex items-center justify-between px-4 py-2.5 hover:bg-white/2 transition-colors no-underline'
+                          >
+                            <span className='text-sm text-foreground'>{post.title}</span>
+                            <span className='text-[11px] font-mono text-muted-foreground shrink-0 ml-3'>
+                              {post.session_date
+                                ? format(new Date(post.session_date), 'MMM d, yyyy')
+                                : '—'}
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className='flex items-center justify-between px-4 py-2.5 border-t border-border'>
+                      {user && (
+                        <Link
+                          to='/watches/$watchId/posts/new'
+                          params={{ watchId }}
+                          className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
+                        >
+                          + New session
+                        </Link>
+                      )}
+                      {postCount > 5 && (
+                        <Link
+                          to='/watches/$watchId/posts'
+                          params={{ watchId }}
+                          className='text-xs font-mono text-muted-foreground hover:text-primary no-underline ml-auto'
+                        >
+                          View all ({postCount}) →
+                        </Link>
+                      )}
                     </div>
-                  ))}
-                </div>
-                <div className='absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-card/70 backdrop-blur-[2px]'>
-                  <LockIcon className='w-4 h-4 text-amber-400' />
-                  <p className='font-mono text-xs text-muted-foreground'>
-                    Timegrapher logging is a Pro feature
-                  </p>
-                  {user && <UpgradeButton pbUserId={user.id} />}
-                </div>
-              </div>
-            ) : timegrapherReadings.length === 0 ? (
-              <div className='text-center py-6 text-xs font-mono text-muted-foreground'>
-                No timegrapher sessions yet.{' '}
-                {user && (
-                  <Link
-                    to='/watches/$watchId/timegrapher'
-                    params={{ watchId }}
-                    className='text-primary'
-                  >
-                    Log the first one →
-                  </Link>
+                  </>
                 )}
               </div>
-            ) : (
-              (() => {
-                const latest = timegrapherReadings[0];
-                return (
-                  <div className='divide-y divide-border'>
-                    {[
-                      [
-                        'DU Rate',
-                        latest.du_rate != null
-                          ? `${latest.du_rate >= 0 ? '+' : ''}${latest.du_rate.toFixed(1)} s/d`
-                          : '—',
-                      ],
-                      [
-                        'DU Amplitude',
-                        latest.du_amp != null ? `${latest.du_amp}°` : '—',
-                      ],
-                      [
-                        'DU Beat Error',
-                        latest.du_be != null
-                          ? `${latest.du_be.toFixed(1)} ms`
-                          : '—',
-                      ],
-                    ].map(([k, v]) => (
-                      <div
-                        key={String(k)}
-                        className='flex justify-between items-center px-4 py-2.5 hover:bg-white/2 transition-colors'
-                      >
-                        <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
-                          {k}
-                        </span>
-                        <span className='font-mono text-[11.5px] text-foreground'>
-                          {v}
-                        </span>
-                      </div>
-                    ))}
-                    <div className='px-4 py-2.5'>
+            )}
+
+            {/* Timegrapher tab */}
+            {activeTab === 'timegrapher' && (
+              <div>
+                {!isPro ? (
+                  <div className='relative'>
+                    <div
+                      className='divide-y divide-border blur-sm select-none pointer-events-none'
+                      aria-hidden
+                    >
+                      {[
+                        ['DU Rate', '+2.3 s/d'],
+                        ['DU Amplitude', '298°'],
+                        ['DU Beat Error', '0.3 ms'],
+                      ].map(([k, v]) => (
+                        <div
+                          key={String(k)}
+                          className='flex justify-between items-center px-4 py-2.5'
+                        >
+                          <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
+                            {k}
+                          </span>
+                          <span className='font-mono text-[11.5px] text-foreground'>{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className='absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-card/70 backdrop-blur-[2px]'>
+                      <LockIcon className='w-4 h-4 text-amber-400' />
+                      <p className='font-mono text-xs text-muted-foreground'>
+                        Timegrapher logging is a Pro feature
+                      </p>
+                      {user && <UpgradeButton pbUserId={user.id} />}
+                    </div>
+                  </div>
+                ) : timegrapherReadings.length === 0 ? (
+                  <div className='text-center py-8 text-xs font-mono text-muted-foreground'>
+                    No timegrapher sessions yet.{' '}
+                    {user && (
                       <Link
                         to='/watches/$watchId/timegrapher'
                         params={{ watchId }}
-                        className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
+                        className='text-primary'
                       >
-                        Full log →
+                        Log the first one →
                       </Link>
-                    </div>
+                    )}
                   </div>
-                );
-              })()
-            )}
-          </section>
-
-          {/* Parts Shopping List */}
-          <section className='rounded-xl border border-border bg-card overflow-hidden'>
-            <div className='flex items-center justify-between px-4 py-2.5 border-b border-border'>
-              <div className='flex items-center gap-2'>
-                <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                  Parts Shopping List
-                </span>
-                {!isPro && (
-                  <span className='inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'>
-                    <LockIcon className='w-2.5 h-2.5' />
-                    Pro
-                  </span>
-                )}
-              </div>
-              {isPro && (
-                <Link
-                  to='/watches/$watchId/shopping-list'
-                  params={{ watchId }}
-                  className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
-                >
-                  View all ({partsShoppingItems.length})
-                </Link>
-              )}
-            </div>
-            {!isPro ? (
-              <div className='relative'>
-                <div
-                  className='divide-y divide-border blur-sm select-none pointer-events-none'
-                  aria-hidden
-                >
-                  {[
-                    ['Mainspring', 'Needed'],
-                    ['Crystal', 'Ordered'],
-                    ['Crown', 'In Hand'],
-                  ].map(([k, v]) => (
-                    <div
-                      key={String(k)}
-                      className='flex justify-between items-center px-4 py-2.5'
-                    >
-                      <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
-                        {k}
-                      </span>
-                      <span className='font-mono text-[11.5px] text-foreground'>
-                        {v}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className='absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-card/70 backdrop-blur-[2px]'>
-                  <LockIcon className='w-4 h-4 text-amber-400' />
-                  <p className='font-mono text-xs text-muted-foreground'>
-                    Parts shopping list is a Pro feature
-                  </p>
-                  {user && <UpgradeButton pbUserId={user.id} />}
-                </div>
-              </div>
-            ) : partsShoppingItems.length === 0 ? (
-              <div className='text-center py-6 text-xs font-mono text-muted-foreground'>
-                No parts on the list yet.{' '}
-                {user && (
-                  <Link
-                    to='/watches/$watchId/shopping-list'
-                    params={{ watchId }}
-                    className='text-primary'
-                  >
-                    Add the first one →
-                  </Link>
-                )}
-              </div>
-            ) : (
-              (() => {
-                const needed = partsShoppingItems.filter((i) => i.status === 'needed').length;
-                const ordered = partsShoppingItems.filter((i) => i.status === 'ordered').length;
-                const inHand = partsShoppingItems.filter((i) => i.status === 'in_hand').length;
-                return (
-                  <div className='divide-y divide-border'>
-                    {[
-                      ['Needed', needed],
-                      ['Ordered', ordered],
-                      ['In Hand', inHand],
-                    ].map(([k, v]) => (
-                      <div
-                        key={String(k)}
-                        className='flex justify-between items-center px-4 py-2.5 hover:bg-white/2 transition-colors'
-                      >
-                        <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
-                          {k}
-                        </span>
-                        <span className='font-mono text-[11.5px] text-foreground'>
-                          {v}
-                        </span>
+                ) : (
+                  (() => {
+                    const latest = timegrapherReadings[0];
+                    return (
+                      <div>
+                        <div className='divide-y divide-border'>
+                          {[
+                            [
+                              'DU Rate',
+                              latest.du_rate != null
+                                ? `${latest.du_rate >= 0 ? '+' : ''}${latest.du_rate.toFixed(1)} s/d`
+                                : '—',
+                            ],
+                            [
+                              'DU Amplitude',
+                              latest.du_amp != null ? `${latest.du_amp}°` : '—',
+                            ],
+                            [
+                              'DU Beat Error',
+                              latest.du_be != null
+                                ? `${latest.du_be.toFixed(1)} ms`
+                                : '—',
+                            ],
+                          ].map(([k, v]) => (
+                            <div
+                              key={String(k)}
+                              className='flex justify-between items-center px-4 py-2.5 hover:bg-white/2 transition-colors'
+                            >
+                              <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
+                                {k}
+                              </span>
+                              <span className='font-mono text-[11.5px] text-foreground'>
+                                {v}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className='px-4 py-2.5 border-t border-border'>
+                          <Link
+                            to='/watches/$watchId/timegrapher'
+                            params={{ watchId }}
+                            className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
+                          >
+                            Full log ({timegrapherReadings.length}) →
+                          </Link>
+                        </div>
                       </div>
-                    ))}
-                    <div className='px-4 py-2.5'>
+                    );
+                  })()
+                )}
+              </div>
+            )}
+
+            {/* Parts tab */}
+            {activeTab === 'parts' && (
+              <div>
+                {/* Parts Used */}
+                <div className='border-b border-border'>
+                  <div className='flex items-center justify-between px-4 py-2 bg-muted/20 border-b border-border'>
+                    <span className='font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground'>
+                      Parts Used
+                    </span>
+                    {user && <AddPartUsedDialog watchId={watchId} />}
+                  </div>
+                  {partsUsed.length === 0 ? (
+                    <p className='px-4 py-3 font-mono text-xs italic text-muted-foreground/50'>
+                      No parts logged yet.
+                    </p>
+                  ) : (
+                    <table className='w-full text-xs font-mono'>
+                      <thead>
+                        <tr className='border-b border-border bg-muted/20'>
+                          <th className='px-3.5 py-2 text-left text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
+                            Part
+                          </th>
+                          <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
+                            Qty
+                          </th>
+                          <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
+                            Unit
+                          </th>
+                          <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
+                            Total
+                          </th>
+                          {user && <th className='px-3.5 py-2 w-6' />}
+                        </tr>
+                      </thead>
+                      <tbody className='divide-y divide-border'>
+                        {partsUsed.map((part) => {
+                          const unitCost = part.expand?.inventory_item?.unit_cost ?? 0;
+                          const total = (part.qty_used ?? 0) * unitCost;
+                          return (
+                            <tr key={part.id} className='hover:bg-white/2 transition-colors'>
+                              <td className='px-3.5 py-2.5 text-foreground'>
+                                {part.expand?.inventory_item?.name ?? '—'}
+                              </td>
+                              <td className='px-3.5 py-2.5 text-right text-muted-foreground'>
+                                {part.qty_used}
+                              </td>
+                              <td className='px-3.5 py-2.5 text-right text-muted-foreground'>
+                                {fmt(unitCost)}
+                              </td>
+                              <td className='px-3.5 py-2.5 text-right text-foreground'>
+                                {fmt(total)}
+                              </td>
+                              {user && (
+                                <td className='px-3.5 py-2.5 text-right'>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm('Remove this part from the log?')) {
+                                        deletePartUsed.mutate(part.id);
+                                      }
+                                    }}
+                                    className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
+                                    aria-label='Remove part'
+                                  >
+                                    ×
+                                  </button>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      <tfoot>
+                        <tr className='border-t border-border bg-muted/20'>
+                          <td
+                            colSpan={3}
+                            className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'
+                          >
+                            Total
+                          </td>
+                          <td className='px-3.5 py-2 text-right font-semibold text-foreground'>
+                            {fmt(watch.parts_cost)}
+                          </td>
+                          {user && <td />}
+                        </tr>
+                      </tfoot>
+                    </table>
+                  )}
+                </div>
+
+                {/* Parts Shopping List */}
+                <div>
+                  <div className='flex items-center justify-between px-4 py-2 bg-muted/20 border-b border-border'>
+                    <div className='flex items-center gap-2'>
+                      <span className='font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground'>
+                        Shopping List
+                      </span>
+                      {!isPro && (
+                        <span className='inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'>
+                          <LockIcon className='w-2.5 h-2.5' />
+                          Pro
+                        </span>
+                      )}
+                    </div>
+                    {isPro && (
                       <Link
                         to='/watches/$watchId/shopping-list'
                         params={{ watchId }}
                         className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
                       >
-                        Full list →
+                        View all ({partsShoppingItems.length})
                       </Link>
+                    )}
+                  </div>
+                  {!isPro ? (
+                    <div className='relative'>
+                      <div
+                        className='divide-y divide-border blur-sm select-none pointer-events-none'
+                        aria-hidden
+                      >
+                        {[
+                          ['Mainspring', 'Needed'],
+                          ['Crystal', 'Ordered'],
+                          ['Crown', 'In Hand'],
+                        ].map(([k, v]) => (
+                          <div
+                            key={String(k)}
+                            className='flex justify-between items-center px-4 py-2.5'
+                          >
+                            <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
+                              {k}
+                            </span>
+                            <span className='font-mono text-[11.5px] text-foreground'>{v}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className='absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-card/70 backdrop-blur-[2px]'>
+                        <LockIcon className='w-4 h-4 text-amber-400' />
+                        <p className='font-mono text-xs text-muted-foreground'>
+                          Parts shopping list is a Pro feature
+                        </p>
+                        {user && <UpgradeButton pbUserId={user.id} />}
+                      </div>
+                    </div>
+                  ) : partsShoppingItems.length === 0 ? (
+                    <div className='text-center py-6 text-xs font-mono text-muted-foreground'>
+                      No parts on the list yet.{' '}
+                      {user && (
+                        <Link
+                          to='/watches/$watchId/shopping-list'
+                          params={{ watchId }}
+                          className='text-primary'
+                        >
+                          Add the first one →
+                        </Link>
+                      )}
+                    </div>
+                  ) : (
+                    <div className='divide-y divide-border'>
+                      {[
+                        ['Needed', partsShoppingItems.filter((i) => i.status === 'needed').length],
+                        ['Ordered', partsShoppingItems.filter((i) => i.status === 'ordered').length],
+                        ['In Hand', partsShoppingItems.filter((i) => i.status === 'in_hand').length],
+                      ].map(([k, v]) => (
+                        <div
+                          key={String(k)}
+                          className='flex justify-between items-center px-4 py-2.5 hover:bg-white/2 transition-colors'
+                        >
+                          <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
+                            {k}
+                          </span>
+                          <span className='font-mono text-[11.5px] text-foreground'>{v}</span>
+                        </div>
+                      ))}
+                      <div className='px-4 py-2.5'>
+                        <Link
+                          to='/watches/$watchId/shopping-list'
+                          params={{ watchId }}
+                          className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
+                        >
+                          Full list →
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Notes tab */}
+            {activeTab === 'notes' && (
+              <div className='px-4 py-3'>
+                {editingNotes ? (
+                  <div className='space-y-3'>
+                    <TipTapEditor
+                      value={draftNotes}
+                      onChange={setDraftNotes}
+                      toolbarConfig={{
+                        headings: [true, true, true],
+                        bold: true,
+                        italic: true,
+                        strike: true,
+                        bulletList: true,
+                        orderedList: true,
+                      }}
+                    />
+                    <div className='flex gap-3'>
+                      <button
+                        onClick={() => {
+                          updateWatch.mutate({ ...watch, notes: draftNotes });
+                          setEditingNotes(false);
+                        }}
+                        disabled={updateWatch.isPending}
+                        className='text-xs font-mono text-primary hover:text-primary/80 disabled:opacity-50 bg-transparent border-none cursor-pointer p-0'
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingNotes(false)}
+                        className='text-xs font-mono text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer p-0'
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
-                );
-              })()
-            )}
-          </section>
-
-          {/* Parts Used */}
-          <section className='rounded-xl border border-border bg-card overflow-hidden'>
-            <div className='flex items-center justify-between px-4 py-2.5 border-b border-border'>
-              <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                Parts Used
-              </span>
-              {user && <AddPartUsedDialog watchId={watchId} />}
-            </div>
-            {partsUsed.length === 0 ? (
-              <p className='px-4 py-3 font-mono text-xs italic text-muted-foreground/50'>
-                No parts logged yet.
-              </p>
-            ) : (
-              <>
-                <table className='w-full text-xs font-mono'>
-                  <thead>
-                    <tr className='border-b border-border bg-muted/40'>
-                      <th className='px-3.5 py-2 text-left text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
-                        Part
-                      </th>
-                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
-                        Qty
-                      </th>
-                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
-                        Unit
-                      </th>
-                      <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
-                        Total
-                      </th>
-                      {user && <th className='px-3.5 py-2 w-6' />}
-                    </tr>
-                  </thead>
-                  <tbody className='divide-y divide-border'>
-                    {partsUsed.map((part) => {
-                      const unitCost =
-                        part.expand?.inventory_item?.unit_cost ?? 0;
-                      const total = (part.qty_used ?? 0) * unitCost;
-                      return (
-                        <tr
-                          key={part.id}
-                          className='hover:bg-white/2 transition-colors'
-                        >
-                          <td className='px-3.5 py-2.5 text-foreground'>
-                            {part.expand?.inventory_item?.name ?? '—'}
-                          </td>
-                          <td className='px-3.5 py-2.5 text-right text-muted-foreground'>
-                            {part.qty_used}
-                          </td>
-                          <td className='px-3.5 py-2.5 text-right text-muted-foreground'>
-                            {fmt(unitCost)}
-                          </td>
-                          <td className='px-3.5 py-2.5 text-right text-foreground'>
-                            {fmt(total)}
-                          </td>
-                          {user && (
-                            <td className='px-3.5 py-2.5 text-right'>
-                              <button
-                                onClick={() => {
-                                  if (
-                                    confirm('Remove this part from the log?')
-                                  ) {
-                                    deletePartUsed.mutate(part.id);
-                                  }
-                                }}
-                                className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                                aria-label='Remove part'
-                              >
-                                ×
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                  <tfoot>
-                    <tr className='border-t border-border bg-muted/20'>
-                      <td
-                        colSpan={user ? 3 : 3}
-                        className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'
+                ) : (
+                  <div>
+                    {!!watch.notes ? (
+                      <div
+                        className='prose text-sm max-w-none'
+                        dangerouslySetInnerHTML={{ __html: watch.notes }}
+                      />
+                    ) : (
+                      <p className='font-mono text-xs italic text-muted-foreground/50'>
+                        No notes yet.
+                      </p>
+                    )}
+                    {user && (
+                      <button
+                        onClick={() => {
+                          setDraftNotes(watch.notes ?? '');
+                          setEditingNotes(true);
+                        }}
+                        className='mt-2 text-xs font-mono text-primary hover:text-primary/80 bg-transparent border-none cursor-pointer p-0'
                       >
-                        Total
-                      </td>
-                      <td className='px-3.5 py-2 text-right font-semibold text-foreground'>
-                        {fmt(watch.parts_cost)}
-                      </td>
-                      {user && <td />}
-                    </tr>
-                  </tfoot>
-                </table>
-              </>
-            )}
-          </section>
-
-          {/* Repair Log */}
-          <section className='rounded-xl border border-border bg-card overflow-hidden'>
-            <div className='flex items-center justify-between px-4 py-2.5 border-b border-border'>
-              <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                Repair Log
-              </span>
-              <Link
-                to='/watches/$watchId/posts'
-                params={{ watchId }}
-                className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
-              >
-                View all ({postCount})
-              </Link>
-            </div>
-            {postCount === 0 ? (
-              <div className='text-center py-6 text-xs font-mono text-muted-foreground'>
-                No repair sessions yet.{' '}
-                {user && (
-                  <Link
-                    to='/watches/$watchId/posts/new'
-                    params={{ watchId }}
-                    className='text-primary'
-                  >
-                    Log the first one →
-                  </Link>
-                )}
-              </div>
-            ) : (
-              <ul className='divide-y divide-border'>
-                {posts!.slice(0, 5).map((post) => (
-                  <li key={post.id}>
-                    <Link
-                      to='/watches/$watchId/posts/$postId'
-                      params={{ watchId, postId: post.id }}
-                      className='flex items-center justify-between px-4 py-2.5 hover:bg-white/2 transition-colors no-underline'
-                    >
-                      <span className='text-sm text-foreground'>
-                        {post.title}
-                      </span>
-                      <span className='text-[11px] font-mono text-muted-foreground shrink-0 ml-3'>
-                        {post.session_date
-                          ? format(new Date(post.session_date), 'MMM d, yyyy')
-                          : '—'}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-                {postCount > 5 && (
-                  <li>
-                    <Link
-                      to='/watches/$watchId/posts'
-                      params={{ watchId }}
-                      className='block text-center text-xs font-mono text-muted-foreground hover:text-primary py-2.5 no-underline'
-                    >
-                      + {postCount - 5} more
-                    </Link>
-                  </li>
-                )}
-              </ul>
-            )}
-            {user && postCount > 0 && (
-              <div className='px-4 py-2.5 border-t border-border'>
-                <Link
-                  to='/watches/$watchId/posts/new'
-                  params={{ watchId }}
-                  className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
-                >
-                  + New session
-                </Link>
-              </div>
-            )}
-          </section>
-
-          {/* Notes */}
-          <section className='rounded-xl border border-border bg-card overflow-hidden'>
-            <div className='flex items-center justify-between px-4 py-2.5 border-b border-border'>
-              <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                Notes
-              </span>
-              {user && !editingNotes && (
-                <button
-                  onClick={() => {
-                    setDraftNotes(watch.notes ?? '');
-                    setEditingNotes(true);
-                  }}
-                  className='text-xs font-mono text-primary hover:text-primary/80 bg-transparent border-none cursor-pointer p-0'
-                >
-                  Edit
-                </button>
-              )}
-            </div>
-            <div className='px-4 py-3'>
-              {editingNotes ? (
-                <div className='space-y-3'>
-                  <TipTapEditor
-                    value={draftNotes}
-                    onChange={setDraftNotes}
-                    toolbarConfig={{
-                      headings: [true, true, true],
-                      bold: true,
-                      italic: true,
-                      strike: true,
-                      bulletList: true,
-                      orderedList: true,
-                    }}
-                  />
-                  <div className='flex gap-3'>
-                    <button
-                      onClick={() => {
-                        updateWatch.mutate({ ...watch, notes: draftNotes });
-                        setEditingNotes(false);
-                      }}
-                      disabled={updateWatch.isPending}
-                      className='text-xs font-mono text-primary hover:text-primary/80 disabled:opacity-50 bg-transparent border-none cursor-pointer p-0'
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditingNotes(false)}
-                      className='text-xs font-mono text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer p-0'
-                    >
-                      Cancel
-                    </button>
+                        {watch.notes ? 'Edit notes' : 'Add notes'}
+                      </button>
+                    )}
                   </div>
-                </div>
-              ) : !!watch.notes ? (
-                <div
-                  className='prose text-sm max-w-none'
-                  dangerouslySetInnerHTML={{ __html: watch.notes }}
-                />
-              ) : (
-                <p className='font-mono text-xs italic text-muted-foreground/50'>
-                  No notes yet.
-                </p>
-              )}
-            </div>
-          </section>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Delete watch */}
           <section className='flex justify-end'>
             <Button
               disabled={deleteWatch.isPending}
@@ -860,8 +904,6 @@ function RouteComponent() {
                 ) {
                   await deleteWatch.mutateAsync(watch.id);
                   navigate({ to: '/dashboard' });
-                } else {
-                  return;
                 }
               }}
               size='sm'
