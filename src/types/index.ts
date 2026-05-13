@@ -179,6 +179,48 @@ export type CreateTimegrapherReading = Omit<
   'id' | 'created' | 'updated'
 >;
 
+export type PartsShoppingStatus = 'needed' | 'ordered' | 'in_hand';
+
+export type WatchPartsShoppingItem = {
+  id: string;
+  user: string;
+  watch: string;
+  name: string;
+  category?: InventoryCategory;
+  target_price?: number;
+  notes?: string;
+  status: PartsShoppingStatus;
+  created: string;
+  updated: string;
+};
+
+export type CreateWatchPartsShoppingItem = Omit<
+  WatchPartsShoppingItem,
+  'id' | 'created' | 'updated'
+>;
+
+export type WishlistPriority = 'low' | 'medium' | 'high';
+export type WishlistStatus = 'wanted' | 'watching' | 'acquired';
+
+export type WishlistItem = {
+  id: string;
+  user: string;
+  make: string;
+  model: string;
+  reference?: string;
+  target_price?: number;
+  notes?: string;
+  priority: WishlistPriority;
+  status: WishlistStatus;
+  created: string;
+  updated: string;
+};
+
+export type CreateWishlistItem = Omit<
+  WishlistItem,
+  'id' | 'created' | 'updated'
+>;
+
 export const SubscriptionStatus = {
   ON_TRIAL: 'on_trial',
   PAUSED: 'paused',

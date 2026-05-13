@@ -9,8 +9,10 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ProRouteImport } from './routes/pro'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -27,6 +29,7 @@ import { Route as InventoryNewRouteImport } from './routes/inventory/new'
 import { Route as EquipmentNewRouteImport } from './routes/equipment/new'
 import { Route as WatchesWatchIdIndexRouteImport } from './routes/watches/$watchId/index'
 import { Route as WatchesWatchIdTimegrapherRouteImport } from './routes/watches/$watchId/timegrapher'
+import { Route as WatchesWatchIdShoppingListRouteImport } from './routes/watches/$watchId/shopping-list'
 import { Route as WatchesWatchIdGalleryRouteImport } from './routes/watches/$watchId/gallery'
 import { Route as WatchesWatchIdEditRouteImport } from './routes/watches/$watchId/edit'
 import { Route as InventoryInventoryIdEditRouteImport } from './routes/inventory/$inventoryId/edit'
@@ -35,6 +38,11 @@ import { Route as WatchesWatchIdPostsIndexRouteImport } from './routes/watches/$
 import { Route as WatchesWatchIdPostsNewRouteImport } from './routes/watches/$watchId/posts/new'
 import { Route as WatchesWatchIdPostsPostIdRouteImport } from './routes/watches/$watchId/posts/$postId'
 
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   id: '/terms-of-service',
   path: '/terms-of-service',
@@ -43,6 +51,11 @@ const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProRoute = ProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
@@ -126,6 +139,12 @@ const WatchesWatchIdTimegrapherRoute =
     path: '/watches/$watchId/timegrapher',
     getParentRoute: () => rootRouteImport,
   } as any)
+const WatchesWatchIdShoppingListRoute =
+  WatchesWatchIdShoppingListRouteImport.update({
+    id: '/watches/$watchId/shopping-list',
+    path: '/watches/$watchId/shopping-list',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const WatchesWatchIdGalleryRoute = WatchesWatchIdGalleryRouteImport.update({
   id: '/watches/$watchId/gallery',
   path: '/watches/$watchId/gallery',
@@ -172,8 +191,10 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/pro': typeof ProRoute
   '/signup': typeof SignupRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/wishlist': typeof WishlistRoute
   '/equipment/new': typeof EquipmentNewRoute
   '/inventory/new': typeof InventoryNewRoute
   '/post/$postId': typeof PostPostIdRoute
@@ -187,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/inventory/$inventoryId/edit': typeof InventoryInventoryIdEditRoute
   '/watches/$watchId/edit': typeof WatchesWatchIdEditRoute
   '/watches/$watchId/gallery': typeof WatchesWatchIdGalleryRoute
+  '/watches/$watchId/shopping-list': typeof WatchesWatchIdShoppingListRoute
   '/watches/$watchId/timegrapher': typeof WatchesWatchIdTimegrapherRoute
   '/watches/$watchId/': typeof WatchesWatchIdIndexRoute
   '/watches/$watchId/posts/$postId': typeof WatchesWatchIdPostsPostIdRoute
@@ -199,8 +221,10 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/pro': typeof ProRoute
   '/signup': typeof SignupRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/wishlist': typeof WishlistRoute
   '/equipment/new': typeof EquipmentNewRoute
   '/inventory/new': typeof InventoryNewRoute
   '/post/$postId': typeof PostPostIdRoute
@@ -214,6 +238,7 @@ export interface FileRoutesByTo {
   '/inventory/$inventoryId/edit': typeof InventoryInventoryIdEditRoute
   '/watches/$watchId/edit': typeof WatchesWatchIdEditRoute
   '/watches/$watchId/gallery': typeof WatchesWatchIdGalleryRoute
+  '/watches/$watchId/shopping-list': typeof WatchesWatchIdShoppingListRoute
   '/watches/$watchId/timegrapher': typeof WatchesWatchIdTimegrapherRoute
   '/watches/$watchId': typeof WatchesWatchIdIndexRoute
   '/watches/$watchId/posts/$postId': typeof WatchesWatchIdPostsPostIdRoute
@@ -227,8 +252,10 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
+  '/pro': typeof ProRoute
   '/signup': typeof SignupRoute
   '/terms-of-service': typeof TermsOfServiceRoute
+  '/wishlist': typeof WishlistRoute
   '/equipment/new': typeof EquipmentNewRoute
   '/inventory/new': typeof InventoryNewRoute
   '/post/$postId': typeof PostPostIdRoute
@@ -242,6 +269,7 @@ export interface FileRoutesById {
   '/inventory/$inventoryId/edit': typeof InventoryInventoryIdEditRoute
   '/watches/$watchId/edit': typeof WatchesWatchIdEditRoute
   '/watches/$watchId/gallery': typeof WatchesWatchIdGalleryRoute
+  '/watches/$watchId/shopping-list': typeof WatchesWatchIdShoppingListRoute
   '/watches/$watchId/timegrapher': typeof WatchesWatchIdTimegrapherRoute
   '/watches/$watchId/': typeof WatchesWatchIdIndexRoute
   '/watches/$watchId/posts/$postId': typeof WatchesWatchIdPostsPostIdRoute
@@ -256,8 +284,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/privacy-policy'
+    | '/pro'
     | '/signup'
     | '/terms-of-service'
+    | '/wishlist'
     | '/equipment/new'
     | '/inventory/new'
     | '/post/$postId'
@@ -271,6 +301,7 @@ export interface FileRouteTypes {
     | '/inventory/$inventoryId/edit'
     | '/watches/$watchId/edit'
     | '/watches/$watchId/gallery'
+    | '/watches/$watchId/shopping-list'
     | '/watches/$watchId/timegrapher'
     | '/watches/$watchId/'
     | '/watches/$watchId/posts/$postId'
@@ -283,8 +314,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/privacy-policy'
+    | '/pro'
     | '/signup'
     | '/terms-of-service'
+    | '/wishlist'
     | '/equipment/new'
     | '/inventory/new'
     | '/post/$postId'
@@ -298,6 +331,7 @@ export interface FileRouteTypes {
     | '/inventory/$inventoryId/edit'
     | '/watches/$watchId/edit'
     | '/watches/$watchId/gallery'
+    | '/watches/$watchId/shopping-list'
     | '/watches/$watchId/timegrapher'
     | '/watches/$watchId'
     | '/watches/$watchId/posts/$postId'
@@ -310,8 +344,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/privacy-policy'
+    | '/pro'
     | '/signup'
     | '/terms-of-service'
+    | '/wishlist'
     | '/equipment/new'
     | '/inventory/new'
     | '/post/$postId'
@@ -325,6 +361,7 @@ export interface FileRouteTypes {
     | '/inventory/$inventoryId/edit'
     | '/watches/$watchId/edit'
     | '/watches/$watchId/gallery'
+    | '/watches/$watchId/shopping-list'
     | '/watches/$watchId/timegrapher'
     | '/watches/$watchId/'
     | '/watches/$watchId/posts/$postId'
@@ -338,8 +375,10 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
+  ProRoute: typeof ProRoute
   SignupRoute: typeof SignupRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
+  WishlistRoute: typeof WishlistRoute
   EquipmentNewRoute: typeof EquipmentNewRoute
   InventoryNewRoute: typeof InventoryNewRoute
   PostPostIdRoute: typeof PostPostIdRoute
@@ -353,6 +392,7 @@ export interface RootRouteChildren {
   InventoryInventoryIdEditRoute: typeof InventoryInventoryIdEditRoute
   WatchesWatchIdEditRoute: typeof WatchesWatchIdEditRoute
   WatchesWatchIdGalleryRoute: typeof WatchesWatchIdGalleryRoute
+  WatchesWatchIdShoppingListRoute: typeof WatchesWatchIdShoppingListRoute
   WatchesWatchIdTimegrapherRoute: typeof WatchesWatchIdTimegrapherRoute
   WatchesWatchIdIndexRoute: typeof WatchesWatchIdIndexRoute
   WatchesWatchIdPostsPostIdRoute: typeof WatchesWatchIdPostsPostIdRoute
@@ -362,6 +402,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms-of-service': {
       id: '/terms-of-service'
       path: '/terms-of-service'
@@ -374,6 +421,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro': {
+      id: '/pro'
+      path: '/pro'
+      fullPath: '/pro'
+      preLoaderRoute: typeof ProRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy-policy': {
@@ -488,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WatchesWatchIdTimegrapherRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/watches/$watchId/shopping-list': {
+      id: '/watches/$watchId/shopping-list'
+      path: '/watches/$watchId/shopping-list'
+      fullPath: '/watches/$watchId/shopping-list'
+      preLoaderRoute: typeof WatchesWatchIdShoppingListRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/watches/$watchId/gallery': {
       id: '/watches/$watchId/gallery'
       path: '/watches/$watchId/gallery'
@@ -546,8 +607,10 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
+  ProRoute: ProRoute,
   SignupRoute: SignupRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
+  WishlistRoute: WishlistRoute,
   EquipmentNewRoute: EquipmentNewRoute,
   InventoryNewRoute: InventoryNewRoute,
   PostPostIdRoute: PostPostIdRoute,
@@ -561,6 +624,7 @@ const rootRouteChildren: RootRouteChildren = {
   InventoryInventoryIdEditRoute: InventoryInventoryIdEditRoute,
   WatchesWatchIdEditRoute: WatchesWatchIdEditRoute,
   WatchesWatchIdGalleryRoute: WatchesWatchIdGalleryRoute,
+  WatchesWatchIdShoppingListRoute: WatchesWatchIdShoppingListRoute,
   WatchesWatchIdTimegrapherRoute: WatchesWatchIdTimegrapherRoute,
   WatchesWatchIdIndexRoute: WatchesWatchIdIndexRoute,
   WatchesWatchIdPostsPostIdRoute: WatchesWatchIdPostsPostIdRoute,

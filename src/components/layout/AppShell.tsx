@@ -22,6 +22,8 @@ const PAGE_SUBTITLES: Record<string, string> = {
   '/inventory': 'SPARE PARTS STOCK',
   '/equipment': 'TOOLS & CAPITAL EXPENDITURE',
   '/settings/profile': 'YOUR PUBLIC PROFILE',
+  '/pro': 'UPGRADE YOUR PLAN',
+  '/wishlist': 'ACQUISITION TARGETS',
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -30,7 +32,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const currentPage = NAV_PAGES.find((p) => p.path === pathname);
   const subtitle =
     PAGE_SUBTITLES[pathname] ??
-    (pathname.endsWith('/timegrapher') ? 'TIMEGRAPHER LOG' : '');
+    (pathname.endsWith('/timegrapher')
+      ? 'TIMEGRAPHER LOG'
+      : pathname.endsWith('/shopping-list')
+        ? 'PARTS SHOPPING LIST'
+        : '');
 
   return (
     <SidebarProvider>
