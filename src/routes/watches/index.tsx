@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { LayoutGrid, List, PlusIcon } from 'lucide-react';
+import { Info, LayoutGrid, List, PlusIcon } from 'lucide-react';
 
 import { cn, fmt, profit } from '#/lib/helpers';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
@@ -10,6 +10,12 @@ import { KanbanBoard } from '#/components/watches/KanbanBoard';
 import { WatchDetailPanel } from '#/components/watches/WatchDetailPanel';
 import { StatusPicker } from '#/components/watches/StatusPicker';
 import { Button } from '#/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '#/components/ui/tooltip';
 import { WatchesListSkeleton } from '#/components/skeletons';
 import { useWatches } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
@@ -139,7 +145,36 @@ function WatchesPage() {
                   <Th>Paid</Th>
                   <Th>Parts</Th>
                   <Th>Sold For</Th>
-                  <Th>Breakdown</Th>
+                  <Th>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger className="flex items-center gap-1 cursor-default">
+                          Breakdown
+                          <Info className="size-3 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="font-mono text-xs">
+                          <div className="flex flex-col gap-1.5 py-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="inline-block size-2.5 rounded-sm bg-amber-600 shrink-0" />
+                              Amount paid
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-block size-2.5 rounded-sm bg-zinc-500 shrink-0" />
+                              Parts cost
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-block size-2.5 rounded-sm bg-green-400 shrink-0" />
+                              Profit
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="inline-block size-2.5 rounded-sm bg-red-400 shrink-0" />
+                              Loss
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </Th>
                   <Th>Profit</Th>
                   <Th>Hours</Th>
                 </tr>
