@@ -17,7 +17,7 @@ type WatchDetailPanelProps = {
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex justify-between items-center px-4 py-2 hover:bg-white/2 transition-colors gap-4">
+    <div className="flex justify-between items-center px-4 py-2 hover:bg-black/[0.03] transition-colors gap-4">
       <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">
         {label}
       </span>
@@ -98,7 +98,8 @@ function PanelContent({ watch, onClose, isMobile }: PanelContentProps) {
             isMobile ? 'h-32' : 'aspect-video',
           )}
         >
-          <span className="font-mono text-[9px] text-muted-foreground/25 uppercase tracking-widest">
+          {/* text-muted-foreground at full opacity on zinc-950: 6.2:1 */}
+          <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
             No photos
           </span>
         </div>

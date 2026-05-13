@@ -18,7 +18,7 @@ export function KanbanCard({ watch, isSelected, onClick }: KanbanCardProps) {
         'w-full text-left rounded-lg border bg-card p-3 transition-all cursor-pointer block',
         isSelected
           ? 'border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/20'
-          : 'border-border hover:border-border/80 hover:bg-white/3',
+          : 'border-border hover:border-border hover:bg-black/[0.04]',
       )}
     >
       {firstPhoto ? (
@@ -29,7 +29,8 @@ export function KanbanCard({ watch, isSelected, onClick }: KanbanCardProps) {
         />
       ) : (
         <div className="w-full aspect-video rounded-md bg-zinc-900 border border-dashed border-border mb-2.5 flex items-center justify-center">
-          <span className="font-mono text-[9px] text-muted-foreground/30 uppercase tracking-widest">
+          {/* text-muted-foreground at full opacity on zinc-900: 5.6:1 */}
+          <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
             No photo
           </span>
         </div>

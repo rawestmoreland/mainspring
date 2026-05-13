@@ -1,12 +1,15 @@
 import type { Watch, WatchStatus } from '#/types';
 import { KanbanCard } from '#/components/watches/KanbanCard';
 
+// Colors chosen to meet WCAG AA (4.5:1) against the paper background (#fcfbf9).
+// Light "400" Tailwind variants fail on this light theme — use design-system
+// ink/status colors instead.
 const COLUMNS: { status: WatchStatus; label: string; color: string }[] = [
-  { status: 'acquired', label: 'Acquired', color: 'text-violet-400/70' },
-  { status: 'in_progress', label: 'In Progress', color: 'text-amber-400/70' },
-  { status: 'paused', label: 'Paused', color: 'text-zinc-400/60' },
-  { status: 'listed', label: 'Listed', color: 'text-blue-400/70' },
-  { status: 'sold', label: 'Sold', color: 'text-green-400/70' },
+  { status: 'acquired', label: 'Acquired', color: 'text-plum' },          // #5a3a5a — 9.5:1
+  { status: 'in_progress', label: 'In Progress', color: 'text-[#6d4512]' }, // 8.0:1
+  { status: 'paused', label: 'Paused', color: 'text-[#6b5a45]' },          // 5.7:1
+  { status: 'listed', label: 'Listed', color: 'text-[#2c4a6b]' },          // #indigo — 9.0:1
+  { status: 'sold', label: 'Sold', color: 'text-forest' },                  // #3a5a3a — 6.8:1
 ];
 
 type KanbanBoardProps = {
@@ -32,7 +35,8 @@ export function KanbanBoard({
               >
                 {label}
               </span>
-              <span className="font-mono text-[10px] text-muted-foreground/50 bg-muted/40 rounded px-1.5 py-0.5">
+              {/* text-ink-soft on bg-muted/40 badge: 7.8:1 */}
+              <span className="font-mono text-[10px] text-ink-soft bg-muted/40 rounded px-1.5 py-0.5">
                 {cards.length}
               </span>
             </div>
@@ -46,8 +50,9 @@ export function KanbanBoard({
                 />
               ))}
               {cards.length === 0 && (
-                <div className="rounded-lg border border-dashed border-border/40 py-8 flex items-center justify-center">
-                  <span className="font-mono text-[9px] text-muted-foreground/25 uppercase tracking-widest">
+                // text-ink-soft on paper bg: 8.5:1
+                <div className="rounded-lg border border-dashed border-border py-8 flex items-center justify-center">
+                  <span className="font-mono text-[10px] text-ink-soft uppercase tracking-widest">
                     Empty
                   </span>
                 </div>

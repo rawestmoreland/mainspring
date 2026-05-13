@@ -3,7 +3,7 @@ export const STAGE_META: Record<string, { label: string; className: string }> =
     before: {
       label: 'Before',
       className:
-        'bg-[rgba(166,124,46,0.12)] text-[#8c6624] border-[rgba(166,124,46,0.3)]',
+        'bg-[rgba(166,124,46,0.12)] text-[#6d4512] border-[rgba(166,124,46,0.3)]',
     },
     during: {
       label: 'During',
@@ -32,7 +32,7 @@ export const STATUS_META: Record<string, { label: string; className: string }> =
     in_progress: {
       label: 'In Progress',
       className:
-        'bg-[rgba(166,124,46,0.10)] text-[#8c6624] border-[rgba(166,124,46,0.25)]',
+        'bg-[rgba(166,124,46,0.10)] text-[#6d4512] border-[rgba(166,124,46,0.25)]',
     },
     listed: {
       label: 'Listed',
@@ -47,6 +47,6 @@ export const STATUS_META: Record<string, { label: string; className: string }> =
     paused: {
       label: 'Paused',
       className:
-        'bg-[rgba(60,55,46,0.06)] text-[#9a8b73] border-[rgba(34,26,18,0.14)]',
+        'bg-[rgba(60,55,46,0.06)] text-[#6b5a45] border-[rgba(34,26,18,0.14)]',
     },
   };
