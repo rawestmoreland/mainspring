@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRef, useState } from 'react';
 import { useCreatePost } from '#/hooks/posts';
+import { useSubscription } from '#/hooks/subscription';
 import { useUser } from '#/hooks/user';
 import { useGetWatchById } from '#/hooks/watches';
 import { PostsApi } from '#/lib/api/posts';
@@ -26,6 +27,7 @@ function NewPostPage() {
   const { data: user } = useUser();
   const { data: watch } = useGetWatchById(watchId);
   const navigate = useNavigate();
+  const { isPro } = useSubscription();
   const createPost = useCreatePost(watchId);
   const editorRef = useRef<TiptapEditorRef>(null);
   const [photosOpen, setPhotosOpen] = useState(false);
@@ -151,7 +153,7 @@ function NewPostPage() {
                 ref={editorRef}
                 value={field.value}
                 onChange={field.onChange}
-                onImageUpload={handleImageUpload}
+                onImageUpload={isPro ? handleImageUpload : undefined}
                 minHeight='200px'
                 toolbarConfig={{
                   headings: [true, true, true],
@@ -161,13 +163,25 @@ function NewPostPage() {
                   bulletList: true,
                   orderedList: true,
                   blockquote: true,
-                  image: true,
+                  image: isPro,
                   undo: true,
                   redo: true,
                 }}
               />
             )}
           />
+          {!isPro && (
+            <p className='text-[11px] font-mono text-muted-foreground/60'>
+              Photo uploads require a{' '}
+              <Link
+                to='/pro'
+                className='text-amber-500 hover:text-amber-400 underline underline-offset-2'
+              >
+                Pro subscription
+              </Link>
+              .
+            </p>
+          )}
           <WatchPhotoPicker
             photos={watch?.photos ?? []}
             open={photosOpen}
@@ -265,7 +279,12 @@ function WatchPhotoPicker({
                       key={ph.id}
                       type='button'
                       onClick={() => handleInsert(ph)}
-                      title={inserted ? 'Inserted!' : (ph.caption || `Insert ${STAGE_LABELS[ph.stage]} photo`)}
+                      title={
+                        inserted
+                          ? 'Inserted!'
+                          : ph.caption ||
+                            `Insert ${STAGE_LABELS[ph.stage]} photo`
+                      }
                       className={`relative group overflow-hidden rounded border w-14 h-14 shrink-0 transition-all ${
                         inserted
                           ? 'border-primary ring-1 ring-primary'

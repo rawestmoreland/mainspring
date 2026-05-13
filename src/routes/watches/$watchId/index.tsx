@@ -23,6 +23,7 @@ import { AddPartUsedDialog } from '#/components/watches/AddPartUsedDialog';
 import TipTapEditor from '#/components/TipTap';
 import { useDeletePartUsed } from '#/hooks/parts_used';
 import { useGetTimegrapherReadings } from '#/hooks/timegrapher';
+import { useGetPartsShoppingList } from '#/hooks/watch-parts-shopping-list';
 import { useSubscription } from '#/hooks/subscription';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { capitalize } from 'lodash-es';
@@ -47,6 +48,7 @@ function RouteComponent() {
   const deleteWatch = useDeleteWatch();
   const deletePartUsed = useDeletePartUsed(watchId);
   const { data: timegrapherReadings = [] } = useGetTimegrapherReadings(watchId);
+  const { data: partsShoppingItems = [] } = useGetPartsShoppingList(watchId);
   const { isPro } = useSubscription();
 
   const [stageFilter, setStageFilter] = useState<string>('all');
@@ -485,6 +487,114 @@ function RouteComponent() {
                         className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
                       >
                         Full log →
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })()
+            )}
+          </section>
+
+          {/* Parts Shopping List */}
+          <section className='rounded-xl border border-border bg-card overflow-hidden'>
+            <div className='flex items-center justify-between px-4 py-2.5 border-b border-border'>
+              <div className='flex items-center gap-2'>
+                <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+                  Parts Shopping List
+                </span>
+                {!isPro && (
+                  <span className='inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'>
+                    <LockIcon className='w-2.5 h-2.5' />
+                    Pro
+                  </span>
+                )}
+              </div>
+              {isPro && (
+                <Link
+                  to='/watches/$watchId/shopping-list'
+                  params={{ watchId }}
+                  className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
+                >
+                  View all ({partsShoppingItems.length})
+                </Link>
+              )}
+            </div>
+            {!isPro ? (
+              <div className='relative'>
+                <div
+                  className='divide-y divide-border blur-sm select-none pointer-events-none'
+                  aria-hidden
+                >
+                  {[
+                    ['Mainspring', 'Needed'],
+                    ['Crystal', 'Ordered'],
+                    ['Crown', 'In Hand'],
+                  ].map(([k, v]) => (
+                    <div
+                      key={String(k)}
+                      className='flex justify-between items-center px-4 py-2.5'
+                    >
+                      <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
+                        {k}
+                      </span>
+                      <span className='font-mono text-[11.5px] text-foreground'>
+                        {v}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                <div className='absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-card/70 backdrop-blur-[2px]'>
+                  <LockIcon className='w-4 h-4 text-amber-400' />
+                  <p className='font-mono text-xs text-muted-foreground'>
+                    Parts shopping list is a Pro feature
+                  </p>
+                  {user && <UpgradeButton pbUserId={user.id} />}
+                </div>
+              </div>
+            ) : partsShoppingItems.length === 0 ? (
+              <div className='text-center py-6 text-xs font-mono text-muted-foreground'>
+                No parts on the list yet.{' '}
+                {user && (
+                  <Link
+                    to='/watches/$watchId/shopping-list'
+                    params={{ watchId }}
+                    className='text-primary'
+                  >
+                    Add the first one →
+                  </Link>
+                )}
+              </div>
+            ) : (
+              (() => {
+                const needed = partsShoppingItems.filter((i) => i.status === 'needed').length;
+                const ordered = partsShoppingItems.filter((i) => i.status === 'ordered').length;
+                const inHand = partsShoppingItems.filter((i) => i.status === 'in_hand').length;
+                return (
+                  <div className='divide-y divide-border'>
+                    {[
+                      ['Needed', needed],
+                      ['Ordered', ordered],
+                      ['In Hand', inHand],
+                    ].map(([k, v]) => (
+                      <div
+                        key={String(k)}
+                        className='flex justify-between items-center px-4 py-2.5 hover:bg-white/2 transition-colors'
+                      >
+                        <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
+                          {k}
+                        </span>
+                        <span className='font-mono text-[11.5px] text-foreground'>
+                          {v}
+                        </span>
+                      </div>
+                    ))}
+                    <div className='px-4 py-2.5'>
+                      <Link
+                        to='/watches/$watchId/shopping-list'
+                        params={{ watchId }}
+                        className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
+                      >
+                        Full list →
                       </Link>
                     </div>
                   </div>
