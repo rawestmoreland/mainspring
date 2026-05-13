@@ -97,6 +97,7 @@ export const WatchesApi = {
   getWatchById: async (id: string): Promise<Watch> => {
     const watch = await pb.collection('watches').getOne<Watch>(id, {
       expand: 'watch_photos_via_watch,parts_used_via_watch.inventory_item',
+      requestKey: null,
     });
     return {
       ...watch,
