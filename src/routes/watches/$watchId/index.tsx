@@ -29,7 +29,13 @@ import { useSubscription } from '#/hooks/subscription';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { capitalize } from 'lodash-es';
 import { Button } from '#/components/ui/button';
-import { LockIcon, Trash2Icon, ImagePlusIcon, UploadCloudIcon, PencilIcon } from 'lucide-react';
+import {
+  LockIcon,
+  Trash2Icon,
+  ImagePlusIcon,
+  UploadCloudIcon,
+  PencilIcon,
+} from 'lucide-react';
 import { StatusPicker } from '#/components/watches/StatusPicker';
 
 export const Route = createFileRoute('/watches/$watchId/')({
@@ -57,7 +63,10 @@ function RouteComponent() {
 
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [activeIdx, setActiveIdx] = useState(0);
-  const [lightbox, setLightbox] = useState<{ photos: WatchPhoto[]; index: number } | null>(null);
+  const [lightbox, setLightbox] = useState<{
+    photos: WatchPhoto[];
+    index: number;
+  } | null>(null);
   const [editingNotes, setEditingNotes] = useState(false);
   const [draftNotes, setDraftNotes] = useState('');
   const [showUpload, setShowUpload] = useState(false);
@@ -66,7 +75,9 @@ function RouteComponent() {
 
   if (isLoading) {
     return (
-      <div className='text-sm text-muted-foreground font-mono'>Loading watch…</div>
+      <div className='text-sm text-muted-foreground font-mono'>
+        Loading watch…
+      </div>
     );
   }
 
@@ -87,7 +98,9 @@ function RouteComponent() {
   const photos = watch.photos ?? [];
   const canViewPhotos = isPro || photos.length > 0;
   const displayedPhotos =
-    stageFilter === 'all' ? photos : photos.filter((ph) => ph.stage === stageFilter);
+    stageFilter === 'all'
+      ? photos
+      : photos.filter((ph) => ph.stage === stageFilter);
   const activePhoto = displayedPhotos[activeIdx] ?? null;
 
   const handleStageFilter = (s: string) => {
@@ -97,7 +110,9 @@ function RouteComponent() {
 
   const prevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setActiveIdx((i) => (i - 1 + displayedPhotos.length) % displayedPhotos.length);
+    setActiveIdx(
+      (i) => (i - 1 + displayedPhotos.length) % displayedPhotos.length,
+    );
   };
 
   const nextPhoto = (e: React.MouseEvent) => {
@@ -107,7 +122,11 @@ function RouteComponent() {
 
   const handleUpload = (pending: PendingPhoto[]) => {
     uploadPhotos.mutate(
-      pending.map((p) => ({ file: p.file, stage: p.stage, caption: p.caption })),
+      pending.map((p) => ({
+        file: p.file,
+        stage: p.stage,
+        caption: p.caption,
+      })),
     );
   };
 
@@ -157,7 +176,11 @@ function RouteComponent() {
                 onClick={() => featuredInputRef.current?.click()}
                 disabled={uploadFeaturedImage.isPending}
                 className='relative w-12 h-12 rounded-lg overflow-hidden border border-border bg-zinc-900 cursor-pointer p-0 block disabled:opacity-50'
-                aria-label={watch.featured_image_url ? 'Change featured image' : 'Set featured image'}
+                aria-label={
+                  watch.featured_image_url
+                    ? 'Change featured image'
+                    : 'Set featured image'
+                }
               >
                 {watch.featured_image_url ? (
                   <img
@@ -277,7 +300,9 @@ function RouteComponent() {
                       size='icon'
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm('Are you sure you want to delete this photo?')) {
+                        if (
+                          confirm('Are you sure you want to delete this photo?')
+                        ) {
                           deletePhoto.mutate(activePhoto.id);
                         }
                       }}
@@ -321,7 +346,11 @@ function RouteComponent() {
                       : 'border-border opacity-50 hover:opacity-100',
                   )}
                 >
-                  <img src={ph.image} alt={ph.caption} className='w-full h-full object-cover' />
+                  <img
+                    src={ph.image}
+                    alt={ph.caption}
+                    className='w-full h-full object-cover'
+                  />
                 </button>
               ))}
             </div>
@@ -365,12 +394,20 @@ function RouteComponent() {
           <div className='grid grid-cols-2 gap-2'>
             {(
               [
-                ['Invested', fmt(watch.bought_price + (watch.parts_cost ?? 0)), null],
+                [
+                  'Invested',
+                  fmt(watch.bought_price + (watch.parts_cost ?? 0)),
+                  null,
+                ],
                 ['Sale Price', fmt(watch.sold_price), null],
                 [
                   'Profit',
                   p !== null ? fmt(p) : '—',
-                  p !== null ? (p >= 0 ? 'text-green-400' : 'text-red-400') : null,
+                  p !== null
+                    ? p >= 0
+                      ? 'text-green-400'
+                      : 'text-red-400'
+                    : null,
                 ],
                 [
                   'ROI',
@@ -383,7 +420,10 @@ function RouteComponent() {
                 ],
               ] as [string, string, string | null][]
             ).map(([label, value, colorClass]) => (
-              <div key={label} className='rounded-lg border border-border bg-card px-3 py-2.5'>
+              <div
+                key={label}
+                className='rounded-lg border border-border bg-card px-3 py-2.5'
+              >
                 <div className='font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground'>
                   {label}
                 </div>
@@ -419,7 +459,11 @@ function RouteComponent() {
               <div className='divide-y divide-border'>
                 {(
                   [
-                    ['Condition', capitalize(watch.condition_bought?.replace('_', ' ')) ?? '—'],
+                    [
+                      'Condition',
+                      capitalize(watch.condition_bought?.replace('_', ' ')) ??
+                        '—',
+                    ],
                     ['Purchase', fmt(watch.bought_price)],
                     ['Parts Cost', fmt(watch.parts_cost)],
                   ] as [string, string][]
@@ -428,7 +472,9 @@ function RouteComponent() {
                     <span className='font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground'>
                       {k}
                     </span>
-                    <span className='font-mono text-[11px] text-foreground mt-0.5'>{v}</span>
+                    <span className='font-mono text-[11px] text-foreground mt-0.5'>
+                      {v}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -438,12 +484,17 @@ function RouteComponent() {
                     ['Hours', `${watch.hours_spent ?? 0} hrs`],
                     [
                       'Acquired',
-                      watch.bought_date ? format(watch.bought_date, 'MMM d, yyyy') : '—',
+                      watch.bought_date
+                        ? format(watch.bought_date, 'MMM d, yyyy')
+                        : '—',
                     ],
                     [
                       'Sold',
                       watch.sold_date
-                        ? format(new Date(watch.sold_date as string), 'MMM d, yyyy')
+                        ? format(
+                            new Date(watch.sold_date as string),
+                            'MMM d, yyyy',
+                          )
                         : '—',
                     ],
                   ] as [string, string][]
@@ -452,7 +503,9 @@ function RouteComponent() {
                     <span className='font-mono text-[9.5px] uppercase tracking-wider text-muted-foreground'>
                       {k}
                     </span>
-                    <span className='font-mono text-[11px] text-foreground mt-0.5'>{v}</span>
+                    <span className='font-mono text-[11px] text-foreground mt-0.5'>
+                      {v}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -461,7 +514,7 @@ function RouteComponent() {
 
           {/* Tabbed workflow sections */}
           <div className='rounded-xl border border-border bg-card overflow-hidden'>
-            <div className='flex border-b border-border overflow-x-auto'>
+            <div className='flex border-b border-border overflow-x-auto overflow-y-hidden'>
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -516,10 +569,15 @@ function RouteComponent() {
                             params={{ watchId, postId: post.id }}
                             className='flex items-center justify-between px-4 py-2.5 hover:bg-white/2 transition-colors no-underline'
                           >
-                            <span className='text-sm text-foreground'>{post.title}</span>
+                            <span className='text-sm text-foreground'>
+                              {post.title}
+                            </span>
                             <span className='text-[11px] font-mono text-muted-foreground shrink-0 ml-3'>
                               {post.session_date
-                                ? format(new Date(post.session_date), 'MMM d, yyyy')
+                                ? format(
+                                    new Date(post.session_date),
+                                    'MMM d, yyyy',
+                                  )
                                 : '—'}
                             </span>
                           </Link>
@@ -572,7 +630,9 @@ function RouteComponent() {
                           <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
                             {k}
                           </span>
-                          <span className='font-mono text-[11.5px] text-foreground'>{v}</span>
+                          <span className='font-mono text-[11.5px] text-foreground'>
+                            {v}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -686,10 +746,14 @@ function RouteComponent() {
                       </thead>
                       <tbody className='divide-y divide-border'>
                         {partsUsed.map((part) => {
-                          const unitCost = part.expand?.inventory_item?.unit_cost ?? 0;
+                          const unitCost =
+                            part.expand?.inventory_item?.unit_cost ?? 0;
                           const total = (part.qty_used ?? 0) * unitCost;
                           return (
-                            <tr key={part.id} className='hover:bg-white/2 transition-colors'>
+                            <tr
+                              key={part.id}
+                              className='hover:bg-white/2 transition-colors'
+                            >
                               <td className='px-3.5 py-2.5 text-foreground'>
                                 {part.expand?.inventory_item?.name ?? '—'}
                               </td>
@@ -706,7 +770,11 @@ function RouteComponent() {
                                 <td className='px-3.5 py-2.5 text-right'>
                                   <button
                                     onClick={() => {
-                                      if (confirm('Remove this part from the log?')) {
+                                      if (
+                                        confirm(
+                                          'Remove this part from the log?',
+                                        )
+                                      ) {
                                         deletePartUsed.mutate(part.id);
                                       }
                                     }}
@@ -781,7 +849,9 @@ function RouteComponent() {
                             <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
                               {k}
                             </span>
-                            <span className='font-mono text-[11.5px] text-foreground'>{v}</span>
+                            <span className='font-mono text-[11.5px] text-foreground'>
+                              {v}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -809,9 +879,24 @@ function RouteComponent() {
                   ) : (
                     <div className='divide-y divide-border'>
                       {[
-                        ['Needed', partsShoppingItems.filter((i) => i.status === 'needed').length],
-                        ['Ordered', partsShoppingItems.filter((i) => i.status === 'ordered').length],
-                        ['In Hand', partsShoppingItems.filter((i) => i.status === 'in_hand').length],
+                        [
+                          'Needed',
+                          partsShoppingItems.filter(
+                            (i) => i.status === 'needed',
+                          ).length,
+                        ],
+                        [
+                          'Ordered',
+                          partsShoppingItems.filter(
+                            (i) => i.status === 'ordered',
+                          ).length,
+                        ],
+                        [
+                          'In Hand',
+                          partsShoppingItems.filter(
+                            (i) => i.status === 'in_hand',
+                          ).length,
+                        ],
                       ].map(([k, v]) => (
                         <div
                           key={String(k)}
@@ -820,7 +905,9 @@ function RouteComponent() {
                           <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
                             {k}
                           </span>
-                          <span className='font-mono text-[11.5px] text-foreground'>{v}</span>
+                          <span className='font-mono text-[11.5px] text-foreground'>
+                            {v}
+                          </span>
                         </div>
                       ))}
                       <div className='px-4 py-2.5'>
