@@ -21,7 +21,7 @@ export const startProCheckout = createServerFn({
   )
   .handler(async ({ data: { userId, pathname } }) => {
     const storeId = process.env.LEMONSQUEEZY_STORE_ID!;
-    const variantId = '1622808';
+    const variantId = process.env.PRODUCT_VARIANT_ID ?? '1622808';
 
     const appUrl = !!process.env.APP_URL
       ? `${process.env.APP_URL}`
