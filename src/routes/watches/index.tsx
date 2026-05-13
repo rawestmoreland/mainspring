@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Info, LayoutGrid, List, PlusIcon } from 'lucide-react';
 
@@ -43,6 +43,14 @@ function WatchesPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [selectedWatchId, setSelectedWatchId] = useState<string | null>(null);
 
+  useEffect(() => {
+    const getSavedViewMode = async () => {
+      const localMode = localStorage.getItem('hairspring-viewmode') as ViewMode;
+      if (localMode) setViewMode(localMode);
+    };
+    getSavedViewMode();
+  }, []);
+
   if (isPending || isUserPending) {
     return <WatchesListSkeleton />;
   }
@@ -61,11 +69,16 @@ function WatchesPage() {
     setSelectedWatchId((prev) => (prev === id ? null : id));
   };
 
+  const handleChangeViewMode = async (mode: ViewMode) => {
+    localStorage.setItem('hairspring-viewmode', mode);
+    setViewMode(mode);
+  };
+
   return (
     <>
       <div>
         {/* Toolbar */}
-        <div className="flex items-center gap-0.5 mb-5">
+        <div className='flex items-center gap-0.5 mb-5'>
           {viewMode === 'table' &&
             FILTERS.map(([v, l]) => (
               <button
@@ -81,11 +94,11 @@ function WatchesPage() {
                 {l}
               </button>
             ))}
-          <div className="ml-auto flex items-center gap-2">
-            <div className="flex items-center rounded-md border border-border bg-muted/30 p-0.5">
+          <div className='ml-auto flex items-center gap-2'>
+            <div className='flex items-center rounded-md border border-border bg-muted/30 p-0.5'>
               <button
                 onClick={() => {
-                  setViewMode('board');
+                  handleChangeViewMode('board');
                   setSelectedWatchId(null);
                 }}
                 className={cn(
@@ -94,27 +107,29 @@ function WatchesPage() {
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground bg-transparent',
                 )}
-                title="Board view"
+                title='Board view'
               >
-                <LayoutGrid className="size-3.5" />
+                <LayoutGrid className='size-3.5' />
               </button>
               <button
-                onClick={() => setViewMode('table')}
+                onClick={() => {
+                  handleChangeViewMode('table');
+                }}
                 className={cn(
                   'p-1.5 rounded transition-colors cursor-pointer border-none',
                   viewMode === 'table'
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground bg-transparent',
                 )}
-                title="Table view"
+                title='Table view'
               >
-                <List className="size-3.5" />
+                <List className='size-3.5' />
               </button>
             </div>
             {user && (
               <Button asChild>
-                <Link to="/watches/new">
-                  <PlusIcon className="size-3" />
+                <Link to='/watches/new'>
+                  <PlusIcon className='size-3' />
                   Add Watch
                 </Link>
               </Button>
@@ -148,26 +163,29 @@ function WatchesPage() {
                   <Th>
                     <TooltipProvider>
                       <Tooltip>
-                        <TooltipTrigger className="flex items-center gap-1 cursor-default">
+                        <TooltipTrigger className='flex items-center gap-1 cursor-default'>
                           Breakdown
-                          <Info className="size-3 text-muted-foreground" />
+                          <Info className='size-3 text-muted-foreground' />
                         </TooltipTrigger>
-                        <TooltipContent side="top" className="font-mono text-xs">
-                          <div className="flex flex-col gap-1.5 py-0.5">
-                            <div className="flex items-center gap-2">
-                              <span className="inline-block size-2.5 rounded-sm bg-amber-600 shrink-0" />
+                        <TooltipContent
+                          side='top'
+                          className='font-mono text-xs'
+                        >
+                          <div className='flex flex-col gap-1.5 py-0.5'>
+                            <div className='flex items-center gap-2'>
+                              <span className='inline-block size-2.5 rounded-sm bg-amber-600 shrink-0' />
                               Amount paid
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-block size-2.5 rounded-sm bg-zinc-500 shrink-0" />
+                            <div className='flex items-center gap-2'>
+                              <span className='inline-block size-2.5 rounded-sm bg-zinc-500 shrink-0' />
                               Parts cost
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-block size-2.5 rounded-sm bg-green-400 shrink-0" />
+                            <div className='flex items-center gap-2'>
+                              <span className='inline-block size-2.5 rounded-sm bg-green-400 shrink-0' />
                               Profit
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="inline-block size-2.5 rounded-sm bg-red-400 shrink-0" />
+                            <div className='flex items-center gap-2'>
+                              <span className='inline-block size-2.5 rounded-sm bg-red-400 shrink-0' />
                               Loss
                             </div>
                           </div>
@@ -187,7 +205,7 @@ function WatchesPage() {
                       <Td>
                         <button
                           onClick={() => handleSelectWatch(w.id)}
-                          className="inline-block bg-transparent border-none p-0 cursor-pointer"
+                          className='inline-block bg-transparent border-none p-0 cursor-pointer'
                         >
                           <ThumbStrip photos={w.photos} />
                         </button>
@@ -195,30 +213,32 @@ function WatchesPage() {
                       <Td>
                         <button
                           onClick={() => handleSelectWatch(w.id)}
-                          className="block text-left bg-transparent border-none p-0 cursor-pointer"
+                          className='block text-left bg-transparent border-none p-0 cursor-pointer'
                         >
-                          <div className="font-medium text-foreground">
+                          <div className='font-medium text-foreground'>
                             {w.make} {w.model}
                           </div>
-                          <div className="font-mono text-[11px] text-muted-foreground mt-0.5">
+                          <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
                             {w.reference}
                           </div>
                         </button>
                       </Td>
-                      <Td className="font-mono text-xs text-muted-foreground">
+                      <Td className='font-mono text-xs text-muted-foreground'>
                         {w.year}
                       </Td>
                       <Td>
                         <StatusPicker watch={w} />
                       </Td>
-                      <Td className="text-xs text-muted-foreground capitalize">
+                      <Td className='text-xs text-muted-foreground capitalize'>
                         {w.condition_bought.replace('_', ' ')}
                       </Td>
-                      <Td className="font-mono text-xs">{fmt(w.bought_price)}</Td>
-                      <Td className="font-mono text-xs text-muted-foreground">
+                      <Td className='font-mono text-xs'>
+                        {fmt(w.bought_price)}
+                      </Td>
+                      <Td className='font-mono text-xs text-muted-foreground'>
                         {fmt(w.parts_cost)}
                       </Td>
-                      <Td className="font-mono text-xs">{fmt(w.sold_price)}</Td>
+                      <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
                       <Td>
                         <CostBar watch={w} />
                       </Td>
@@ -234,7 +254,7 @@ function WatchesPage() {
                       >
                         {fmt(p)}
                       </Td>
-                      <Td className="font-mono text-xs text-muted-foreground">
+                      <Td className='font-mono text-xs text-muted-foreground'>
                         {w.hours_spent}h
                       </Td>
                     </TableRow>
@@ -244,12 +264,12 @@ function WatchesPage() {
             </TableWrap>
 
             {allWatches.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground font-mono text-xs">
+              <div className='text-center py-12 text-muted-foreground font-mono text-xs'>
                 No watches yet — add your first one.
               </div>
             )}
             {allWatches.length > 0 && filtered.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground font-mono text-xs">
+              <div className='text-center py-12 text-muted-foreground font-mono text-xs'>
                 No watches match this filter.
               </div>
             )}
