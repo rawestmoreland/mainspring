@@ -9,7 +9,7 @@ type KanbanCardProps = {
 
 export function KanbanCard({ watch, isSelected, onClick }: KanbanCardProps) {
   const p = profit(watch);
-  const firstPhoto = watch.photos?.[0];
+  const cardImage = watch.featured_image_url ?? watch.photos?.[0]?.image;
 
   return (
     <button
@@ -21,9 +21,9 @@ export function KanbanCard({ watch, isSelected, onClick }: KanbanCardProps) {
           : 'border-border hover:border-border hover:bg-black/[0.04]',
       )}
     >
-      {firstPhoto ? (
+      {cardImage ? (
         <img
-          src={firstPhoto.image}
+          src={cardImage}
           alt=""
           className="w-full aspect-video rounded-md object-cover mb-2.5 border border-border"
         />

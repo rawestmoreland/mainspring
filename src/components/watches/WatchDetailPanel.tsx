@@ -41,7 +41,7 @@ export function WatchDetailPanel({ watch, open, onClose }: WatchDetailPanelProps
 
   const p = watch ? profit(watch) : null;
   const r = watch ? roi(watch) : null;
-  const firstPhoto = watch?.photos?.[0];
+  const panelImage = watch?.featured_image_url ?? watch?.photos?.[0]?.image;
 
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
@@ -81,9 +81,9 @@ export function WatchDetailPanel({ watch, open, onClose }: WatchDetailPanelProps
               )}
             </div>
 
-            {firstPhoto ? (
+            {panelImage ? (
               <img
-                src={firstPhoto.image}
+                src={panelImage}
                 alt=""
                 className="w-full aspect-video object-cover border-b border-border"
               />

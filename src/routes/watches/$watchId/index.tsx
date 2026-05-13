@@ -18,6 +18,7 @@ import type { WatchPhoto } from '#/types';
 import { format } from 'date-fns/format';
 import { UploadZone } from '#/components/watches/UploadZone';
 import type { PendingPhoto } from '#/components/watches/UploadZone';
+import { FeaturedImageUpload } from '#/components/watches/FeaturedImageUpload';
 import { Lightbox } from '#/components/watches/Lightbox';
 import { AddPartUsedDialog } from '#/components/watches/AddPartUsedDialog';
 import TipTapEditor from '#/components/TipTap';
@@ -275,6 +276,19 @@ function RouteComponent() {
                   />
                 </button>
               ))}
+            </div>
+          )}
+
+          {/* Featured image */}
+          {user && (
+            <div className='px-4 pb-4 pt-3 border-t border-border'>
+              <div className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-2.5'>
+                Featured Image
+              </div>
+              <FeaturedImageUpload
+                watchId={watchId}
+                imageUrl={watch.featured_image_url}
+              />
             </div>
           )}
 

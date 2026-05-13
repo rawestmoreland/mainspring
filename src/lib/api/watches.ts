@@ -14,6 +14,9 @@ export const WatchesApi = {
     });
     return watches.items.map((w) => ({
       ...w,
+      featured_image_url: w.featured_image
+        ? `${import.meta.env.VITE_POCKETBASE_URL}/api/files/watches/${w.id}/${w.featured_image}?thumb=600x400`
+        : undefined,
       photos:
         w.expand?.watch_photos_via_watch?.map((p: WatchPhoto) => ({
           id: p.id,
@@ -45,6 +48,18 @@ export const WatchesApi = {
   },
   deleteWatchPhoto: async (photoId: string): Promise<void> => {
     await pb.collection('watch_photos').delete(photoId);
+  },
+  uploadFeaturedImage: async (watchId: string, file: File): Promise<Watch> => {
+    const fd = new FormData();
+    fd.append('featured_image', file);
+    const updated = await pb.collection('watches').update<Watch>(watchId, fd);
+    return {
+      ...updated,
+      featured_image_url: updated.featured_image
+        ? `${import.meta.env.VITE_POCKETBASE_URL}/api/files/watches/${updated.id}/${updated.featured_image}?thumb=600x400`
+        : undefined,
+      photos: [],
+    };
   },
   uploadWatchPhoto: async (
     watchId: string,
@@ -85,6 +100,9 @@ export const WatchesApi = {
     });
     return {
       ...watch,
+      featured_image_url: watch.featured_image
+        ? `${import.meta.env.VITE_POCKETBASE_URL}/api/files/watches/${watch.id}/${watch.featured_image}?thumb=600x400`
+        : undefined,
       photos:
         watch.expand?.watch_photos_via_watch?.map((p: WatchPhoto) => ({
           id: p.id,
