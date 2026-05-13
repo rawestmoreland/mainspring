@@ -5,6 +5,7 @@ import { LayoutGrid, List, PlusIcon } from 'lucide-react';
 import { cn, fmt, profit } from '#/lib/helpers';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { ThumbStrip } from '#/components/watches/ThumbStrip';
+import { CostBar } from '#/components/watches/CostBar';
 import { KanbanBoard } from '#/components/watches/KanbanBoard';
 import { WatchDetailPanel } from '#/components/watches/WatchDetailPanel';
 import { StatusPicker } from '#/components/watches/StatusPicker';
@@ -138,6 +139,7 @@ function WatchesPage() {
                   <Th>Paid</Th>
                   <Th>Parts</Th>
                   <Th>Sold For</Th>
+                  <Th>Breakdown</Th>
                   <Th>Profit</Th>
                   <Th>Hours</Th>
                 </tr>
@@ -182,6 +184,9 @@ function WatchesPage() {
                         {fmt(w.parts_cost)}
                       </Td>
                       <Td className="font-mono text-xs">{fmt(w.sold_price)}</Td>
+                      <Td>
+                        <CostBar watch={w} />
+                      </Td>
                       <Td
                         className={cn(
                           'font-mono text-xs',
