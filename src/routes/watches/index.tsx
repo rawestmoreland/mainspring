@@ -55,9 +55,8 @@ function WatchesPage() {
   };
 
   return (
-    <div className="flex gap-5 min-w-0">
-      {/* Main content */}
-      <div className="flex-1 min-w-0">
+    <>
+      <div>
         {/* Toolbar */}
         <div className="flex items-center gap-0.5 mb-5">
           {viewMode === 'table' &&
@@ -218,13 +217,11 @@ function WatchesPage() {
         )}
       </div>
 
-      {/* Detail panel */}
-      {selectedWatch && (
-        <WatchDetailPanel
-          watch={selectedWatch}
-          onClose={() => setSelectedWatchId(null)}
-        />
-      )}
-    </div>
+      <WatchDetailPanel
+        watch={selectedWatch}
+        open={!!selectedWatch}
+        onClose={() => setSelectedWatchId(null)}
+      />
+    </>
   );
 }

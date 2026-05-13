@@ -49,7 +49,7 @@ export function KanbanCard({ watch, isSelected, onClick }: KanbanCardProps) {
           <span
             className={cn(
               'font-mono text-[11px] font-medium',
-              p >= 0 ? 'text-green-400' : 'text-red-400',
+              p >= 0 ? 'text-forest' : 'text-wax',
             )}
           >
             {p >= 0 ? '+' : ''}
