@@ -37,9 +37,16 @@ const FEATURES = [
 
 function ProPage() {
   const { user } = useAuth();
-  const { isPro } = useSubscription();
+  const { isPro, isAppTrial, trialEndsAt } = useSubscription();
 
   if (isPro) {
+    const trialEndLabel =
+      isAppTrial && trialEndsAt
+        ? new Date(trialEndsAt).toLocaleDateString(undefined, {
+            dateStyle: 'medium',
+          })
+        : null;
+
     return (
       <div className='flex flex-col items-center justify-center py-20'>
         <div className='flex flex-col items-center gap-4 rounded-xl border border-border bg-card px-10 py-14 text-center max-w-sm w-full'>
@@ -56,20 +63,33 @@ function ProPage() {
           </div>
           <div>
             <p className='font-mono text-[10px] tracking-widest text-amber-400 uppercase mb-2'>
-              Active Plan
+              {isAppTrial ? 'Pro trial' : 'Active Plan'}
             </p>
             <p className='font-serif font-semibold text-foreground text-lg mb-1'>
-              You&apos;re on Pro
+              {isAppTrial
+                ? "You're on a Pro trial"
+                : "You're on Pro"}
             </p>
             <p className='text-sm text-muted-foreground'>
-              All features are unlocked. Manage your billing from your profile.
+              {isAppTrial ? (
+                <>
+                  All Pro features are unlocked until{' '}
+                  {trialEndLabel ?? 'your trial end date'}. Your trial did not
+                  require a card; subscribe anytime to keep access after it ends.
+                </>
+              ) : (
+                <>
+                  All features are unlocked. Manage your billing from your
+                  profile.
+                </>
+              )}
             </p>
           </div>
           <Link
             to='/settings/profile'
             className='font-mono text-[11px] tracking-widest text-muted-foreground hover:text-foreground transition-colors uppercase'
           >
-            Manage Billing →
+            {isAppTrial ? 'Billing & profile →' : 'Manage Billing →'}
           </Link>
         </div>
       </div>
@@ -97,10 +117,14 @@ function ProPage() {
         <h1 className='font-serif font-semibold text-foreground text-2xl mb-2'>
           Unlock the full Hairspring experience
         </h1>
-        <p className='text-sm text-muted-foreground leading-relaxed mb-6 max-w-xl'>
+        <p className='text-sm text-muted-foreground leading-relaxed mb-4 max-w-xl'>
           Pro gives you the tools serious collectors and flippers need — photo
           documentation, movement analytics, and more. One flat price, every
           feature, forever.
+        </p>
+        <p className='text-xs text-muted-foreground leading-relaxed mb-6 max-w-xl font-mono tracking-wide'>
+          New accounts include 14 days of full Pro access at signup — no credit
+          card required for that trial.
         </p>
         {user?.id && <UpgradeButton pbUserId={user.id} />}
       </div>

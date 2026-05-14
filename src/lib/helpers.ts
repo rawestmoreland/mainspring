@@ -43,39 +43,78 @@ export const numberField = (opts?: { min?: number; message?: string }) =>
     .number({ error: opts?.message ?? 'Must be a number' })
     .min(opts?.min ?? 0, opts?.message);
 
-export const hasPro = ({
+export type PaidSubscriptionArgs = {
+  subscriptionStatus: SubscriptionStatus | string | undefined;
+  renewsAt: string | undefined;
+  endsAt?: string;
+};
+
+/** Lemon Squeezy–backed subscription only (excludes the app-level Pro trial). */
+export const hasPaidSubscription = ({
   subscriptionStatus,
   renewsAt,
   endsAt,
-}: {
-  subscriptionStatus: SubscriptionStatus;
-  renewsAt: string;
-  endsAt?: string;
-}): boolean => {
+}: PaidSubscriptionArgs): boolean => {
   const now = new Date();
 
-  // 1. Basic active statuses
   if (
     subscriptionStatus === SubscriptionStatus.ACTIVE ||
     subscriptionStatus === SubscriptionStatus.ON_TRIAL ||
     subscriptionStatus === SubscriptionStatus.PAID ||
     subscriptionStatus === SubscriptionStatus.CANCELLED
   ) {
-    // Ensure the expiration date hasn't passed (important for CANCELLED)
     return !endsAt || new Date(endsAt) > now;
   }
 
-  // 2. 48-Hour Grace Period for PAST_DUE
   if (subscriptionStatus === SubscriptionStatus.PAST_DUE) {
+    if (!renewsAt) return false;
     const gracePeriodEnd = new Date(renewsAt);
     gracePeriodEnd.setHours(gracePeriodEnd.getHours() + 48);
-
     return now < gracePeriodEnd;
   }
 
-  // 3. Block everything else (EXPIRED, UNPAID, PAUSED)
   return false;
 };
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+/** True when `trial_ends_at` is strictly in the future. */
+export const isActiveAppTrial = (trialEndsAt: string | undefined): boolean => {
+  if (!trialEndsAt) return false;
+  return new Date(trialEndsAt) > new Date();
+};
+
+/** Whole days remaining until trial end (ceil), or `null` if none / expired. */
+export const trialDaysRemainingCeil = (
+  trialEndsAt: string | undefined,
+): number | null => {
+  if (!trialEndsAt) return null;
+  const end = new Date(trialEndsAt);
+  const now = new Date();
+  if (end <= now) return null;
+  return Math.max(1, Math.ceil((end.getTime() - now.getTime()) / MS_PER_DAY));
+};
+
+export const hasPro = ({
+  subscriptionStatus,
+  renewsAt,
+  endsAt,
+  trialEndsAt,
+}: PaidSubscriptionArgs & { trialEndsAt?: string }): boolean => {
+  return (
+    hasPaidSubscription({ subscriptionStatus, renewsAt, endsAt }) ||
+    isActiveAppTrial(trialEndsAt)
+  );
+};
+
+/** Pro access from the 14-day app trial only (not an active paid LS subscription). */
+export const isAppTrialPro = (args: PaidSubscriptionArgs & { trialEndsAt?: string }) =>
+  isActiveAppTrial(args.trialEndsAt) &&
+  !hasPaidSubscription({
+    subscriptionStatus: args.subscriptionStatus,
+    renewsAt: args.renewsAt,
+    endsAt: args.endsAt,
+  });
 
 export const canModifySubscription = (
   subscriptionStatus: SubscriptionStatus,

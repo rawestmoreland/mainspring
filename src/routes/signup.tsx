@@ -47,7 +47,9 @@ function SignupPage() {
           </h1>
           <p className='font-mono text-xs text-muted-foreground tracking-widest uppercase'>
             Hairspring is opening to the public soon. Join the waitlist to be
-            notified when you can officially create an account.
+            notified when you can officially create an account. New accounts get{' '}
+            <span className='text-foreground'>14 days of Pro free</span> — every
+            Pro feature, no credit card required to start.
           </p>
         </div>
 

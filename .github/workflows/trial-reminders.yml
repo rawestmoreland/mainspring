@@ -1,0 +1,15 @@
+name: Trial Expiry Reminders
+
+on:
+  schedule:
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger trial reminder emails
+        run: |
+          curl --fail -s -X POST "${{ secrets.PB_URL }}/api/internal/trigger-trial-reminders" \
+            -H "X-Cron-Secret: ${{ secrets.INTERNAL_CRON_SECRET }}"

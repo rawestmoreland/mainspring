@@ -7,9 +7,12 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"html"
 	"io"
 	"log"
+	"math"
 	"net/http"
+	"net/mail"
 	"os"
 	"regexp"
 	"slices"
@@ -21,6 +24,7 @@ import (
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
+	"github.com/pocketbase/pocketbase/tools/mailer"
 
 	"github.com/NdoleStudio/lemonsqueezy-go"
 
@@ -35,6 +39,10 @@ func init() {
 var (
 	subdomainRe = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$`)
 
+	appTrialDuration       = 14 * 24 * time.Hour
+	trialReminderHorizon   = 3 * 24 * time.Hour
+	defaultPublicAppOrigin = "https://hairspring.app"
+
 	reservedSubdomains = []string{
 		"www", "app", "api", "admin", "mail", "smtp", "imap", "pop",
 		"support", "help", "docs", "status", "blog", "dashboard",
@@ -46,13 +54,13 @@ var (
 	}
 )
 
-// hasPro mirrors the frontend hasPro() logic in src/lib/helpers.ts.
-func hasPro(user *core.Record) bool {
+// hasPaidSubscription mirrors hasPaidSubscription() in src/lib/helpers.ts (Lemon Squeezy only).
+func hasPaidSubscription(user *core.Record) bool {
 	status := user.GetString("subscription_status")
 	now := time.Now()
 
 	switch status {
-	case "active", "on_trial", "cancelled":
+	case "active", "on_trial", "paid", "cancelled":
 		endsAt := user.GetDateTime("ends_at")
 		return endsAt.IsZero() || endsAt.Time().After(now)
 	case "past_due":
@@ -63,6 +71,111 @@ func hasPro(user *core.Record) bool {
 		return now.Before(renewsAt.Time().Add(48 * time.Hour))
 	default:
 		return false
+	}
+}
+
+func hasActiveAppTrial(user *core.Record) bool {
+	t := user.GetDateTime("trial_ends_at")
+	if t.IsZero() {
+		return false
+	}
+	return t.Time().After(time.Now())
+}
+
+// hasPro mirrors hasPro() in src/lib/helpers.ts (paid subscription or app-level trial).
+func hasPro(user *core.Record) bool {
+	if hasPaidSubscription(user) {
+		return true
+	}
+	return hasActiveAppTrial(user)
+}
+
+func appOrigin() string {
+	if v := strings.TrimSpace(os.Getenv("APP_URL")); v != "" {
+		return strings.TrimRight(v, "/")
+	}
+	return defaultPublicAppOrigin
+}
+
+func sendTrialExpiryReminders(app core.App) {
+	records, err := app.FindRecordsByFilter(
+		"users",
+		"trial_expiry_email_sent = false && trial_ends_at != ''",
+		"trial_ends_at",
+		500,
+		0,
+	)
+	if err != nil {
+		log.Println("trial reminder query:", err)
+		return
+	}
+
+	now := time.Now()
+	mailClient := app.NewMailClient()
+	meta := app.Settings().Meta
+
+	for _, rec := range records {
+		if hasPaidSubscription(rec) {
+			continue
+		}
+
+		trialEnd := rec.GetDateTime("trial_ends_at")
+		if trialEnd.IsZero() {
+			continue
+		}
+		end := trialEnd.Time()
+		if !end.After(now) {
+			continue
+		}
+		if end.Sub(now) > trialReminderHorizon {
+			continue
+		}
+
+		days := int(math.Ceil(end.Sub(now).Hours() / 24))
+		if days < 1 {
+			days = 1
+		}
+
+		addr := rec.Email()
+		if addr == "" {
+			continue
+		}
+
+		base := appOrigin()
+		proURL := base + "/pro"
+		endLocal := end.UTC().Format("January 2, 2006")
+
+		msg := &mailer.Message{
+			From: mail.Address{
+				Address: meta.SenderAddress,
+				Name:    meta.SenderName,
+			},
+			To: []mail.Address{{Address: addr}},
+			Subject: fmt.Sprintf(
+				"Your Hairspring Pro trial ends in %d day(s)",
+				days,
+			),
+			HTML: fmt.Sprintf(
+				`<p>Hi,</p>
+<p>Your free Pro trial (no credit card required) ends on <strong>%s</strong> — about <strong>%d</strong> day(s) from now.</p>
+<p>Subscribe anytime to keep photo uploads, timegrapher logging, shopping lists, and the rest of Pro.</p>
+<p><a href="%s">View Pro plans</a></p>
+<p>— Hairspring</p>`,
+				html.EscapeString(endLocal),
+				days,
+				html.EscapeString(proURL),
+			),
+		}
+
+		if err := mailClient.Send(msg); err != nil {
+			log.Println("trial reminder email:", rec.Id, err)
+			continue
+		}
+
+		rec.Set("trial_expiry_email_sent", true)
+		if err := app.Save(rec); err != nil {
+			log.Println("trial reminder save:", rec.Id, err)
+		}
 	}
 }
 
@@ -96,10 +209,30 @@ func main() {
 		Automigrate: isGoRun,
 	})
 
+	app.OnRecordCreateRequest("users").BindFunc(func(e *core.RecordRequestEvent) error {
+		if !e.Record.GetDateTime("trial_ends_at").IsZero() {
+			return e.Next()
+		}
+		e.Record.Set("trial_ends_at", time.Now().UTC().Add(appTrialDuration))
+		return e.Next()
+	})
+
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		// serves static files from the provided public dir (if exists)
 		se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
 
+		return se.Next()
+	})
+
+	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
+		se.Router.POST("/api/internal/trigger-trial-reminders", func(e *core.RequestEvent) error {
+			secret := os.Getenv("INTERNAL_CRON_SECRET")
+			if secret == "" || e.Request.Header.Get("X-Cron-Secret") != secret {
+				return e.String(http.StatusUnauthorized, "unauthorized")
+			}
+			sendTrialExpiryReminders(app)
+			return e.String(http.StatusOK, "ok")
+		})
 		return se.Next()
 	})
 

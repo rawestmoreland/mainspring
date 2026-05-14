@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { tanstackStart } from '@tanstack/react-start/plugin/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
@@ -5,6 +6,10 @@ import viteReact from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
+  },
   server: {
     allowedHosts: ['.ngrok-free.app', '.localtest.me'],
     host: true,

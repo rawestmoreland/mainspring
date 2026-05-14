@@ -16,6 +16,7 @@ import { getCustomerPortalUrl, getSignedUrl } from '#/server/ls-url';
 import { useSubscription } from '#/hooks/subscription';
 import { Separator } from '#/components/ui/separator';
 import { canModifySubscription } from '#/lib/helpers';
+import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 
 export const Route = createFileRoute('/settings/profile')({
   component: ProfileSettingsPage,
@@ -42,8 +43,15 @@ type FormData = z.infer<typeof schema>;
 
 function ProfileSettingsPage() {
   const { user, profile, isLoading } = useAuth();
-  const { subscriptionId, lsCustomerId, subscriptionStatus, renewsAt, endsAt } =
-    useSubscription();
+  const {
+    subscriptionId,
+    lsCustomerId,
+    subscriptionStatus,
+    renewsAt,
+    endsAt,
+    isAppTrial,
+    trialEndsAt,
+  } = useSubscription();
 
   const queryClient = useQueryClient();
 
@@ -271,6 +279,27 @@ function ProfileSettingsPage() {
         </form>
         <Separator />
       </div>
+      {isAppTrial && !!trialEndsAt && (
+        <div className='space-y-4'>
+          <h2 className='text-xl font-extrabold'>Pro trial</h2>
+          <p className='text-sm text-muted-foreground'>
+            Your account has full Pro access through{' '}
+            <span className='font-medium text-foreground'>
+              {new Date(trialEndsAt).toLocaleDateString(undefined, {
+                dateStyle: 'medium',
+              })}
+            </span>
+            . This trial did not require a credit card. After it ends, Pro
+            features lock unless you subscribe.
+          </p>
+          {user?.id && (
+            <div>
+              <UpgradeButton pbUserId={user.id} />
+            </div>
+          )}
+          <Separator />
+        </div>
+      )}
       {!!lsCustomerId && (
         <div className='space-y-4'>
           <h1 className='text-xl font-extrabold'>Billing & Subscription</h1>
