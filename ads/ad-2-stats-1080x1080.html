@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #ccc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 40px; }
+
+.ad {
+  width: 1080px;
+  height: 1080px;
+  background: #1a1410;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+/* Decorative rings */
+.ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(184,137,63,0.1);
+  pointer-events: none;
+}
+.ring-1 { width: 700px; height: 700px; top: -200px; right: -200px; }
+.ring-2 { width: 480px; height: 480px; top: -100px; right: -100px; border-color: rgba(184,137,63,0.07); }
+.ring-3 { width: 900px; height: 900px; bottom: -350px; left: -300px; border-color: rgba(184,137,63,0.05); }
+
+/* Subtle grid texture */
+.grid-tex {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(184,137,63,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184,137,63,0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 60px 64px 52px;
+}
+
+/* Top bar */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 64px;
+}
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #f5f4f1;
+  letter-spacing: -0.01em;
+}
+.logo-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #5a4a35;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-top: 2px;
+}
+.tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  color: #b8893f;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  border: 1px solid rgba(184,137,63,0.3);
+  padding: 5px 12px;
+  border-radius: 2px;
+}
+
+/* Hero stat */
+.hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 52px;
+}
+.hero-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #6b5c45;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+.hero-number {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 96px;
+  font-weight: 700;
+  color: #b8893f;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.hero-sub {
+  font-family: 'Lora', serif;
+  font-size: 18px;
+  font-style: italic;
+  color: #5a4a35;
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: rgba(184,137,63,0.15);
+  margin-bottom: 44px;
+}
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-bottom: 52px;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.stat-lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  color: #5a4a35;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+.stat-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 42px;
+  font-weight: 700;
+  color: #f5f4f1;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.stat-val.brass { color: #b8893f; }
+.stat-note {
+  font-family: 'Lora', serif;
+  font-size: 12px;
+  font-style: italic;
+  color: #4a3c2a;
+}
+
+/* Bottom bar */
+.bottom-bar {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 32px;
+  border-top: 1px solid rgba(184,137,63,0.1);
+}
+.tagline {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-style: italic;
+  color: #4a3c2a;
+  letter-spacing: 0.01em;
+}
+.tagline em {
+  color: #b8893f;
+  font-style: italic;
+}
+.cta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: #b8893f;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  border: 1px solid rgba(184,137,63,0.35);
+  padding: 12px 22px;
+  border-radius: 3px;
+}
+</style>
+</head>
+<body>
+<div class="ad">
+  <div class="ring ring-1"></div>
+  <div class="ring ring-2"></div>
+  <div class="ring ring-3"></div>
+  <div class="grid-tex"></div>
+
+  <div class="inner">
+    <div class="top-bar">
+      <div class="logo-row">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" width="30" height="30">
+          <circle cx="16" cy="16" r="14.5" stroke="#b8893f" stroke-width="1" fill="none"/>
+          <path d="M16 16 m 0 0 a 1 1 0 0 1 1 0 a 2.2 2.2 0 0 1 0 3.2 a 4 4 0 0 1 -5.6 -0.4 a 6 6 0 0 1 0.6 -8.4 a 8 8 0 0 1 11 0.6 a 10.5 10.5 0 0 1 -0.7 14.4" stroke="#b8893f" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <circle cx="16" cy="16" r="0.9" fill="#b8893f"/>
+        </svg>
+        <div>
+          <div class="logo-name">Hairspring</div>
+          <div class="logo-sub">Watch Flip Tracker</div>
+        </div>
+      </div>
+      <div class="tag">2024 — Year in Review</div>
+    </div>
+
+    <div class="hero-stat">
+      <div class="hero-label">Total profit, 12 flips</div>
+      <div class="hero-number">$6,480</div>
+      <div class="hero-sub">realized across sold watches this year</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-lbl">Avg ROI per flip</div>
+        <div class="stat-val brass">31.4%</div>
+        <div class="stat-note">on realized sales</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Capital deployed</div>
+        <div class="stat-val">$20,640</div>
+        <div class="stat-note">total invested</div>
+      </div>
+      <div class="stat">
+        <div class="stat-lbl">Bench hours</div>
+        <div class="stat-val">142h</div>
+        <div class="stat-note">logged this year</div>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <div class="tagline">Six watches in pieces.<br><em>Zero spreadsheets.</em></div>
+      <div class="cta">Try Hairspring free &rarr;</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

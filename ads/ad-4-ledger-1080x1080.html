@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #ccc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 40px; }
+
+.ad {
+  width: 1080px;
+  height: 1080px;
+  background: #f9f8f6;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+/* Faint ruled-paper lines */
+.lines {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    180deg,
+    transparent,
+    transparent 47px,
+    rgba(34,26,18,0.04) 47px,
+    rgba(34,26,18,0.04) 48px
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Left margin red line — like a legal pad */
+.margin-line {
+  position: absolute;
+  left: 72px;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: rgba(150,58,46,0.15);
+  z-index: 1;
+}
+
+.inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 52px 56px 48px 88px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 36px;
+}
+.header-left {}
+.eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  color: #b8893f;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  margin-bottom: 8px;
+}
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px;
+  font-weight: 700;
+  color: #221a12;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.page-sub {
+  font-family: 'Lora', serif;
+  font-size: 14px;
+  font-style: italic;
+  color: #9a8b73;
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.logo-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #221a12;
+}
+.logo-sub-sm {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  color: #9a8b73;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-top: 1px;
+}
+
+/* Summary KPIs */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.kpi {
+  background: #f0eeeb;
+  border: 1px solid rgba(34,26,18,0.09);
+  border-radius: 5px;
+  padding: 10px 12px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi.hi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: #b8893f;
+}
+.kpi-lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #9a8b73;
+  margin-bottom: 4px;
+}
+.kpi-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #221a12;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.kpi-val.g { color: #3a5a3a; }
+.kpi-val.b { color: #b8893f; }
+
+/* Ledger table */
+.ledger {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid rgba(34,26,18,0.1);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(34,26,18,0.06);
+  margin-bottom: 28px;
+}
+.ledger-head {
+  display: grid;
+  grid-template-columns: 2.4fr 0.9fr 1fr 1fr 1fr 0.9fr;
+  background: #eeece9;
+  border-bottom: 1px solid rgba(34,26,18,0.1);
+  padding: 10px 18px;
+  gap: 8px;
+}
+.th {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #9a8b73;
+}
+.ledger-row {
+  display: grid;
+  grid-template-columns: 2.4fr 0.9fr 1fr 1fr 1fr 0.9fr;
+  padding: 13px 18px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(34,26,18,0.055);
+  align-items: center;
+}
+.ledger-row:last-child { border-bottom: none; }
+.ledger-row:nth-child(even) { background: rgba(34,26,18,0.015); }
+
+.td-name {
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  color: #221a12;
+}
+.td-ref {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  color: #c5b9a1;
+}
+.td-mono {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  color: #5a4a35;
+}
+.td-g { font-family: 'DM Mono', monospace; font-size: 12px; color: #3a5a3a; font-weight: 500; }
+.td-r { font-family: 'DM Mono', monospace; font-size: 12px; color: #963a2e; }
+.td-b { font-family: 'DM Mono', monospace; font-size: 12px; color: #b8893f; }
+.td-dim { font-family: 'DM Mono', monospace; font-size: 12px; color: #c5b9a1; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.badge.sold { background: rgba(58,90,58,0.12); color: #3a5a3a; }
+.badge.listed { background: rgba(44,74,107,0.12); color: #2c4a6b; }
+.badge.wip { background: rgba(184,137,63,0.14); color: #8c6624; }
+.badge.acquired { background: rgba(90,58,90,0.12); color: #5a3a5a; }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; display: inline-block; }
+
+/* Footer */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-note {
+  font-family: 'Caveat', cursive;
+  font-size: 16px;
+  color: #9a8b73;
+}
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #b8893f;
+  color: #f9f8f6;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 13px 22px;
+  border-radius: 4px;
+}
+</style>
+</head>
+<body>
+<div class="ad">
+  <div class="lines"></div>
+  <div class="margin-line"></div>
+
+  <div class="inner">
+
+    <div class="header">
+      <div class="header-left">
+        <div class="eyebrow">Watch Ledger</div>
+        <div class="page-title">Know every flip,<br><em style="font-style:italic;color:#b8893f;">down to the dollar.</em></div>
+        <div class="page-sub">Your complete flip history — profit, ROI, hours, every entry.</div>
+      </div>
+      <div class="logo-row">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" width="28" height="28">
+          <circle cx="16" cy="16" r="14.5" stroke="#b8893f" stroke-width="1" fill="none"/>
+          <path d="M16 16 m 0 0 a 1 1 0 0 1 1 0 a 2.2 2.2 0 0 1 0 3.2 a 4 4 0 0 1 -5.6 -0.4 a 6 6 0 0 1 0.6 -8.4 a 8 8 0 0 1 11 0.6 a 10.5 10.5 0 0 1 -0.7 14.4" stroke="#b8893f" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <circle cx="16" cy="16" r="0.9" fill="#b8893f"/>
+        </svg>
+        <div>
+          <div class="logo-name">Hairspring</div>
+          <div class="logo-sub-sm">Watch Flip Tracker</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-strip">
+      <div class="kpi hi">
+        <div class="kpi-lbl">Total Profit</div>
+        <div class="kpi-val g">$3,240</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Avg ROI</div>
+        <div class="kpi-val b">28.4%</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Capital</div>
+        <div class="kpi-val">$12,840</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Hours</div>
+        <div class="kpi-val">86h</div>
+      </div>
+    </div>
+
+    <div class="ledger">
+      <div class="ledger-head">
+        <div class="th">Watch</div>
+        <div class="th">Status</div>
+        <div class="th">Bought</div>
+        <div class="th">Sold / Ask</div>
+        <div class="th">Profit</div>
+        <div class="th">ROI</div>
+      </div>
+      <div class="ledger-row">
+        <div>
+          <div class="td-name">Omega Seamaster 300M</div>
+          <div class="td-ref">Ref. 210.30.42.20</div>
+        </div>
+        <div><span class="badge sold"><span class="dot"></span>Sold</span></div>
+        <div class="td-mono">$2,100</div>
+        <div class="td-mono">$2,650</div>
+        <div class="td-g">+$550</div>
+        <div class="td-g">26.2%</div>
+      </div>
+      <div class="ledger-row">
+        <div>
+          <div class="td-name">Tudor Black Bay 58</div>
+          <div class="td-ref">Ref. M79030N</div>
+        </div>
+        <div><span class="badge sold"><span class="dot"></span>Sold</span></div>
+        <div class="td-mono">$1,350</div>
+        <div class="td-mono">$1,800</div>
+        <div class="td-g">+$450</div>
+        <div class="td-g">33.3%</div>
+      </div>
+      <div class="ledger-row">
+        <div>
+          <div class="td-name">Seiko SKX007D</div>
+          <div class="td-ref">Ref. SKXA53</div>
+        </div>
+        <div><span class="badge sold"><span class="dot"></span>Sold</span></div>
+        <div class="td-mono">$180</div>
+        <div class="td-mono">$340</div>
+        <div class="td-g">+$160</div>
+        <div class="td-g">88.9%</div>
+      </div>
+      <div class="ledger-row">
+        <div>
+          <div class="td-name">Grand Seiko SBGA211</div>
+          <div class="td-ref">"Snowflake"</div>
+        </div>
+        <div><span class="badge listed"><span class="dot"></span>Listed</span></div>
+        <div class="td-mono">$3,200</div>
+        <div class="td-b">$4,100</div>
+        <div class="td-b">+$900?</div>
+        <div class="td-b">28.1%?</div>
+      </div>
+      <div class="ledger-row">
+        <div>
+          <div class="td-name">Rolex Datejust 116200</div>
+          <div class="td-ref">Service project</div>
+        </div>
+        <div><span class="badge wip"><span class="dot"></span>In Progress</span></div>
+        <div class="td-mono">$4,800</div>
+        <div class="td-dim">—</div>
+        <div class="td-dim">—</div>
+        <div class="td-dim">—</div>
+      </div>
+      <div class="ledger-row">
+        <div>
+          <div class="td-name">Longines HydroConquest</div>
+          <div class="td-ref">Ref. L3.781.4</div>
+        </div>
+        <div><span class="badge acquired"><span class="dot"></span>Acquired</span></div>
+        <div class="td-mono">$580</div>
+        <div class="td-dim">—</div>
+        <div class="td-dim">—</div>
+        <div class="td-dim">—</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="footer-note">Every flip tells a story — make sure you know it.</div>
+      <div class="cta-btn">Try Hairspring free &rarr;</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
