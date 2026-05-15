@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #ccc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 40px; }
+
+.ad {
+  width: 1200px;
+  height: 628px;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+/* ── LEFT: dark headline panel ── */
+.left {
+  width: 400px;
+  min-width: 400px;
+  background: #1a1410;
+  padding: 44px 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.left::before {
+  content: '';
+  position: absolute;
+  width: 340px; height: 340px;
+  border-radius: 50%;
+  border: 1px solid rgba(184,137,63,0.12);
+  top: -80px; right: -100px;
+  pointer-events: none;
+}
+.left::after {
+  content: '';
+  position: absolute;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  border: 1px solid rgba(184,137,63,0.08);
+  bottom: 30px; left: -70px;
+  pointer-events: none;
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  position: relative;
+  z-index: 1;
+}
+.logo-text-block { display: flex; flex-direction: column; gap: 1px; }
+.logo-name {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: #f5f4f1;
+  letter-spacing: -0.01em;
+}
+/* dark bg: #9a8b73 gives 5.5:1 on #1a1410 ✓ */
+.logo-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  color: #9a8b73;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.headline-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 32px 0 24px;
+  position: relative;
+  z-index: 1;
+}
+.eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #b8893f;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 14px;
+}
+.headline-block h2 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 34px;
+  font-weight: 700;
+  color: #f5f4f1;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+.headline-block h2 em {
+  font-style: italic;
+  color: #b8893f;
+}
+/* dark bg: #9a8b73 gives 5.5:1 on #1a1410 ✓ */
+.headline-block p {
+  font-family: 'Lora', serif;
+  font-size: 13.5px;
+  color: #9a8b73;
+  line-height: 1.75;
+}
+
+.cta-block {
+  position: relative;
+  z-index: 1;
+}
+/* brass bg #b8893f + dark ink #221a12 = 4.9:1 ✓ */
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #b8893f;
+  color: #221a12;
+  font-family: 'DM Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 13px 22px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+/* dark bg: #9a8b73 gives 5.5:1 on #1a1410 ✓ */
+.cta-note {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #9a8b73;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ── RIGHT: app mockup ── */
+.right {
+  flex: 1;
+  background: #f5f4f1;
+  padding: 26px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.page-header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding-bottom: 2px;
+}
+.page-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 19px;
+  font-weight: 700;
+  color: #221a12;
+}
+/* light bg: #6b5640 gives 6.6:1 on #f5f4f1 ✓ */
+.page-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  color: #6b5640;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+/* KPI cards */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+.kpi {
+  background: #f9f8f6;
+  border: 1px solid rgba(34,26,18,0.1);
+  border-radius: 5px;
+  padding: 11px 13px 12px;
+  position: relative;
+  overflow: hidden;
+}
+.kpi.accent::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: #b8893f;
+}
+/* light bg: #6b5640 gives 6.6:1 on #f9f8f6 ✓ */
+.kpi-lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #6b5640;
+  margin-bottom: 5px;
+}
+.kpi-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 21px;
+  font-weight: 700;
+  color: #221a12;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.kpi-val.g { color: #3a5a3a; }
+/* light bg: #6b4f14 gives 7.2:1 on #f9f8f6 ✓ */
+.kpi-val.b { color: #6b4f14; }
+/* light bg: #6b5640 gives 6.6:1 on #f9f8f6 ✓ */
+.kpi-note {
+  font-family: 'Lora', serif;
+  font-size: 9.5px;
+  font-style: italic;
+  color: #6b5640;
+  margin-top: 3px;
+}
+
+/* Table */
+.tbl-wrap {
+  background: #f9f8f6;
+  border: 1px solid rgba(34,26,18,0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  flex: 1;
+}
+.tbl-head {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr 1fr 1fr 1fr;
+  background: #eeece9;
+  border-bottom: 1px solid rgba(34,26,18,0.08);
+  padding: 7px 14px;
+  gap: 6px;
+}
+/* light bg: #6b5640 gives 5.9:1 on #eeece9 ✓ */
+.th {
+  font-family: 'DM Mono', monospace;
+  font-size: 7.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #6b5640;
+}
+.tbl-row {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr 1fr 1fr 1fr;
+  padding: 9px 14px;
+  gap: 6px;
+  border-bottom: 1px solid rgba(34,26,18,0.055);
+  align-items: center;
+}
+.tbl-row:last-child { border-bottom: none; }
+.td-name {
+  font-family: 'Lora', serif;
+  font-size: 11.5px;
+  color: #221a12;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.td-mono {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  color: #5a4a35;
+}
+.td-g { font-family: 'DM Mono', monospace; font-size: 10.5px; color: #3a5a3a; font-weight: 500; }
+/* light bg: #6b4f14 gives 7.2:1 on #f9f8f6 ✓ */
+.td-b { font-family: 'DM Mono', monospace; font-size: 10.5px; color: #6b4f14; }
+/* light bg: #6b5640 gives 6.6:1 on #f9f8f6 ✓ */
+.td-dim { font-family: 'DM Mono', monospace; font-size: 10.5px; color: #6b5640; }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.badge.sold { background: rgba(58,90,58,0.12); color: #3a5a3a; }
+.badge.listed { background: rgba(44,74,107,0.12); color: #2c4a6b; }
+/* #6b4f14 on badge bg gives 6.3:1 ✓ */
+.badge.wip { background: rgba(184,137,63,0.14); color: #6b4f14; }
+.badge.acquired { background: rgba(90,58,90,0.12); color: #5a3a5a; }
+.dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; display: inline-block; }
+
+/* light bg: #6b5640 gives 6.6:1 on #f5f4f1 ✓ */
+.section-lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #6b5640;
+  margin-bottom: 6px;
+}
+</style>
+</head>
+<body>
+<div class="ad">
+
+  <!-- LEFT panel -->
+  <div class="left">
+    <div class="logo-row">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" width="26" height="26">
+        <circle cx="16" cy="16" r="14.5" stroke="#b8893f" stroke-width="1" fill="none"/>
+        <path d="M16 16 m 0 0 a 1 1 0 0 1 1 0 a 2.2 2.2 0 0 1 0 3.2 a 4 4 0 0 1 -5.6 -0.4 a 6 6 0 0 1 0.6 -8.4 a 8 8 0 0 1 11 0.6 a 10.5 10.5 0 0 1 -0.7 14.4" stroke="#b8893f" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+        <circle cx="16" cy="16" r="0.9" fill="#b8893f"/>
+      </svg>
+      <div class="logo-text-block">
+        <span class="logo-name">Hairspring</span>
+        <span class="logo-sub">Watch Flip Tracker</span>
+      </div>
+    </div>
+
+    <div class="headline-block">
+      <div class="eyebrow">For the serious hobbyist</div>
+      <h2>Your flip journal,<br><em>finally done right.</em></h2>
+      <p>Track profit, ROI, parts inventory, and bench hours — all in one place built for watch enthusiasts.</p>
+    </div>
+
+    <div class="cta-block">
+      <div class="cta-btn">Start tracking free &rarr;</div>
+      <div class="cta-note">No spreadsheets required</div>
+    </div>
+  </div>
+
+  <!-- RIGHT panel: app mockup -->
+  <div class="right">
+    <div class="page-header">
+      <span class="page-title">Dashboard</span>
+      <span class="page-sub">— Overview</span>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi accent">
+        <div class="kpi-lbl">Total Profit (sold)</div>
+        <div class="kpi-val g">$3,240</div>
+        <div class="kpi-note">8 sold watches</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Capital Deployed</div>
+        <div class="kpi-val">$12,840</div>
+        <div class="kpi-note">across all watches</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Avg ROI (sold)</div>
+        <div class="kpi-val b">28.4%</div>
+        <div class="kpi-note">realized gains</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-lbl">Hours Logged</div>
+        <div class="kpi-val">86h</div>
+        <div class="kpi-note">bench time</div>
+      </div>
+    </div>
+
+    <div class="section-lbl">Watch Ledger</div>
+
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        <div class="th">Watch</div>
+        <div class="th">Status</div>
+        <div class="th">Bought</div>
+        <div class="th">Sold</div>
+        <div class="th">Profit</div>
+      </div>
+      <div class="tbl-row">
+        <div class="td-name">Omega Seamaster 300M</div>
+        <div><span class="badge sold"><span class="dot"></span>Sold</span></div>
+        <div class="td-mono">$2,100</div>
+        <div class="td-mono">$2,650</div>
+        <div class="td-g">+$550</div>
+      </div>
+      <div class="tbl-row">
+        <div class="td-name">Tudor Black Bay 58</div>
+        <div><span class="badge sold"><span class="dot"></span>Sold</span></div>
+        <div class="td-mono">$1,350</div>
+        <div class="td-mono">$1,800</div>
+        <div class="td-g">+$450</div>
+      </div>
+      <div class="tbl-row">
+        <div class="td-name">Grand Seiko SBGA211</div>
+        <div><span class="badge listed"><span class="dot"></span>Listed</span></div>
+        <div class="td-mono">$3,200</div>
+        <div class="td-mono">$4,100</div>
+        <div class="td-b">+$900?</div>
+      </div>
+      <div class="tbl-row">
+        <div class="td-name">Rolex Datejust 116200</div>
+        <div><span class="badge wip"><span class="dot"></span>In Progress</span></div>
+        <div class="td-mono">$4,800</div>
+        <div class="td-dim">—</div>
+        <div class="td-dim">—</div>
+      </div>
+      <div class="tbl-row">
+        <div class="td-name">Seiko SKX007D</div>
+        <div><span class="badge sold"><span class="dot"></span>Sold</span></div>
+        <div class="td-mono">$180</div>
+        <div class="td-mono">$340</div>
+        <div class="td-g">+$160</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
