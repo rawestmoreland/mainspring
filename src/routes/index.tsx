@@ -53,7 +53,7 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     queryKey: ['public', 'posts', tenant.user],
     queryFn: async () => {
       const res = await fetch(
-        `${pbUrl}/api/collections/repair_posts/records?filter=user%3D%22${tenant.user}%22&sort=-updated_at&perPage=50`,
+        `${pbUrl}/api/collections/repair_posts/records?filter=user%3D%22${tenant.user}%22&sort=-session_date&perPage=50`,
       );
       if (!res.ok) return [];
       return ((await res.json()) as { items?: RepairPost[] }).items ?? [];
