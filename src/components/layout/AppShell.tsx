@@ -15,7 +15,6 @@ import {
   SidebarTrigger,
 } from '#/components/ui/sidebar';
 import { useSubscription } from '#/hooks/subscription';
-import { TrialBanner } from './TrialBanner';
 
 const PAGE_SUBTITLES: Record<string, string> = {
   '/dashboard': 'PROFIT & LOSS OVERVIEW',
@@ -29,7 +28,7 @@ const PAGE_SUBTITLES: Record<string, string> = {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const { isPro, isAppTrial, trialDaysRemaining } = useSubscription();
+  const { isPro } = useSubscription();
   const currentPage = NAV_PAGES.find((p) => p.path === pathname);
   const subtitle =
     PAGE_SUBTITLES[pathname] ??
@@ -43,10 +42,6 @@ export function AppShell({ children }: { children: ReactNode }) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <TrialBanner
-          isAppTrial={isAppTrial}
-          trialDaysRemaining={trialDaysRemaining}
-        />
         <header className='flex justify-between border-border px-4 border-b items-center'>
           <div className='flex h-14 shrink-0 items-center gap-2'>
             <SidebarTrigger className='-ml-1' />
@@ -82,7 +77,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               >
                 <path d='M4 0L5.2 2.8L8 3.1L6 5.1L6.5 8L4 6.6L1.5 8L2 5.1L0 3.1L2.8 2.8Z' />
               </svg>
-              {isAppTrial ? 'Pro trial' : 'Pro'}
+              Pro
             </span>
           )}
         </header>

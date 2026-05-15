@@ -7,6 +7,7 @@ import {
 } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
 import { useSubscription } from '#/hooks/subscription';
+import { FREE_PHOTO_LIMIT } from '#/lib/constants';
 import { StageTag } from '#/components/primitives/StageTag';
 import { UploadZone } from '#/components/watches/UploadZone';
 import type { PendingPhoto } from '#/components/watches/UploadZone';
@@ -52,7 +53,7 @@ function GalleryPage() {
   };
 
   const allPhotos = watch?.photos ?? [];
-  const canViewPhotos = isPro || allPhotos.length > 0;
+  const canUpload = isPro || allPhotos.length < FREE_PHOTO_LIMIT;
   const filtered =
     stageFilter === 'all'
       ? allPhotos
@@ -116,13 +117,17 @@ function GalleryPage() {
           </span>
         </Link>
         {user && (
-          isPro ? (
-            <UploadZone onUpload={handleUpload} />
+          canUpload ? (
+            <UploadZone
+              onUpload={handleUpload}
+              currentCount={!isPro ? allPhotos.length : undefined}
+              limit={!isPro ? FREE_PHOTO_LIMIT : undefined}
+            />
           ) : (
             <div className='flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2'>
               <LockIcon className='w-3.5 h-3.5 text-amber-400 shrink-0' />
               <span className='font-mono text-xs text-muted-foreground'>
-                Photo uploads are a Pro feature
+                {FREE_PHOTO_LIMIT} photo limit reached
               </span>
               <UpgradeButton pbUserId={user.id} />
             </div>
@@ -130,23 +135,22 @@ function GalleryPage() {
         )}
       </div>
 
+      {uploadPhotos.isError && (
+        <div
+          role='alert'
+          className='rounded-md border border-red-900/60 bg-red-950/30 px-3 py-2 font-mono text-xs text-red-300'
+        >
+          {(uploadPhotos.error as Error)?.message ?? 'Upload failed. Please try again.'}
+        </div>
+      )}
+
       {allPhotos.length === 0 ? (
-        canViewPhotos ? (
-          <div className='flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-lg gap-3'>
-            <div className='text-4xl text-muted-foreground/20'>⬜</div>
-            <p className='text-xs font-mono text-muted-foreground'>
-              No photos yet.
-            </p>
-          </div>
-        ) : (
-          <div className='flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-lg gap-3'>
-            <LockIcon className='w-6 h-6 text-amber-400' />
-            <p className='font-mono text-xs text-muted-foreground text-center px-6'>
-              Photo documentation is a Pro feature
-            </p>
-            {user && <UpgradeButton pbUserId={user.id} />}
-          </div>
-        )
+        <div className='flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-lg gap-3'>
+          <div className='text-4xl text-muted-foreground/20'>⬜</div>
+          <p className='text-xs font-mono text-muted-foreground'>
+            No photos yet.
+          </p>
+        </div>
       ) : (
         <>
           {/* Stage filter pills */}

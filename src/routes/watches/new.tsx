@@ -7,8 +7,12 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { WatchCondition, WatchStatus } from '#/types';
 import { numberField } from '#/lib/helpers';
-import { useCreateWatch } from '#/hooks/watches';
+import { FREE_PROJECT_LIMIT } from '#/lib/constants';
+import { useCreateWatch, useWatches } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
+import { useSubscription } from '#/hooks/subscription';
+import { UpgradeButton } from '#/components/primitives/UpgradeButton';
+import { LockIcon } from 'lucide-react';
 import {
   Field,
   FieldContent,
@@ -76,6 +80,8 @@ function NewWatchRoute() {
   const editorRef = useRef<TiptapEditorRef>(null);
 
   const { data: user, isPending: isUserPending } = useUser();
+  const { isPro } = useSubscription();
+  const { data: watches, isPending: isWatchesPending } = useWatches();
 
   const defaultValues = useMemo<FormData>(
     () => ({
@@ -105,8 +111,41 @@ function NewWatchRoute() {
     defaultValues,
   });
 
-  if (isUserPending) {
+  if (isUserPending || isWatchesPending) {
     return <FormSkeleton />;
+  }
+
+  const activeCount = (watches ?? []).filter((w) => w.status !== 'sold').length;
+  const atProjectLimit = !isPro && activeCount >= FREE_PROJECT_LIMIT;
+
+  if (atProjectLimit) {
+    return (
+      <div className='max-w-3xl'>
+        <div className='mb-6'>
+          <Link
+            to='/watches'
+            className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
+          >
+            ← Back to Watches
+          </Link>
+        </div>
+        <div className='flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-card px-8 py-16 text-center'>
+          <div className='flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10'>
+            <LockIcon className='h-5 w-5 text-amber-400' />
+          </div>
+          <div className='space-y-1'>
+            <h2 className='font-serif font-semibold text-foreground'>
+              Project Limit Reached
+            </h2>
+            <p className='font-mono text-xs text-muted-foreground max-w-xs'>
+              Free accounts support up to {FREE_PROJECT_LIMIT} active projects.
+              You have {activeCount}. Upgrade to Pro for unlimited projects.
+            </p>
+          </div>
+          {user && <UpgradeButton pbUserId={user.id} />}
+        </div>
+      </div>
+    );
   }
 
   const onSubmit = async (data: FormData) => {
@@ -116,7 +155,12 @@ function NewWatchRoute() {
 
     try {
       const created = await createWatch.mutateAsync({
-        watch: { ...data, user: user.id, reference: data.reference ?? '' },
+        watch: {
+          ...data,
+          user: user.id,
+          reference: data.reference ?? '',
+          featured_image: null,
+        },
       });
       navigate({
         to: '/watches/$watchId',

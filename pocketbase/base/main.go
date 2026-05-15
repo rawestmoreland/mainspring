@@ -4,15 +4,14 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"html"
 	"io"
 	"log"
-	"math"
 	"net/http"
-	"net/mail"
 	"os"
 	"regexp"
 	"slices"
@@ -25,7 +24,6 @@ import (
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
-	"github.com/pocketbase/pocketbase/tools/mailer"
 
 	"github.com/NdoleStudio/lemonsqueezy-go"
 
@@ -37,12 +35,13 @@ func init() {
 	_ = godotenv.Load()
 }
 
+const (
+	freeProjectLimit = 2
+	freePhotoLimit   = 3
+)
+
 var (
 	subdomainRe = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$`)
-
-	appTrialDuration       = 14 * 24 * time.Hour
-	trialReminderHorizon   = 3 * 24 * time.Hour
-	defaultPublicAppOrigin = "https://hairspring.app"
 
 	reservedSubdomains = []string{
 		"www", "app", "api", "admin", "mail", "smtp", "imap", "pop",
@@ -55,7 +54,7 @@ var (
 	}
 )
 
-// hasPaidSubscription mirrors hasPaidSubscription() in src/lib/helpers.ts (Lemon Squeezy only).
+// hasPaidSubscription mirrors hasPaidSubscription() in src/lib/helpers.ts.
 func hasPaidSubscription(user *core.Record) bool {
 	status := user.GetString("subscription_status")
 	now := time.Now()
@@ -75,109 +74,9 @@ func hasPaidSubscription(user *core.Record) bool {
 	}
 }
 
-func hasActiveAppTrial(user *core.Record) bool {
-	t := user.GetDateTime("trial_ends_at")
-	if t.IsZero() {
-		return false
-	}
-	return t.Time().After(time.Now())
-}
-
-// hasPro mirrors hasPro() in src/lib/helpers.ts (paid subscription or app-level trial).
+// hasPro mirrors hasPro() in src/lib/helpers.ts.
 func hasPro(user *core.Record) bool {
-	if hasPaidSubscription(user) {
-		return true
-	}
-	return hasActiveAppTrial(user)
-}
-
-func appOrigin() string {
-	if v := strings.TrimSpace(os.Getenv("APP_URL")); v != "" {
-		return strings.TrimRight(v, "/")
-	}
-	return defaultPublicAppOrigin
-}
-
-func sendTrialExpiryReminders(app core.App) {
-	records, err := app.FindRecordsByFilter(
-		"users",
-		"trial_expiry_email_sent = false && trial_ends_at != ''",
-		"trial_ends_at",
-		500,
-		0,
-	)
-	if err != nil {
-		log.Println("trial reminder query:", err)
-		return
-	}
-
-	now := time.Now()
-	mailClient := app.NewMailClient()
-	meta := app.Settings().Meta
-
-	for _, rec := range records {
-		if hasPaidSubscription(rec) {
-			continue
-		}
-
-		trialEnd := rec.GetDateTime("trial_ends_at")
-		if trialEnd.IsZero() {
-			continue
-		}
-		end := trialEnd.Time()
-		if !end.After(now) {
-			continue
-		}
-		if end.Sub(now) > trialReminderHorizon {
-			continue
-		}
-
-		days := int(math.Ceil(end.Sub(now).Hours() / 24))
-		if days < 1 {
-			days = 1
-		}
-
-		addr := rec.Email()
-		if addr == "" {
-			continue
-		}
-
-		base := appOrigin()
-		proURL := base + "/pro"
-		endLocal := end.UTC().Format("January 2, 2006")
-
-		msg := &mailer.Message{
-			From: mail.Address{
-				Address: meta.SenderAddress,
-				Name:    meta.SenderName,
-			},
-			To: []mail.Address{{Address: addr}},
-			Subject: fmt.Sprintf(
-				"Your Hairspring Pro trial ends in %d day(s)",
-				days,
-			),
-			HTML: fmt.Sprintf(
-				`<p>Hi,</p>
-<p>Your free Pro trial (no credit card required) ends on <strong>%s</strong> — about <strong>%d</strong> day(s) from now.</p>
-<p>Subscribe anytime to keep photo uploads, timegrapher logging, shopping lists, and the rest of Pro.</p>
-<p><a href="%s">View Pro plans</a></p>
-<p>— Hairspring</p>`,
-				html.EscapeString(endLocal),
-				days,
-				html.EscapeString(proURL),
-			),
-		}
-
-		if err := mailClient.Send(msg); err != nil {
-			log.Println("trial reminder email:", rec.Id, err)
-			continue
-		}
-
-		rec.Set("trial_expiry_email_sent", true)
-		if err := app.Save(rec); err != nil {
-			log.Println("trial reminder save:", rec.Id, err)
-		}
-	}
+	return hasPaidSubscription(user)
 }
 
 func main() {
@@ -221,10 +120,6 @@ func main() {
 			return e.String(http.StatusBadRequest, "display name is required")
 		}
 
-		if e.Record.GetDateTime("trial_ends_at").IsZero() {
-			e.Record.Set("trial_ends_at", time.Now().UTC().Add(appTrialDuration))
-		}
-
 		if err := e.Next(); err != nil {
 			return err
 		}
@@ -235,7 +130,7 @@ func main() {
 
 		_, err := app.FindFirstRecordByFilter("user_profiles", "email = {:email}", dbx.Params{"email": email})
 		if err != nil {
-			if !app.IsNotFound(err) {
+			if !errors.Is(err, sql.ErrNoRows) {
 				return fmt.Errorf("profile lookup failed: %w", err)
 			}
 			collection, err := app.FindCollectionByNameOrId("user_profiles")
@@ -258,18 +153,6 @@ func main() {
 		// serves static files from the provided public dir (if exists)
 		se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
 
-		return se.Next()
-	})
-
-	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
-		se.Router.POST("/api/internal/trigger-trial-reminders", func(e *core.RequestEvent) error {
-			secret := os.Getenv("INTERNAL_CRON_SECRET")
-			if secret == "" || e.Request.Header.Get("X-Cron-Secret") != secret {
-				return e.String(http.StatusUnauthorized, "unauthorized")
-			}
-			sendTrialExpiryReminders(app)
-			return e.String(http.StatusOK, "ok")
-		})
 		return se.Next()
 	})
 
@@ -336,9 +219,7 @@ func main() {
 			if eventName == "subscription_expired" {
 				record, err := app.FindRecordById("users", userID)
 				if err == nil {
-					// Revoke access entirely
 					record.Set("subscription_status", "expired")
-					// Optional: Clear the renewal date since it's no longer relevant
 					record.Set("renews_at", "")
 					app.Save(record)
 				}
@@ -347,19 +228,9 @@ func main() {
 			if eventName == "subscription_updated" || eventName == "subscription_resumed" {
 				record, err := app.FindRecordById("users", userID)
 				if err == nil {
-					// Sync the current status (active, past_due, paused, etc.)
 					status := payload.Data.Attributes.Status
 					record.Set("subscription_status", status)
-
-					// Always sync renewal date; null from LS unmarshals to "" which is correct
 					record.Set("renews_at", payload.Data.Attributes.RenewsAt)
-
-					// If the status is 'cancelled' but not yet expired,
-					// they are in the "grace period." You might want to log this.
-					if status == "cancelled" {
-						// Logic to notify user they are on their last month
-					}
-
 					app.Save(record)
 				}
 			}
@@ -367,12 +238,9 @@ func main() {
 			if eventName == "subscription_cancelled" {
 				record, err := app.FindRecordById("users", userID)
 				if err == nil {
-					// Sync the current status (active, past_due, paused, etc.)
-					status := payload.Data.Attributes.Status
-					record.Set("subscription_status", status)
+					record.Set("subscription_status", payload.Data.Attributes.Status)
 					record.Set("renews_at", "")
 					record.Set("ends_at", payload.Data.Attributes.EndsAt)
-
 					app.Save(record)
 				}
 			}
@@ -409,6 +277,46 @@ func main() {
 		return e.Next()
 	})
 
+	// Enforce free-tier project limit before a new watch is persisted.
+	app.OnRecordCreate("watches").BindFunc(func(e *core.RecordEvent) error {
+		userID := e.Record.GetString("user")
+		if userID == "" {
+			return e.Next()
+		}
+
+		user, err := e.App.FindRecordById("users", userID)
+		if err != nil {
+			return apis.NewApiError(http.StatusForbidden, "user not found", nil)
+		}
+
+		if hasPro(user) {
+			return e.Next()
+		}
+
+		// Count active (non-sold) projects for this user.
+		active, err := e.App.FindRecordsByFilter(
+			"watches",
+			"user = {:userId} && status != 'sold'",
+			"-created",
+			freeProjectLimit+1,
+			0,
+			dbx.Params{"userId": userID},
+		)
+		if err != nil {
+			return fmt.Errorf("project count query failed: %w", err)
+		}
+		if len(active) >= freeProjectLimit {
+			return apis.NewApiError(
+				http.StatusForbidden,
+				fmt.Sprintf("free accounts are limited to %d active projects", freeProjectLimit),
+				nil,
+			)
+		}
+
+		return e.Next()
+	})
+
+	// Enforce free-tier photo limit before a new photo is persisted.
 	app.OnRecordCreate("watch_photos").BindFunc(func(e *core.RecordEvent) error {
 		watchID := e.Record.GetString("watch")
 
@@ -422,8 +330,28 @@ func main() {
 			return apis.NewApiError(http.StatusForbidden, "user not found", nil)
 		}
 
-		if !hasPro(user) {
-			return apis.NewApiError(http.StatusForbidden, "pro subscription required to upload photos", nil)
+		if hasPro(user) {
+			return e.Next()
+		}
+
+		// Count existing photos for this watch.
+		photos, err := e.App.FindRecordsByFilter(
+			"watch_photos",
+			"watch = {:watchId}",
+			"-created",
+			freePhotoLimit+1,
+			0,
+			dbx.Params{"watchId": watchID},
+		)
+		if err != nil {
+			return fmt.Errorf("photo count query failed: %w", err)
+		}
+		if len(photos) >= freePhotoLimit {
+			return apis.NewApiError(
+				http.StatusForbidden,
+				fmt.Sprintf("free accounts are limited to %d photos per project", freePhotoLimit),
+				nil,
+			)
 		}
 
 		return e.Next()

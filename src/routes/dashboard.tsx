@@ -13,6 +13,14 @@ import { Button } from '#/components/ui/button';
 import { PlusIcon } from 'lucide-react';
 import { DashboardSkeleton } from '#/components/skeletons';
 import { StatusPicker } from '#/components/watches/StatusPicker';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '#/components/ui/tooltip';
+import { FREE_PROJECT_LIMIT } from '#/lib/constants';
+import { useSubscription } from '#/hooks/subscription';
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -33,6 +41,7 @@ function Dashboard() {
   const { data: equipment, isPending: isEquipmentPending } = useEquipment();
   const { data: inventory, isPending: isInventoryPending } = useInventory();
   const { data: user, isPending: isUserPending } = useUser();
+  const { isPro } = useSubscription();
 
   if (
     isWatchesPending ||
@@ -43,6 +52,9 @@ function Dashboard() {
     return <DashboardSkeleton />;
   }
 
+  const activeCount = watches?.filter((w) => w.status !== 'sold').length ?? 0;
+
+  const atProjectLimit = !isPro && activeCount >= FREE_PROJECT_LIMIT;
   const sold = watches?.filter((w) => w.status === 'sold') ?? [];
   const totalProfit = sold.reduce((s, w) => s + (profit(w) ?? 0), 0);
   const totalInvested = watches?.reduce(
@@ -96,12 +108,31 @@ function Dashboard() {
       <div className='flex items-center justify-between mb-3.5'>
         <SectionLabel>Watch Ledger</SectionLabel>
         {user && !!watches?.length && (
-          <Button variant='outline' asChild>
-            <Link to='/watches/new'>
-              <PlusIcon className='size-3' />
-              Add Watch
-            </Link>
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button asChild disabled={atProjectLimit}>
+                    <Link to='/watches/new'>
+                      <PlusIcon className='size-3' />
+                      Add Watch
+                    </Link>
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {atProjectLimit && (
+                <TooltipContent>
+                  <p className='font-mono text-xs'>
+                    Free accounts are limited to {FREE_PROJECT_LIMIT} active
+                    projects.{' '}
+                    <Link to='/pro' className='text-amber-400 hover:underline'>
+                      Upgrade to Pro
+                    </Link>
+                  </p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         )}
       </div>
       <TableWrap className='mb-7'>

@@ -58,7 +58,7 @@ export type Watch = {
   bought_date: string;
   sold_date: string | null;
   notes: string;
-  featured_image: string;
+  featured_image: string | null;
   featured_image_url?: string;
   photos: WatchPhoto[];
   expand?: {

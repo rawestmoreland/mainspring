@@ -19,6 +19,8 @@ import {
 import { WatchesListSkeleton } from '#/components/skeletons';
 import { useWatches } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
+import { useSubscription } from '#/hooks/subscription';
+import { FREE_PROJECT_LIMIT } from '#/lib/constants';
 import type { WatchStatus } from '#/types';
 
 export const Route = createFileRoute('/watches/')({
@@ -39,6 +41,7 @@ const FILTERS: [FilterValue, string][] = [
 function WatchesPage() {
   const { data: watches, isPending } = useWatches();
   const { data: user, isPending: isUserPending } = useUser();
+  const { isPro } = useSubscription();
   const [filter, setFilter] = useState<FilterValue>('all');
   const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [selectedWatchId, setSelectedWatchId] = useState<string | null>(null);
@@ -56,6 +59,8 @@ function WatchesPage() {
   }
 
   const allWatches = watches ?? [];
+  const activeCount = allWatches.filter((w) => w.status !== 'sold').length;
+  const atProjectLimit = !isPro && activeCount >= FREE_PROJECT_LIMIT;
   const filtered =
     filter === 'all'
       ? allWatches
@@ -127,12 +132,30 @@ function WatchesPage() {
               </button>
             </div>
             {user && (
-              <Button asChild>
-                <Link to='/watches/new'>
-                  <PlusIcon className='size-3' />
-                  Add Watch
-                </Link>
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span>
+                      <Button asChild disabled={atProjectLimit}>
+                        <Link to='/watches/new'>
+                          <PlusIcon className='size-3' />
+                          Add Watch
+                        </Link>
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {atProjectLimit && (
+                    <TooltipContent>
+                      <p className='font-mono text-xs'>
+                        Free accounts are limited to {FREE_PROJECT_LIMIT} active projects.{' '}
+                        <Link to='/pro' className='text-amber-400 hover:underline'>
+                          Upgrade to Pro
+                        </Link>
+                      </p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         </div>

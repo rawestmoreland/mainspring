@@ -27,6 +27,7 @@ import { useGetTimegrapherReadings } from '#/hooks/timegrapher';
 import { useGetPartsShoppingList } from '#/hooks/watch-parts-shopping-list';
 import { useSubscription } from '#/hooks/subscription';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
+import { FREE_PHOTO_LIMIT } from '#/lib/constants';
 import { capitalize } from 'lodash-es';
 import { Button } from '#/components/ui/button';
 import {
@@ -35,6 +36,7 @@ import {
   ImagePlusIcon,
   UploadCloudIcon,
   PencilIcon,
+  CameraIcon,
 } from 'lucide-react';
 import { StatusPicker } from '#/components/watches/StatusPicker';
 
@@ -96,7 +98,7 @@ function RouteComponent() {
   }
 
   const photos = watch.photos ?? [];
-  const canViewPhotos = isPro || photos.length > 0;
+  const canUploadPhotos = isPro || photos.length < FREE_PHOTO_LIMIT;
   const displayedPhotos =
     stageFilter === 'all'
       ? photos
@@ -190,11 +192,11 @@ function RouteComponent() {
                   />
                 ) : (
                   <div className='w-full h-full flex items-center justify-center'>
-                    <ImagePlusIcon className='w-4 h-4 text-muted-foreground' />
+                    <ImagePlusIcon className='w-4 h-4 text-muted' />
                   </div>
                 )}
                 <div className='absolute inset-0 flex items-center justify-center bg-black/0 group-hover/avatar:bg-black/50 transition-all rounded-lg'>
-                  <PencilIcon className='w-3 h-3 text-white opacity-0 group-hover/avatar:opacity-100 transition-opacity' />
+                  <PencilIcon className='w-4 h-4 text-muted opacity-0 group-hover/avatar:opacity-100 transition-opacity' />
                 </div>
               </button>
               {uploadFeaturedImage.isPending && (
@@ -247,142 +249,200 @@ function RouteComponent() {
       <div className='flex flex-col md:flex-row gap-6 items-start'>
         {/* LEFT: Photo panel */}
         <div className='w-full md:w-[54%] shrink-0 rounded-xl border border-border overflow-hidden bg-card'>
-          {/* Stage filter */}
-          <div className='flex flex-wrap gap-1.5 px-4 py-3 border-b border-border'>
-            {Object.keys(STAGE_META).map((s) => (
-              <StagePill
-                key={s}
-                stage={s}
-                active={stageFilter === s}
-                onClick={() => handleStageFilter(s)}
-              />
-            ))}
-          </div>
-
-          {/* Main photo viewer */}
-          {canViewPhotos ? (
-            activePhoto ? (
-              <div className='relative w-full aspect-4/3 bg-zinc-950 overflow-hidden group'>
-                <img
-                  src={activePhoto.image}
-                  alt={activePhoto.caption}
-                  className='w-full h-full object-contain cursor-zoom-in'
-                  onClick={() =>
-                    setLightbox({ photos: displayedPhotos, index: activeIdx })
-                  }
-                />
-                {displayedPhotos.length > 1 && (
-                  <>
-                    <button
-                      onClick={prevPhoto}
-                      className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100'
-                    >
-                      ‹
-                    </button>
-                    <button
-                      onClick={nextPhoto}
-                      className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100'
-                    >
-                      ›
-                    </button>
-                    <div className='absolute bottom-2 right-2 bg-black/60 text-white/70 font-mono text-[10px] px-2 py-0.5 rounded-full'>
-                      {activeIdx + 1} / {displayedPhotos.length}
-                    </div>
-                  </>
-                )}
-                <div className='absolute top-2 left-2'>
-                  <StageTag stage={activePhoto.stage} />
+          {photos.length === 0 ? (
+            /* Empty state — inline upload zone */
+            <div>
+              <div className='flex flex-col items-center px-6 pt-8 pb-1 text-center'>
+                <div className='w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-3'>
+                  <CameraIcon className='w-[18px] h-[18px] text-zinc-200' />
                 </div>
-                {user && (
-                  <div className='absolute top-2 right-2'>
-                    <Button
-                      className='cursor-pointer'
-                      size='icon'
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (
-                          confirm('Are you sure you want to delete this photo?')
-                        ) {
-                          deletePhoto.mutate(activePhoto.id);
-                        }
-                      }}
-                    >
-                      <Trash2Icon />
-                    </Button>
-                  </div>
-                )}
-                {activePhoto.caption && (
-                  <div className='absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-3 pb-2.5 pt-6 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight'>
-                    {activePhoto.caption}
-                  </div>
-                )}
+                <p className='font-mono text-sm text-foreground/80 mb-1'>
+                  No photos yet
+                </p>
+                <p className='font-mono text-xs text-muted-foreground max-w-[240px] leading-relaxed'>
+                  Document each stage — before, during, after, and listing
+                  shots.
+                </p>
               </div>
-            ) : (
-              <div className='w-full aspect-4/3 flex items-center justify-center text-muted-foreground font-mono text-xs bg-zinc-950'>
-                No photos for this stage
-              </div>
-            )
-          ) : (
-            <div className='w-full aspect-4/3 flex flex-col items-center justify-center gap-3 bg-zinc-950'>
-              <LockIcon className='w-5 h-5 text-amber-400' />
-              <p className='font-mono text-xs text-muted-foreground text-center px-6'>
-                Photo documentation is a Pro feature
-              </p>
-              {user && <UpgradeButton pbUserId={user.id} />}
-            </div>
-          )}
-
-          {/* Thumbnail strip */}
-          {displayedPhotos.length > 1 && (
-            <div className='flex gap-1.5 px-4 py-3 border-t border-border overflow-x-auto'>
-              {displayedPhotos.map((ph, i) => (
-                <button
-                  key={ph.id}
-                  onClick={() => setActiveIdx(i)}
-                  className={cn(
-                    'group/thumb relative shrink-0 w-14 h-14 rounded-md overflow-hidden border-2 transition-all cursor-pointer bg-transparent p-0',
-                    i === activeIdx
-                      ? 'border-amber-500 opacity-100'
-                      : 'border-border opacity-50 hover:opacity-100',
-                  )}
-                >
-                  <img
-                    src={ph.image}
-                    alt={ph.caption}
-                    className='w-full h-full object-cover'
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Compact photo-actions footer */}
-          {user && (
-            <>
-              <div className='flex items-center px-4 py-2.5 border-t border-border'>
-                <button
-                  type='button'
-                  onClick={() => setShowUpload((v) => !v)}
-                  className='flex items-center gap-1.5 text-[10.5px] font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0'
-                >
-                  <UploadCloudIcon className='w-3.5 h-3.5' />
-                  Upload photos ({photos.length})
-                </button>
-              </div>
-              {showUpload && (
-                <div className='px-4 pb-4 border-t border-border'>
-                  {isPro ? (
-                    <UploadZone onUpload={handleUpload} />
+              {user && (
+                <div className='px-4 pb-5'>
+                  {canUploadPhotos ? (
+                    <>
+                      <UploadZone
+                        onUpload={handleUpload}
+                        currentCount={!isPro ? photos.length : undefined}
+                        limit={!isPro ? FREE_PHOTO_LIMIT : undefined}
+                      />
+                      {uploadPhotos.isError && (
+                        <p
+                          role='alert'
+                          className='mt-2 font-mono text-[11px] text-red-400'
+                        >
+                          {(uploadPhotos.error as Error)?.message ??
+                            'Upload failed. Please try again.'}
+                        </p>
+                      )}
+                    </>
                   ) : (
-                    <div className='flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6 mt-3'>
+                    <div className='mt-4 flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6'>
                       <LockIcon className='w-4 h-4 text-amber-400' />
                       <p className='font-mono text-xs text-muted-foreground'>
-                        Photo uploads are a Pro feature
+                        {FREE_PHOTO_LIMIT} photo limit reached
                       </p>
                       <UpgradeButton pbUserId={user.id} />
                     </div>
                   )}
                 </div>
+              )}
+            </div>
+          ) : (
+            /* Has photos — full viewer */
+            <>
+              {/* Stage filter */}
+              <div className='flex flex-wrap gap-1.5 px-4 py-3 border-b border-border'>
+                {Object.keys(STAGE_META).map((s) => (
+                  <StagePill
+                    key={s}
+                    stage={s}
+                    active={stageFilter === s}
+                    onClick={() => handleStageFilter(s)}
+                  />
+                ))}
+              </div>
+
+              {/* Main photo viewer */}
+              {activePhoto ? (
+                <div className='relative w-full aspect-4/3 bg-zinc-950 overflow-hidden group'>
+                  <img
+                    src={activePhoto.image}
+                    alt={activePhoto.caption}
+                    className='w-full h-full object-contain cursor-zoom-in'
+                    onClick={() =>
+                      setLightbox({ photos: displayedPhotos, index: activeIdx })
+                    }
+                  />
+                  {displayedPhotos.length > 1 && (
+                    <>
+                      <button
+                        onClick={prevPhoto}
+                        className='absolute left-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100'
+                      >
+                        ‹
+                      </button>
+                      <button
+                        onClick={nextPhoto}
+                        className='absolute right-2 top-1/2 -translate-y-1/2 bg-black/55 hover:bg-black/75 text-white text-xl px-3 py-2 rounded-lg border-none cursor-pointer transition-colors opacity-0 group-hover:opacity-100'
+                      >
+                        ›
+                      </button>
+                      <div className='absolute bottom-2 right-2 bg-black/60 text-white/70 font-mono text-[10px] px-2 py-0.5 rounded-full'>
+                        {activeIdx + 1} / {displayedPhotos.length}
+                      </div>
+                    </>
+                  )}
+                  <div className='absolute top-2 left-2'>
+                    <StageTag stage={activePhoto.stage} />
+                  </div>
+                  {user && (
+                    <div className='absolute top-2 right-2'>
+                      <Button
+                        className='cursor-pointer'
+                        size='icon'
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (
+                            confirm(
+                              'Are you sure you want to delete this photo?',
+                            )
+                          ) {
+                            deletePhoto.mutate(activePhoto.id);
+                          }
+                        }}
+                      >
+                        <Trash2Icon />
+                      </Button>
+                    </div>
+                  )}
+                  {activePhoto.caption && (
+                    <div className='absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 to-transparent px-3 pb-2.5 pt-6 text-[11px] text-white/85 opacity-0 group-hover:opacity-100 transition-opacity leading-tight'>
+                      {activePhoto.caption}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className='w-full aspect-4/3 flex items-center justify-center text-muted-foreground font-mono text-xs bg-zinc-950'>
+                  No photos for this stage
+                </div>
+              )}
+
+              {/* Thumbnail strip */}
+              {displayedPhotos.length > 1 && (
+                <div className='flex gap-1.5 px-4 py-3 border-t border-border overflow-x-auto'>
+                  {displayedPhotos.map((ph, i) => (
+                    <button
+                      key={ph.id}
+                      onClick={() => setActiveIdx(i)}
+                      className={cn(
+                        'group/thumb relative shrink-0 w-14 h-14 rounded-md overflow-hidden border-2 transition-all cursor-pointer bg-transparent p-0',
+                        i === activeIdx
+                          ? 'border-amber-500 opacity-100'
+                          : 'border-border opacity-50 hover:opacity-100',
+                      )}
+                    >
+                      <img
+                        src={ph.image}
+                        alt={ph.caption}
+                        className='w-full h-full object-cover'
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Compact photo-actions footer */}
+              {user && (
+                <>
+                  <div className='flex items-center px-4 py-2.5 border-t border-border'>
+                    <button
+                      type='button'
+                      onClick={() => setShowUpload((v) => !v)}
+                      className='flex items-center gap-1.5 text-[10.5px] font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0'
+                    >
+                      <UploadCloudIcon className='w-3.5 h-3.5' />
+                      Upload photos ({photos.length})
+                    </button>
+                  </div>
+                  {showUpload && (
+                    <div className='px-4 pb-4 border-t border-border'>
+                      {canUploadPhotos ? (
+                        <div className='mt-3 space-y-2'>
+                          <UploadZone
+                            onUpload={handleUpload}
+                            currentCount={!isPro ? photos.length : undefined}
+                            limit={!isPro ? FREE_PHOTO_LIMIT : undefined}
+                          />
+                          {uploadPhotos.isError && (
+                            <p
+                              role='alert'
+                              className='font-mono text-[11px] text-red-400'
+                            >
+                              {(uploadPhotos.error as Error)?.message ??
+                                'Upload failed. Please try again.'}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className='flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6 mt-3'>
+                          <LockIcon className='w-4 h-4 text-amber-400' />
+                          <p className='font-mono text-xs text-muted-foreground'>
+                            {FREE_PHOTO_LIMIT} photo limit reached
+                          </p>
+                          <UpgradeButton pbUserId={user.id} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}
@@ -612,39 +672,7 @@ function RouteComponent() {
             {/* Timegrapher tab */}
             {activeTab === 'timegrapher' && (
               <div>
-                {!isPro ? (
-                  <div className='relative'>
-                    <div
-                      className='divide-y divide-border blur-sm select-none pointer-events-none'
-                      aria-hidden
-                    >
-                      {[
-                        ['DU Rate', '+2.3 s/d'],
-                        ['DU Amplitude', '298°'],
-                        ['DU Beat Error', '0.3 ms'],
-                      ].map(([k, v]) => (
-                        <div
-                          key={String(k)}
-                          className='flex justify-between items-center px-4 py-2.5'
-                        >
-                          <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
-                            {k}
-                          </span>
-                          <span className='font-mono text-[11.5px] text-foreground'>
-                            {v}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className='absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-card/70 backdrop-blur-[2px]'>
-                      <LockIcon className='w-4 h-4 text-amber-400' />
-                      <p className='font-mono text-xs text-muted-foreground'>
-                        Timegrapher logging is a Pro feature
-                      </p>
-                      {user && <UpgradeButton pbUserId={user.id} />}
-                    </div>
-                  </div>
-                ) : timegrapherReadings.length === 0 ? (
+                {timegrapherReadings.length === 0 ? (
                   <div className='text-center py-8 text-xs font-mono text-muted-foreground'>
                     No timegrapher sessions yet.{' '}
                     {user && (
@@ -660,27 +688,41 @@ function RouteComponent() {
                 ) : (
                   (() => {
                     const latest = timegrapherReadings[0];
+                    const rows = isPro
+                      ? [
+                          [
+                            'DU Rate',
+                            latest.du_rate != null
+                              ? `${latest.du_rate >= 0 ? '+' : ''}${latest.du_rate.toFixed(1)} s/d`
+                              : '—',
+                          ],
+                          [
+                            'DU Amplitude',
+                            latest.du_amp != null ? `${latest.du_amp}°` : '—',
+                          ],
+                          [
+                            'DU Beat Error',
+                            latest.du_be != null
+                              ? `${latest.du_be.toFixed(1)} ms`
+                              : '—',
+                          ],
+                        ]
+                      : [
+                          [
+                            'Avg Rate',
+                            latest.du_rate != null
+                              ? `${latest.du_rate >= 0 ? '+' : ''}${latest.du_rate.toFixed(1)} s/d`
+                              : '—',
+                          ],
+                          [
+                            'Avg Amplitude',
+                            latest.du_amp != null ? `${latest.du_amp}°` : '—',
+                          ],
+                        ];
                     return (
                       <div>
                         <div className='divide-y divide-border'>
-                          {[
-                            [
-                              'DU Rate',
-                              latest.du_rate != null
-                                ? `${latest.du_rate >= 0 ? '+' : ''}${latest.du_rate.toFixed(1)} s/d`
-                                : '—',
-                            ],
-                            [
-                              'DU Amplitude',
-                              latest.du_amp != null ? `${latest.du_amp}°` : '—',
-                            ],
-                            [
-                              'DU Beat Error',
-                              latest.du_be != null
-                                ? `${latest.du_be.toFixed(1)} ms`
-                                : '—',
-                            ],
-                          ].map(([k, v]) => (
+                          {rows.map(([k, v]) => (
                             <div
                               key={String(k)}
                               className='flex justify-between items-center px-4 py-2.5 hover:bg-white/2 transition-colors'

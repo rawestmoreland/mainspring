@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { Camera, ListChecks, Timer } from 'lucide-react';
+import { Camera, FolderOpen, ListChecks, Timer } from 'lucide-react';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { useAuth } from '#/hooks/auth';
 import { useSubscription } from '#/hooks/subscription';
@@ -10,19 +10,27 @@ export const Route = createFileRoute('/pro')({
 
 const FEATURES = [
   {
+    icon: FolderOpen,
+    label: 'Unlimited Projects',
+    title: 'Track every flip',
+    description:
+      'Free accounts are limited to 2 active projects. Upgrade to Pro and manage your entire inventory without limits.',
+    badge: null,
+  },
+  {
     icon: Camera,
-    label: 'Photo Documentation',
+    label: 'Unlimited Photos',
     title: 'Capture every detail',
     description:
-      'Upload and organize photos for each watch in your collection. Build a visual record of condition, dial close-ups, movement shots, and more.',
+      'Free accounts get 3 photos per project. Pro unlocks unlimited photo documentation — before, during, after, and listing shots.',
     badge: null,
   },
   {
     icon: Timer,
-    label: 'Timegrapher Logging',
-    title: 'Track movement accuracy',
+    label: 'Advanced Timegrapher',
+    title: 'Full positional logging',
     description:
-      'Log beat rate, beat error, and amplitude readings over time. Spot drift, compare positions, and build a performance history for every caliber.',
+      'Free users log a single rate and amplitude reading. Pro exposes the full 6-position grid (DU, DD, CU, CD, CL, CR) with automated delta tracking across sessions.',
     badge: null,
   },
   {
@@ -37,16 +45,9 @@ const FEATURES = [
 
 function ProPage() {
   const { user } = useAuth();
-  const { isPro, isAppTrial, trialEndsAt } = useSubscription();
+  const { isPro } = useSubscription();
 
   if (isPro) {
-    const trialEndLabel =
-      isAppTrial && trialEndsAt
-        ? new Date(trialEndsAt).toLocaleDateString(undefined, {
-            dateStyle: 'medium',
-          })
-        : null;
-
     return (
       <div className='flex flex-col items-center justify-center py-20'>
         <div className='flex flex-col items-center gap-4 rounded-xl border border-border bg-card px-10 py-14 text-center max-w-sm w-full'>
@@ -63,33 +64,20 @@ function ProPage() {
           </div>
           <div>
             <p className='font-mono text-[10px] tracking-widest text-amber-400 uppercase mb-2'>
-              {isAppTrial ? 'Pro trial' : 'Active Plan'}
+              Active Plan
             </p>
             <p className='font-serif font-semibold text-foreground text-lg mb-1'>
-              {isAppTrial
-                ? "You're on a Pro trial"
-                : "You're on Pro"}
+              You're on Pro
             </p>
             <p className='text-sm text-muted-foreground'>
-              {isAppTrial ? (
-                <>
-                  All Pro features are unlocked until{' '}
-                  {trialEndLabel ?? 'your trial end date'}. Your trial did not
-                  require a card; subscribe anytime to keep access after it ends.
-                </>
-              ) : (
-                <>
-                  All features are unlocked. Manage your billing from your
-                  profile.
-                </>
-              )}
+              All features are unlocked. Manage your billing from your profile.
             </p>
           </div>
           <Link
             to='/settings/profile'
             className='font-mono text-[11px] tracking-widest text-muted-foreground hover:text-foreground transition-colors uppercase'
           >
-            {isAppTrial ? 'Billing & profile →' : 'Manage Billing →'}
+            Manage Billing →
           </Link>
         </div>
       </div>
@@ -117,20 +105,16 @@ function ProPage() {
         <h1 className='font-serif font-semibold text-foreground text-2xl mb-2'>
           Unlock the full Hairspring experience
         </h1>
-        <p className='text-sm text-muted-foreground leading-relaxed mb-4 max-w-xl'>
-          Pro gives you the tools serious collectors and flippers need — photo
-          documentation, movement analytics, and more. One flat price, every
-          feature, forever.
-        </p>
-        <p className='text-xs text-muted-foreground leading-relaxed mb-6 max-w-xl font-mono tracking-wide'>
-          New accounts include 14 days of full Pro access at signup — no credit
-          card required for that trial.
+        <p className='text-sm text-muted-foreground leading-relaxed mb-6 max-w-xl'>
+          Pro gives you the tools serious collectors and flippers need —
+          unlimited projects, full photo documentation, advanced movement
+          analytics, and more. One flat price, every feature, forever.
         </p>
         {user?.id && <UpgradeButton pbUserId={user.id} />}
       </div>
 
       {/* Feature grid */}
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
         {FEATURES.map(({ icon: Icon, label, title, description, badge }) => (
           <div
             key={label}

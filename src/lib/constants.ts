@@ -1,3 +1,6 @@
+export const FREE_PROJECT_LIMIT = 2;
+export const FREE_PHOTO_LIMIT = 3;
+
 export const NAV_PAGES = [
   { id: 'dashboard', label: 'Dashboard', icon: '◈', path: '/dashboard' },
   { id: 'watches', label: 'Watches', icon: '◷', path: '/watches' },

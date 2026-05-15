@@ -12,13 +12,11 @@ import {
   useDeleteTimegrapherReading,
 } from '#/hooks/timegrapher';
 import { useSubscription } from '#/hooks/subscription';
-import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { cn } from '#/lib/helpers';
-import { LockIcon } from 'lucide-react';
 import type { TimegrapherReading, TimegrapherStatus } from '#/types';
 import { Field, FieldError, FieldLabel } from '#/components/ui/field';
 import {
@@ -198,7 +196,160 @@ function PositionChart({ reading }: { reading: TimegrapherReading }) {
   );
 }
 
-// ── Add Session Form ─────────────────────────────────────────────────────────
+// ── Free-tier simple form ────────────────────────────────────────────────────
+
+const freeSchema = z.object({
+  status: z.enum(['post_service', 'pre_service', 'incoming', 'routine']),
+  lift_angle: z.string().min(1, 'Required'),
+  avg_rate: z.string().optional(),
+  avg_amp: z.string().optional(),
+});
+
+type FreeFormData = z.infer<typeof freeSchema>;
+
+function FreeAddSessionForm({
+  watchId,
+  defaultLiftAngle,
+  onSuccess,
+  onCancel,
+}: {
+  watchId: string;
+  defaultLiftAngle: number;
+  onSuccess: () => void;
+  onCancel: () => void;
+}) {
+  const createReading = useCreateTimegrapherReading(watchId);
+  const { control, handleSubmit } = useForm<FreeFormData>({
+    resolver: zodResolver(freeSchema),
+    defaultValues: {
+      status: 'routine',
+      lift_angle: String(defaultLiftAngle),
+    },
+  });
+
+  const inputCls =
+    'w-full rounded border border-input bg-background px-2.5 py-1.5 font-mono text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring';
+
+  const onSubmit = async (data: FreeFormData) => {
+    await createReading.mutateAsync({
+      watch: watchId,
+      status: data.status,
+      lift_angle: parseFloat(data.lift_angle),
+      du_rate: parseOptNum(data.avg_rate),
+      du_amp: parseOptNum(data.avg_amp),
+    });
+    onSuccess();
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+        <div className='space-y-1'>
+          <Controller
+            name='status'
+            control={control}
+            render={({ fieldState, field }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='free-status'>Session Type</FieldLabel>
+                <Select
+                  name={field.name}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger id='free-status' className={inputCls}>
+                    <SelectValue placeholder='Session type' />
+                  </SelectTrigger>
+                  <SelectContent position='popper'>
+                    <SelectItem value='routine'>Routine</SelectItem>
+                    <SelectItem value='pre_service'>Pre-Service</SelectItem>
+                    <SelectItem value='post_service'>Post-Service</SelectItem>
+                    <SelectItem value='incoming'>Incoming</SelectItem>
+                  </SelectContent>
+                </Select>
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        </div>
+        <div className='space-y-1'>
+          <Controller
+            name='lift_angle'
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='free-lift'>Lift Angle (°)</FieldLabel>
+                <Input {...field} type='number' step='1' id='free-lift' className={inputCls} />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        </div>
+      </div>
+
+      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+        <div className='space-y-1'>
+          <Controller
+            name='avg_rate'
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='free-rate'>Average Rate (s/d)</FieldLabel>
+                <Input
+                  {...field}
+                  type='number'
+                  step='0.1'
+                  id='free-rate'
+                  placeholder='e.g. +2.1'
+                  className={inputCls}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        </div>
+        <div className='space-y-1'>
+          <Controller
+            name='avg_amp'
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='free-amp'>Average Amplitude (°)</FieldLabel>
+                <Input
+                  {...field}
+                  type='number'
+                  step='1'
+                  id='free-amp'
+                  placeholder='e.g. 298'
+                  className={inputCls}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        </div>
+      </div>
+
+      <div className='flex gap-3'>
+        <button
+          type='submit'
+          disabled={createReading.isPending}
+          className='inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-mono text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity'
+        >
+          {createReading.isPending ? 'Saving…' : 'Save Session'}
+        </button>
+        <button
+          type='button'
+          onClick={onCancel}
+          className='inline-flex items-center rounded-md border border-border px-4 py-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent cursor-pointer'
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ── Pro full-positional form ──────────────────────────────────────────────────
 
 const schema = z.object({
   status: z.enum(['post_service', 'pre_service', 'incoming', 'routine']),
@@ -483,35 +634,6 @@ function TimegrapherPage() {
     );
   }
 
-  if (!isPro) {
-    return (
-      <div className='space-y-5 min-w-0'>
-        <Link
-          to='/watches/$watchId'
-          params={{ watchId }}
-          className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
-        >
-          ← Back to Watch
-        </Link>
-        <div className='flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-card px-8 py-16 text-center'>
-          <div className='flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10'>
-            <LockIcon className='h-5 w-5 text-amber-400' />
-          </div>
-          <div className='space-y-1'>
-            <h2 className='font-serif font-semibold text-foreground'>
-              Timegrapher Log
-            </h2>
-            <p className='font-mono text-xs text-muted-foreground max-w-xs'>
-              Track rate, amplitude, and beat error across all positions. Upgrade
-              to Pro to unlock timegrapher logging.
-            </p>
-          </div>
-          {user && <UpgradeButton pbUserId={user.id} />}
-        </div>
-      </div>
-    );
-  }
-
   const latest = readings[0] ?? null;
   const chartReading =
     selectedId !== null
@@ -563,51 +685,97 @@ function TimegrapherPage() {
       </div>
 
       {/* KPI strip */}
-      <div className='grid grid-cols-2 sm:grid-cols-5 gap-3'>
-        <KpiCard
-          highlight
-          label='Latest DU Rate'
-          value={fmtRate(latest?.du_rate)}
-          valueClass={rateClass(latest?.du_rate)}
-          sub='s/d dial up'
-        />
-        <KpiCard
-          label='Avg Amplitude'
-          value={avgAmp !== null ? `${fmtNum(avgAmp)}°` : '—'}
-          sub='target ≥ 270°'
-        />
-        <KpiCard
-          label='Avg Beat Error'
-          value={avgBe !== null ? `${fmtNum(avgBe, 1)} ms` : '—'}
-          sub='target ≤ 0.5'
-        />
-        <KpiCard
-          label='Mean Rate'
-          value={fmtRate(meanRate)}
-          valueClass={rateClass(meanRate ?? undefined)}
-          sub='avg all positions'
-        />
-        <KpiCard
-          label='Sessions'
-          value={readings.length}
-          sub={`${readings.length} total`}
-        />
-      </div>
+      {isPro ? (
+        <div className='grid grid-cols-2 sm:grid-cols-5 gap-3'>
+          <KpiCard
+            highlight
+            label='Latest DU Rate'
+            value={fmtRate(latest?.du_rate)}
+            valueClass={rateClass(latest?.du_rate)}
+            sub='s/d dial up'
+          />
+          <KpiCard
+            label='Avg Amplitude'
+            value={avgAmp !== null ? `${fmtNum(avgAmp)}°` : '—'}
+            sub='target ≥ 270°'
+          />
+          <KpiCard
+            label='Avg Beat Error'
+            value={avgBe !== null ? `${fmtNum(avgBe, 1)} ms` : '—'}
+            sub='target ≤ 0.5'
+          />
+          <KpiCard
+            label='Mean Rate'
+            value={fmtRate(meanRate)}
+            valueClass={rateClass(meanRate ?? undefined)}
+            sub='avg all positions'
+          />
+          <KpiCard
+            label='Sessions'
+            value={readings.length}
+            sub={`${readings.length} total`}
+          />
+        </div>
+      ) : (
+        <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
+          <KpiCard
+            highlight
+            label='Avg Rate'
+            value={fmtRate(latest?.du_rate)}
+            valueClass={rateClass(latest?.du_rate)}
+            sub='s/d'
+          />
+          <KpiCard
+            label='Avg Amplitude'
+            value={latest?.du_amp !== undefined && latest?.du_amp !== null ? `${fmtNum(latest.du_amp)}°` : '—'}
+            sub='target ≥ 270°'
+          />
+          <KpiCard
+            label='Sessions'
+            value={readings.length}
+            sub={`${readings.length} total`}
+          />
+        </div>
+      )}
 
-      {/* Position chart for selected / latest session */}
-      {chartReading && <PositionChart reading={chartReading} />}
+      {/* Position chart — Pro only */}
+      {isPro && chartReading && <PositionChart reading={chartReading} />}
+
+      {/* Pro upsell nudge for free users */}
+      {!isPro && (
+        <div className='flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3'>
+          <span className='font-mono text-[11px] text-amber-400/80'>
+            Upgrade to Pro for 6-position logging (DU · DD · CU · CD · CL · CR) and delta tracking.
+          </span>
+          <Link
+            to='/pro'
+            className='shrink-0 font-mono text-[10px] tracking-widest uppercase px-3 py-1 rounded border border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors'
+          >
+            View Pro
+          </Link>
+        </div>
+      )}
 
       {/* Add session form */}
       {showForm && user && (
         <div className='rounded-xl border border-border bg-card p-5'>
           <SectionLabel>New Session</SectionLabel>
           <div className='mt-3'>
-            <AddSessionForm
-              watchId={watchId}
-              defaultLiftAngle={defaultLiftAngle}
-              onSuccess={() => setShowForm(false)}
-              onCancel={() => setShowForm(false)}
-            />
+            {isPro ? (
+              <AddSessionForm
+                watchId={watchId}
+                defaultLiftAngle={defaultLiftAngle}
+                onSuccess={() => setShowForm(false)}
+                onCancel={() => setShowForm(false)}
+              />
+            ) : (
+              <FreeAddSessionForm
+                watchId={watchId}
+                defaultLiftAngle={defaultLiftAngle}
+                onSuccess={() => setShowForm(false)}
+                onCancel={() => setShowForm(false)}
+              />
+            )}
           </div>
         </div>
       )}
@@ -632,7 +800,7 @@ function TimegrapherPage() {
                 </button>
               )}
             </div>
-          ) : (
+          ) : isPro ? (
             <TableWrap>
               <thead>
                 <tr>
@@ -671,12 +839,7 @@ function TimegrapherPage() {
                         setSelectedId((cur) => (cur === r.id ? null : r.id))
                       }
                     >
-                      <Td
-                        className={cn(
-                          'font-mono text-[11px]',
-                          isSelected && 'text-primary',
-                        )}
-                      >
+                      <Td className={cn('font-mono text-[11px]', isSelected && 'text-primary')}>
                         {format(new Date(r.created), 'MMM d, yyyy')}
                       </Td>
                       <Td className='font-mono text-[11px] text-muted-foreground'>
@@ -686,22 +849,11 @@ function TimegrapherPage() {
                         {r.lift_angle}°
                       </Td>
                       {rates.map((rate, i) => (
-                        <Td
-                          key={i}
-                          className={cn(
-                            'font-mono text-[11px] font-medium',
-                            rateClass(rate),
-                          )}
-                        >
+                        <Td key={i} className={cn('font-mono text-[11px] font-medium', rateClass(rate))}>
                           {fmtRate(rate)}
                         </Td>
                       ))}
-                      <Td
-                        className={cn(
-                          'font-mono text-[11px] font-medium',
-                          rateClass(mean ?? undefined),
-                        )}
-                      >
+                      <Td className={cn('font-mono text-[11px] font-medium', rateClass(mean ?? undefined))}>
                         {fmtRate(mean)}
                       </Td>
                       <Td className='font-mono text-[11px] text-muted-foreground max-w-40 truncate'>
@@ -727,6 +879,56 @@ function TimegrapherPage() {
                     </TableRow>
                   );
                 })}
+              </tbody>
+            </TableWrap>
+          ) : (
+            <TableWrap>
+              <thead>
+                <tr>
+                  <Th>Date</Th>
+                  <Th>Type</Th>
+                  <Th>Lift °</Th>
+                  <Th>Avg Rate</Th>
+                  <Th>Avg Amplitude</Th>
+                  {user && <Th>{''}</Th>}
+                </tr>
+              </thead>
+              <tbody>
+                {readings.map((r) => (
+                  <TableRow key={r.id}>
+                    <Td className='font-mono text-[11px]'>
+                      {format(new Date(r.created), 'MMM d, yyyy')}
+                    </Td>
+                    <Td className='font-mono text-[11px] text-muted-foreground'>
+                      {STATUS_LABELS[r.status]}
+                    </Td>
+                    <Td className='font-mono text-[11px] text-muted-foreground'>
+                      {r.lift_angle}°
+                    </Td>
+                    <Td className={cn('font-mono text-[11px] font-medium', rateClass(r.du_rate))}>
+                      {fmtRate(r.du_rate)}
+                    </Td>
+                    <Td className='font-mono text-[11px] text-muted-foreground'>
+                      {r.du_amp !== undefined && r.du_amp !== null ? `${fmtNum(r.du_amp)}°` : '—'}
+                    </Td>
+                    {user && (
+                      <Td>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm('Delete this session?')) {
+                              deleteReading.mutate(r.id);
+                            }
+                          }}
+                          className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
+                          aria-label='Delete session'
+                        >
+                          ×
+                        </button>
+                      </Td>
+                    )}
+                  </TableRow>
+                ))}
               </tbody>
             </TableWrap>
           )}

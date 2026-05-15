@@ -76,47 +76,13 @@ export const hasPaidSubscription = ({
   return false;
 };
 
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
-/** True when `trial_ends_at` is strictly in the future. */
-export const isActiveAppTrial = (trialEndsAt: string | undefined): boolean => {
-  if (!trialEndsAt) return false;
-  return new Date(trialEndsAt) > new Date();
-};
-
-/** Whole days remaining until trial end (floor, min 1), or `null` if none / expired. */
-export const trialDaysRemainingFloor = (
-  trialEndsAt: string | undefined,
-): number | null => {
-  if (!trialEndsAt) return null;
-  const end = new Date(trialEndsAt);
-  const now = new Date();
-  if (end <= now) return null;
-  return Math.max(1, Math.floor((end.getTime() - now.getTime()) / MS_PER_DAY));
-};
-
 export const hasPro = ({
   subscriptionStatus,
   renewsAt,
   endsAt,
-  trialEndsAt,
-}: PaidSubscriptionArgs & { trialEndsAt?: string }): boolean => {
-  return (
-    hasPaidSubscription({ subscriptionStatus, renewsAt, endsAt }) ||
-    isActiveAppTrial(trialEndsAt)
-  );
+}: PaidSubscriptionArgs): boolean => {
+  return hasPaidSubscription({ subscriptionStatus, renewsAt, endsAt });
 };
-
-/** Pro access from the 14-day app trial only (not an active paid LS subscription). */
-export const isAppTrialPro = (
-  args: PaidSubscriptionArgs & { trialEndsAt?: string },
-) =>
-  isActiveAppTrial(args.trialEndsAt) &&
-  !hasPaidSubscription({
-    subscriptionStatus: args.subscriptionStatus,
-    renewsAt: args.renewsAt,
-    endsAt: args.endsAt,
-  });
 
 export const canModifySubscription = (
   subscriptionStatus: SubscriptionStatus,

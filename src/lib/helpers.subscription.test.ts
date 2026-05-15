@@ -1,16 +1,6 @@
-import { describe, expect, it, vi, afterEach } from 'vitest';
-import {
-  hasPaidSubscription,
-  hasPro,
-  isActiveAppTrial,
-  isAppTrialPro,
-  trialDaysRemainingFloor,
-} from '#/lib/helpers';
+import { describe, expect, it } from 'vitest';
+import { hasPaidSubscription, hasPro } from '#/lib/helpers';
 import { SubscriptionStatus } from '#/types';
-
-afterEach(() => {
-  vi.useRealTimers();
-});
 
 describe('hasPaidSubscription', () => {
   it('returns true for active with future ends_at', () => {
@@ -75,75 +65,24 @@ describe('hasPaidSubscription', () => {
   });
 });
 
-describe('isActiveAppTrial', () => {
-  it('returns false when unset', () => {
-    expect(isActiveAppTrial(undefined)).toBe(false);
-  });
-
-  it('returns true when trial end is in the future', () => {
-    expect(
-      isActiveAppTrial(new Date(Date.now() + 86400000).toISOString()),
-    ).toBe(true);
-  });
-});
-
 describe('hasPro', () => {
-  it('grants pro during app trial without paid subscription', () => {
+  it('grants pro for active subscription with future ends_at', () => {
     expect(
       hasPro({
-        subscriptionStatus: SubscriptionStatus.EXPIRED,
-        renewsAt: '',
-        endsAt: undefined,
-        trialEndsAt: new Date(Date.now() + 86400000).toISOString(),
-      }),
-    ).toBe(true);
-  });
-
-  it('denies when trial ended and not paid', () => {
-    expect(
-      hasPro({
-        subscriptionStatus: SubscriptionStatus.EXPIRED,
-        renewsAt: '',
-        endsAt: undefined,
-        trialEndsAt: new Date(Date.now() - 1000).toISOString(),
-      }),
-    ).toBe(false);
-  });
-});
-
-describe('isAppTrialPro', () => {
-  it('is true only when trial active and not paid', () => {
-    expect(
-      isAppTrialPro({
-        subscriptionStatus: SubscriptionStatus.EXPIRED,
-        renewsAt: '',
-        trialEndsAt: new Date(Date.now() + 86400000).toISOString(),
-      }),
-    ).toBe(true);
-
-    expect(
-      isAppTrialPro({
         subscriptionStatus: SubscriptionStatus.ACTIVE,
         renewsAt: '',
         endsAt: new Date(Date.now() + 86400000).toISOString(),
-        trialEndsAt: new Date(Date.now() + 86400000).toISOString(),
+      }),
+    ).toBe(true);
+  });
+
+  it('denies pro when subscription is expired', () => {
+    expect(
+      hasPro({
+        subscriptionStatus: SubscriptionStatus.EXPIRED,
+        renewsAt: '',
+        endsAt: undefined,
       }),
     ).toBe(false);
-  });
-});
-
-describe('trialDaysRemainingFloor', () => {
-  it('returns null when expired', () => {
-    expect(
-      trialDaysRemainingFloor(new Date(Date.now() - 1000).toISOString()),
-    ).toBe(null);
-  });
-
-  it('returns at least 1 for any future end', () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-01-01T12:00:00.000Z'));
-    expect(
-      trialDaysRemainingFloor('2026-01-01T18:00:00.000Z'),
-    ).toBeGreaterThanOrEqual(1);
   });
 });
