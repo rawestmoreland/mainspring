@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -210,11 +211,47 @@ func main() {
 	})
 
 	app.OnRecordCreateRequest("users").BindFunc(func(e *core.RecordRequestEvent) error {
-		if !e.Record.GetDateTime("trial_ends_at").IsZero() {
-			return e.Next()
+		if e.Record.GetString("email") == "" {
+			return e.String(http.StatusBadRequest, "email is required")
 		}
-		e.Record.Set("trial_ends_at", time.Now().UTC().Add(appTrialDuration))
-		return e.Next()
+		if e.Record.GetString("password") == "" {
+			return e.String(http.StatusBadRequest, "password is required")
+		}
+		if e.Record.GetString("display_name") == "" {
+			return e.String(http.StatusBadRequest, "display name is required")
+		}
+
+		if e.Record.GetDateTime("trial_ends_at").IsZero() {
+			e.Record.Set("trial_ends_at", time.Now().UTC().Add(appTrialDuration))
+		}
+
+		if err := e.Next(); err != nil {
+			return err
+		}
+
+		// User is now persisted — safe to create the profile
+		email := e.Record.GetString("email")
+		displayName := e.Record.GetString("display_name")
+
+		_, err := app.FindFirstRecordByFilter("user_profiles", "email = {:email}", dbx.Params{"email": email})
+		if err != nil {
+			if !app.IsNotFound(err) {
+				return fmt.Errorf("profile lookup failed: %w", err)
+			}
+			collection, err := app.FindCollectionByNameOrId("user_profiles")
+			if err != nil {
+				return fmt.Errorf("failed to find user_profiles collection: %w", err)
+			}
+			profile := core.NewRecord(collection)
+			profile.Set("user", e.Record.Id)
+			profile.Set("email", email)
+			profile.Set("display_name", displayName)
+			if err := app.Save(profile); err != nil {
+				return fmt.Errorf("failed to create user profile: %w", err)
+			}
+		}
+
+		return nil
 	})
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {

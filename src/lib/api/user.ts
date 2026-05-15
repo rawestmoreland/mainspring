@@ -18,7 +18,11 @@ export const UserApi = {
     const authPromise = pb.collection('users').authWithOAuth2({
       provider,
       urlCallback: (url) => {
-        popup = window.open(url, '_blank', 'width=600,height=700,left=200,top=100');
+        popup = window.open(
+          url,
+          '_blank',
+          'width=600,height=700,left=200,top=100',
+        );
       },
     });
 
@@ -39,14 +43,13 @@ export const UserApi = {
     return Promise.race([authPromise, cancelOnClose]);
   },
   signup: async (email: string, password: string, displayName: string) => {
-    await pb
-      .collection('users')
-      .create({ email, password, passwordConfirm: password });
-    const auth = await pb.collection('users').authWithPassword(email, password);
-    await pb.collection('user_profiles').create({
-      user: auth.record.id,
+    await pb.collection('users').create({
+      email,
+      password,
+      passwordConfirm: password,
       display_name: displayName,
     });
+    const auth = await pb.collection('users').authWithPassword(email, password);
     return auth;
   },
   passwordReset: async (email: string) => {

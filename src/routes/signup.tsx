@@ -6,15 +6,16 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Field, FieldError, FieldGroup } from '#/components/ui/field';
-import { useJoinWaitlist } from '#/hooks/waitlist';
+// import { useJoinWaitlist } from '#/hooks/waitlist';
+import { useSignup } from '#/hooks/user';
 
 const schema = z.object({
-  // display_name: z
-  //   .string()
-  //   .min(2, 'Display name must be at least 2 characters')
-  //   .max(256),
+  display_name: z
+    .string()
+    .min(2, 'Display name must be at least 2 characters')
+    .max(256),
   email: z.email('Enter a valid email'),
-  // password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -23,18 +24,20 @@ export const Route = createFileRoute('/signup')({ component: SignupPage });
 function SignupPage() {
   const navigate = useNavigate();
 
-  const { mutateAsync: joinWaitlist, isPending, error } = useJoinWaitlist();
+  // const { mutateAsync: joinWaitlist, isPending, error } = useJoinWaitlist();
+  const { mutateAsync: signup, isPending, error } = useSignup();
 
   const { control, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      email: '',
-    },
-    // defaultValues: { display_name: '', email: '', password: '' },
+    defaultValues: { display_name: '', email: '', password: '' },
   });
 
   const onSubmit = async (data: FormData) => {
-    await joinWaitlist(data.email);
+    await signup({
+      displayName: data.display_name,
+      email: data.email,
+      password: data.password,
+    });
     navigate({ to: '/', replace: true });
   };
 
@@ -43,20 +46,20 @@ function SignupPage() {
       <div className='w-full max-w-sm'>
         <div className='mb-8 text-center'>
           <h1 className='font-serif text-2xl font-bold text-primary mb-5'>
-            Hairspring Waitlist
+            Create an account
           </h1>
-          <p className='font-mono text-xs text-muted-foreground tracking-widest uppercase'>
+          {/* <p className='font-mono text-xs text-muted-foreground tracking-widest uppercase'>
             Hairspring is opening to the public soon. Join the waitlist to be
             notified when you can officially create an account. New accounts get{' '}
             <span className='text-foreground'>14 days of Pro free</span> — every
             Pro feature, no credit card required to start.
-          </p>
+          </p> */}
         </div>
 
         <div className='bg-card border border-border rounded-xl shadow-sm p-6'>
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
             <FieldGroup>
-              {/* <Controller
+              <Controller
                 name='display_name'
                 control={control}
                 render={({ field, fieldState }) => (
@@ -74,7 +77,7 @@ function SignupPage() {
                     )}
                   </Field>
                 )}
-              /> */}
+              />
               <Controller
                 name='email'
                 control={control}
@@ -93,7 +96,7 @@ function SignupPage() {
                   </Field>
                 )}
               />
-              {/* <Controller
+              <Controller
                 name='password'
                 control={control}
                 render={({ field, fieldState }) => (
@@ -110,7 +113,7 @@ function SignupPage() {
                     )}
                   </Field>
                 )}
-              /> */}
+              />
             </FieldGroup>
 
             {error && (
