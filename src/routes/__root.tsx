@@ -182,7 +182,6 @@ function RootComponent() {
           />
         </TooltipProvider>
       </QueryClientProvider>
-      <GoogleAnalytics measurementId='G-7TWPVSWCR2' />
     </RootDocument>
   );
 }
@@ -201,6 +200,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Toaster />
+        <GoogleAnalytics measurementId='G-7TWPVSWCR2' />
         <script src='https://app.lemonsqueezy.com/js/lemon.js' defer></script>
         <Scripts />
       </body>
