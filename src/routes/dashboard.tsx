@@ -186,7 +186,7 @@ function Dashboard() {
                     </div>
                   </Td>
                   <Td>
-                    <StatusPicker watch={w} />
+                    <StatusPicker watch={w} disabled={w.is_frozen} />
                   </Td>
                   <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
                   <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>

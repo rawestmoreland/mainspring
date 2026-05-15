@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { Info, LayoutGrid, List, PlusIcon } from 'lucide-react';
+import { Info, LayoutGrid, List, LockIcon, PlusIcon } from 'lucide-react';
 
 import { cn, fmt, profit } from '#/lib/helpers';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
@@ -223,6 +223,7 @@ function WatchesPage() {
               <tbody>
                 {filtered.map((w) => {
                   const p = profit(w);
+                  const frozen = !!w.is_frozen && !isPro;
                   return (
                     <TableRow key={w.id}>
                       <Td>
@@ -238,8 +239,14 @@ function WatchesPage() {
                           onClick={() => handleSelectWatch(w.id)}
                           className='block text-left bg-transparent border-none p-0 cursor-pointer'
                         >
-                          <div className='font-medium text-foreground'>
+                          <div className='flex items-center gap-1.5 font-medium text-foreground'>
                             {w.make} {w.model}
+                            {frozen && (
+                              <span className='inline-flex items-center gap-0.5 rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'>
+                                <LockIcon className='size-2' />
+                                Frozen
+                              </span>
+                            )}
                           </div>
                           <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
                             {w.reference}
@@ -250,7 +257,7 @@ function WatchesPage() {
                         {w.year}
                       </Td>
                       <Td>
-                        <StatusPicker watch={w} />
+                        <StatusPicker watch={w} disabled={frozen} />
                       </Td>
                       <Td className='text-xs text-muted-foreground capitalize'>
                         {w.condition_bought.replace('_', ' ')}

@@ -9,7 +9,13 @@ import { StageTag } from '#/components/primitives/StageTag';
 import { Lightbox } from '#/components/watches/Lightbox';
 import { STAGE_META } from '#/lib/mocks/meta';
 import { fmt, fmtPct, profit, roi, cn } from '#/lib/helpers';
-import type { UserProfile, Watch, WatchPhoto, WatchStage, RepairPost } from '#/types';
+import type {
+  UserProfile,
+  Watch,
+  WatchPhoto,
+  WatchStage,
+  RepairPost,
+} from '#/types';
 
 export const Route = createFileRoute('/watch/$watchId')({
   component: PublicWatchDetailPage,
@@ -22,7 +28,10 @@ type RawPhoto = {
   caption: string;
   image: string;
 };
-type RawPartUsed = { qty_used: number; expand?: { inventory_item?: { unit_cost: number } } };
+type RawPartUsed = {
+  qty_used: number;
+  expand?: { inventory_item?: { unit_cost: number } };
+};
 type RawWatchRecord = {
   expand?: {
     watch_photos_via_watch?: RawPhoto[];
@@ -36,7 +45,10 @@ function PublicWatchDetailPage() {
 
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [activeIdx, setActiveIdx] = useState(0);
-  const [lightbox, setLightbox] = useState<{ photos: WatchPhoto[]; index: number } | null>(null);
+  const [lightbox, setLightbox] = useState<{
+    photos: WatchPhoto[];
+    index: number;
+  } | null>(null);
 
   const pbUrl = import.meta.env.VITE_POCKETBASE_URL as string;
   const assetUrl = import.meta.env.VITE_ASSET_URL as string;
@@ -59,7 +71,8 @@ function PublicWatchDetailPage() {
         }),
       );
       const parts_cost = (r.expand?.parts_used_via_watch ?? []).reduce(
-        (sum: number, p: RawPartUsed) => sum + (p.qty_used ?? 0) * (p.expand?.inventory_item?.unit_cost ?? 0),
+        (sum: number, p: RawPartUsed) =>
+          sum + (p.qty_used ?? 0) * (p.expand?.inventory_item?.unit_cost ?? 0),
         0,
       );
       return { ...r, photos, parts_cost } as Watch;
@@ -82,7 +95,9 @@ function PublicWatchDetailPage() {
   if (!ctx.tenant) {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
-        <p className='font-mono text-sm text-muted-foreground'>Page not found.</p>
+        <p className='font-mono text-sm text-muted-foreground'>
+          Page not found.
+        </p>
       </div>
     );
   }
@@ -91,7 +106,9 @@ function PublicWatchDetailPage() {
 
   const photos = watch?.photos ?? [];
   const displayedPhotos =
-    stageFilter === 'all' ? photos : photos.filter((ph) => ph.stage === stageFilter);
+    stageFilter === 'all'
+      ? photos
+      : photos.filter((ph) => ph.stage === stageFilter);
   const activePhoto = displayedPhotos[activeIdx] ?? null;
 
   const handleStageFilter = (s: string) => {
@@ -101,7 +118,9 @@ function PublicWatchDetailPage() {
 
   const prevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setActiveIdx((i) => (i - 1 + displayedPhotos.length) % displayedPhotos.length);
+    setActiveIdx(
+      (i) => (i - 1 + displayedPhotos.length) % displayedPhotos.length,
+    );
   };
 
   const nextPhoto = (e: React.MouseEvent) => {
@@ -133,7 +152,9 @@ function PublicWatchDetailPage() {
         </Link>
 
         {isLoading && (
-          <div className='text-sm text-muted-foreground font-mono'>Loading…</div>
+          <div className='text-sm text-muted-foreground font-mono'>
+            Loading…
+          </div>
         )}
 
         {!isLoading && !watch && (
@@ -182,7 +203,10 @@ function PublicWatchDetailPage() {
                       alt={activePhoto.caption}
                       className='w-full h-full object-contain cursor-zoom-in'
                       onClick={() =>
-                        setLightbox({ photos: displayedPhotos, index: activeIdx })
+                        setLightbox({
+                          photos: displayedPhotos,
+                          index: activeIdx,
+                        })
                       }
                     />
                     {displayedPhotos.length > 1 && (
@@ -253,42 +277,65 @@ function PublicWatchDetailPage() {
                       Details
                     </span>
                   </div>
-                  {([
+                  {(
                     [
-                      'Condition',
-                      capitalize(watch.condition_bought?.replace('_', ' ')) ?? '—',
-                    ],
-                    ['Purchase Price', fmt(watch.bought_price)],
-                    ['Parts Cost', fmt(watch.parts_cost)],
-                    ['Total Invested', fmt(watch.bought_price + (watch.parts_cost ?? 0))],
-                    ['Sale Price', fmt(watch.sold_price)],
-                    [
-                      'Profit',
-                      p !== null ? (
-                        <span className={p >= 0 ? 'text-green-400' : 'text-red-400'}>
-                          {fmt(p)}
-                        </span>
-                      ) : (
-                        '—'
-                      ),
-                    ],
-                    [
-                      'ROI',
-                      r !== null ? (
-                        <span className={parseFloat(r) >= 0 ? 'text-green-400' : 'text-red-400'}>
-                          {fmtPct(r)}
-                        </span>
-                      ) : (
-                        '—'
-                      ),
-                    ],
-                    ['Hours Spent', `${watch.hours_spent ?? 0} hrs`],
-                    [
-                      'Acquired',
-                      watch.bought_date ? format(watch.bought_date, 'MMM d, yyyy') : '—',
-                    ],
-                    ['Sold', watch.sold_date ? format(watch.sold_date, 'MMM d, yyyy') : '—'],
-                  ] as [string, React.ReactNode][]).map(([k, v]) => (
+                      [
+                        'Condition',
+                        capitalize(watch.condition_bought?.replace('_', ' ')) ??
+                          '—',
+                      ],
+                      ['Purchase Price', fmt(watch.bought_price)],
+                      ['Parts Cost', fmt(watch.parts_cost)],
+                      [
+                        'Total Invested',
+                        fmt(watch.bought_price + (watch.parts_cost ?? 0)),
+                      ],
+                      ['Sale Price', fmt(watch.sold_price)],
+                      [
+                        'Profit',
+                        p !== null ? (
+                          <span
+                            className={
+                              p >= 0 ? 'text-green-400' : 'text-red-400'
+                            }
+                          >
+                            {fmt(p)}
+                          </span>
+                        ) : (
+                          '—'
+                        ),
+                      ],
+                      [
+                        'ROI',
+                        r !== null ? (
+                          <span
+                            className={
+                              parseFloat(r) >= 0
+                                ? 'text-green-400'
+                                : 'text-red-400'
+                            }
+                          >
+                            {fmtPct(r)}
+                          </span>
+                        ) : (
+                          '—'
+                        ),
+                      ],
+                      ['Hours Spent', `${watch.hours_spent ?? 0} hrs`],
+                      [
+                        'Acquired',
+                        watch.bought_date
+                          ? format(watch.bought_date, 'MMM d, yyyy')
+                          : '—',
+                      ],
+                      [
+                        'Sold',
+                        watch.sold_date
+                          ? format(watch.sold_date, 'MMM d, yyyy')
+                          : '—',
+                      ],
+                    ] as [string, React.ReactNode][]
+                  ).map(([k, v]) => (
                     <div
                       key={k}
                       className='flex justify-between items-center gap-4 px-4 py-2.5 border-b border-border last:border-0'
@@ -296,7 +343,9 @@ function PublicWatchDetailPage() {
                       <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
                         {k}
                       </span>
-                      <span className='font-mono text-[11.5px] text-foreground'>{v}</span>
+                      <span className='font-mono text-[11.5px] text-foreground'>
+                        {v}
+                      </span>
                     </div>
                   ))}
                 </section>
@@ -321,10 +370,15 @@ function PublicWatchDetailPage() {
                             params={{ postId: post.id }}
                             className='flex items-center justify-between px-4 py-2.5 hover:bg-white/2 transition-colors no-underline'
                           >
-                            <span className='text-sm text-foreground'>{post.title}</span>
+                            <span className='text-sm text-foreground'>
+                              {post.title}
+                            </span>
                             <span className='text-[11px] font-mono text-muted-foreground shrink-0 ml-3'>
                               {post.session_date
-                                ? format(new Date(post.session_date), 'MMM d, yyyy')
+                                ? format(
+                                    new Date(post.session_date),
+                                    'MMM d, yyyy',
+                                  )
                                 : '—'}
                             </span>
                           </Link>
@@ -341,9 +395,15 @@ function PublicWatchDetailPage() {
 
       <footer className='border-t border-border py-6'>
         <div className='max-w-3xl mx-auto px-5'>
-          <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-            Powered by Hairspring
-          </span>
+          <a
+            href={'https://hairspring.app'}
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+              Powered by Hairspring
+            </span>
+          </a>
         </div>
       </footer>
 

@@ -12,6 +12,7 @@ import {
 import { useSubscription } from '#/hooks/subscription';
 import { useUser } from '#/hooks/user';
 import { useGetWatchById } from '#/hooks/watches';
+
 import { PostsApi } from '#/lib/api/posts';
 import TiptapEditor, { type TiptapEditorRef } from '#/components/TipTap';
 import type { WatchPhoto, WatchStage } from '#/types';
@@ -33,6 +34,7 @@ function PostPage() {
   const { data: watch } = useGetWatchById(watchId);
   const { data: user } = useUser();
   const { isPro } = useSubscription();
+  const isFrozen = !!watch?.is_frozen && !isPro;
   const updatePost = useUpdatePost(watchId, postId);
   const deleteImage = useDeletePostImage(watchId, postId);
   const [editing, setEditing] = useState(false);
@@ -252,7 +254,7 @@ function PostPage() {
                   : '—'}
               </p>
             </div>
-            {user && (
+            {user && !isFrozen && (
               <button
                 onClick={() => setEditing(true)}
                 className='shrink-0 rounded-md border border-border px-3 py-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors'

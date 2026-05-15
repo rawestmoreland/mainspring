@@ -743,13 +743,13 @@ function TimegrapherPage() {
 
       {/* Pro upsell nudge for free users */}
       {!isPro && (
-        <div className='flex items-center gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3'>
-          <span className='font-mono text-[11px] text-amber-400/80'>
+        <div className='flex items-center gap-3 rounded-lg border border-amber-500/40 bg-amber-950/80 px-4 py-3'>
+          <span className='font-mono text-[11px] text-amber-200'>
             Upgrade to Pro for 6-position logging (DU · DD · CU · CD · CL · CR) and delta tracking.
           </span>
           <Link
             to='/pro'
-            className='shrink-0 font-mono text-[10px] tracking-widest uppercase px-3 py-1 rounded border border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors'
+            className='shrink-0 font-mono text-[10px] tracking-widest uppercase px-3 py-1 rounded border border-amber-500/60 bg-amber-500/20 text-amber-200 hover:bg-amber-500/35 transition-colors'
           >
             View Pro
           </Link>

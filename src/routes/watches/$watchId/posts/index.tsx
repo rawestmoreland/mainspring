@@ -3,6 +3,7 @@ import { format } from 'date-fns/format';
 import { useGetPostsByWatch, useDeletePost } from '#/hooks/posts';
 import { useGetWatchById } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
+import { useSubscription } from '#/hooks/subscription';
 
 export const Route = createFileRoute('/watches/$watchId/posts/')({
   component: RepairLogPage,
@@ -25,7 +26,9 @@ function RepairLogPage() {
   const { data: watch } = useGetWatchById(watchId);
   const { data: posts, isLoading } = useGetPostsByWatch(watchId);
   const { data: user } = useUser();
+  const { isPro } = useSubscription();
   const deletePost = useDeletePost(watchId);
+  const isFrozen = !!watch?.is_frozen && !isPro;
 
   return (
     <div className='space-y-8'>
@@ -52,7 +55,7 @@ function RepairLogPage() {
             </p>
           )}
         </div>
-        {user && (
+        {user && !isFrozen && (
           <Link
             to='/watches/$watchId/posts/new'
             params={{ watchId }}
@@ -69,7 +72,7 @@ function RepairLogPage() {
       ) : !posts || posts.length === 0 ? (
         <div className='text-center py-12 text-xs font-mono text-muted-foreground border border-dashed border-border rounded-md space-y-2'>
           <p>No repair sessions logged yet.</p>
-          {user && (
+          {user && !isFrozen && (
             <Link
               to='/watches/$watchId/posts/new'
               params={{ watchId }}

@@ -17,7 +17,9 @@ function PublicPostDetailPage() {
   const { data: post, isLoading } = useQuery<RepairPost | null>({
     queryKey: ['public', 'post', postId],
     queryFn: async () => {
-      const res = await fetch(`${pbUrl}/api/collections/repair_posts/records/${postId}`);
+      const res = await fetch(
+        `${pbUrl}/api/collections/repair_posts/records/${postId}`,
+      );
       if (!res.ok) return null;
       const r = (await res.json()) as {
         collectionId: string;
@@ -25,7 +27,8 @@ function PublicPostDetailPage() {
         images?: string[];
       } & Record<string, unknown>;
       const imageUrls: string[] = (r.images ?? []).map(
-        (filename: string) => `${assetUrl}/${r.collectionId}/${r.id}/${filename}`,
+        (filename: string) =>
+          `${assetUrl}/${r.collectionId}/${r.id}/${filename}`,
       );
       return { ...r, imageUrls } as unknown as RepairPost;
     },
@@ -35,7 +38,9 @@ function PublicPostDetailPage() {
   if (!ctx.tenant) {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
-        <p className='font-mono text-sm text-muted-foreground'>Page not found.</p>
+        <p className='font-mono text-sm text-muted-foreground'>
+          Page not found.
+        </p>
       </div>
     );
   }
@@ -73,7 +78,9 @@ function PublicPostDetailPage() {
         )}
 
         {isLoading && (
-          <div className='text-sm text-muted-foreground font-mono'>Loading…</div>
+          <div className='text-sm text-muted-foreground font-mono'>
+            Loading…
+          </div>
         )}
 
         {!isLoading && !post && (
@@ -129,9 +136,15 @@ function PublicPostDetailPage() {
 
       <footer className='border-t border-border py-6'>
         <div className='max-w-3xl mx-auto px-5'>
-          <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-            Powered by Hairspring
-          </span>
+          <a
+            href={'https://hairspring.app'}
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+              Powered by Hairspring
+            </span>
+          </a>
         </div>
       </footer>
     </div>

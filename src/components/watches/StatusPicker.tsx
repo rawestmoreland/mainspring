@@ -12,9 +12,14 @@ import { Watch, WatchStatus } from '#/types';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { useUpdateWatch } from '#/hooks/watches';
 
-export function StatusPicker({ watch }: { watch: Watch }) {
+export function StatusPicker({ watch, disabled }: { watch: Watch; disabled?: boolean }) {
   const [open, setOpen] = useState(false);
   const updateWatch = useUpdateWatch();
+
+  if (disabled) {
+    return <StatusBadge status={watch.status} />;
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>

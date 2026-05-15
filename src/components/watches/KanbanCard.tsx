@@ -1,3 +1,6 @@
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+
 import { cn, fmt, profit } from '#/lib/helpers';
 import type { Watch } from '#/types';
 
@@ -5,22 +8,44 @@ type KanbanCardProps = {
   watch: Watch;
   isSelected: boolean;
   onClick: () => void;
+  dragDisabled?: boolean;
 };
 
-export function KanbanCard({ watch, isSelected, onClick }: KanbanCardProps) {
+export function KanbanCard({ watch, isSelected, onClick, dragDisabled }: KanbanCardProps) {
   const p = profit(watch);
   const cardImage = watch.featured_image_url ?? watch.photos?.[0]?.image;
+  const frozen = !!watch.is_frozen;
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: watch.id,
+    disabled: dragDisabled || frozen,
+  });
 
   return (
     <button
+      ref={setNodeRef}
       onClick={onClick}
+      style={{ transform: CSS.Transform.toString(transform) }}
+      {...listeners}
+      {...attributes}
       className={cn(
-        'w-full text-left rounded-lg border bg-card p-3 transition-all cursor-pointer block',
+        'relative w-full text-left rounded-lg border bg-card p-3 transition-all block',
+        frozen ? 'cursor-default opacity-60' : 'cursor-grab active:cursor-grabbing',
+        isDragging ? 'opacity-30' : '',
         isSelected
           ? 'border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/20'
           : 'border-border hover:border-border hover:bg-black/[0.04]',
       )}
     >
+      {frozen && (
+        <div className="absolute inset-0 rounded-lg z-10 flex items-start justify-end p-1.5 pointer-events-none">
+          <span className="font-mono text-[9px] uppercase tracking-widest bg-amber-500/15 text-amber-400 rounded px-1.5 py-0.5 flex items-center gap-1">
+            <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M11.5 8h-1V5.5a2.5 2.5 0 0 0-5 0V8h-1A1.5 1.5 0 0 0 3 9.5v4A1.5 1.5 0 0 0 4.5 15h7A1.5 1.5 0 0 0 13 13.5v-4A1.5 1.5 0 0 0 11.5 8zM6 5.5a2 2 0 1 1 4 0V8H6V5.5z"/>
+            </svg>
+            Frozen
+          </span>
+        </div>
+      )}
       {cardImage ? (
         <img
           src={cardImage}

@@ -13,7 +13,6 @@ export const UserApi = {
     pb.authStore.clear();
 
     let popup: Window | null = null;
-    let settled = false;
 
     const authPromise = pb.collection('users').authWithOAuth2({
       provider,
@@ -26,18 +25,19 @@ export const UserApi = {
       },
     });
 
+    // When the popup closes, give authPromise 2 seconds to resolve before
+    // treating it as a user cancellation. Successful auth always sends its
+    // postMessage before the popup closes, so authPromise wins in milliseconds.
+    // Only a genuine user-cancel leaves the promise unsettled past that window.
     const cancelOnClose = new Promise<never>((_, reject) => {
       const interval = setInterval(() => {
-        if (popup && popup.closed) {
+        if (popup?.closed) {
           clearInterval(interval);
-          if (!settled) reject(new Error('OAuth cancelled'));
+          setTimeout(() => reject(new Error('OAuth cancelled')), 2000);
         }
       }, 300);
 
-      authPromise.finally(() => {
-        settled = true;
-        clearInterval(interval);
-      });
+      authPromise.finally(() => clearInterval(interval));
     });
 
     return Promise.race([authPromise, cancelOnClose]);
@@ -48,6 +48,7 @@ export const UserApi = {
       password,
       passwordConfirm: password,
       display_name: displayName,
+      subscription_status: 'free',
     });
     const auth = await pb.collection('users').authWithPassword(email, password);
     return auth;

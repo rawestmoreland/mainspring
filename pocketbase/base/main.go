@@ -79,6 +79,46 @@ func hasPro(user *core.Record) bool {
 	return hasPaidSubscription(user)
 }
 
+// freezeExcessProjects keeps the 2 most-recently-updated non-sold watches
+// unfrozen and freezes the rest. Called after a subscription lapses.
+func freezeExcessProjects(userID string, app core.App) {
+	watches, err := app.FindRecordsByFilter(
+		"watches",
+		"user = {:userId} && status != 'sold'",
+		"-updated",
+		-1, 0,
+		dbx.Params{"userId": userID},
+	)
+	if err != nil {
+		return
+	}
+	for i, w := range watches {
+		shouldFreeze := i >= freeProjectLimit
+		if w.GetBool("is_frozen") != shouldFreeze {
+			w.Set("is_frozen", shouldFreeze)
+			app.Save(w)
+		}
+	}
+}
+
+// unfreezeAllProjects clears is_frozen on every watch for the user.
+// Called when a subscription is reinstated.
+func unfreezeAllProjects(userID string, app core.App) {
+	watches, err := app.FindRecordsByFilter(
+		"watches",
+		"user = {:userId} && is_frozen = true",
+		"", -1, 0,
+		dbx.Params{"userId": userID},
+	)
+	if err != nil {
+		return
+	}
+	for _, w := range watches {
+		w.Set("is_frozen", false)
+		app.Save(w)
+	}
+}
+
 func main() {
 	app := pocketbase.New()
 
@@ -109,7 +149,59 @@ func main() {
 		Automigrate: isGoRun,
 	})
 
+	app.OnRecordAuthWithOAuth2Request().BindFunc(func(e *core.RecordAuthWithOAuth2RequestEvent) error {
+		isNew := e.IsNewRecord
+
+		var displayName string
+		if e.OAuth2User.Name != "" {
+			displayName = e.OAuth2User.Name
+		} else if e.OAuth2User.Username != "" {
+			displayName = e.OAuth2User.Username
+		} else if e.OAuth2User.Email != "" {
+			displayName = strings.SplitN(e.OAuth2User.Email, "@", 2)[0]
+		}
+
+		if err := e.Next(); err != nil {
+			return err
+		}
+
+		// Create user_profile for new OAuth2 sign-ups.
+		// We do this here rather than in OnRecordCreateRequest because display_name
+		// is not a field on the users collection and won't appear on e.Record there.
+		if isNew && e.Record != nil {
+			_, err := app.FindFirstRecordByFilter("user_profiles", "user = {:user}", dbx.Params{"user": e.Record.Id})
+			if err != nil {
+				if !errors.Is(err, sql.ErrNoRows) {
+					return fmt.Errorf("profile lookup failed: %w", err)
+				}
+				col, err := app.FindCollectionByNameOrId("user_profiles")
+				if err != nil {
+					return fmt.Errorf("failed to find user_profiles collection: %w", err)
+				}
+				profile := core.NewRecord(col)
+				profile.Set("user", e.Record.Id)
+				profile.Set("email", e.Record.Email())
+				profile.Set("display_name", displayName)
+				if err := app.Save(profile); err != nil {
+					return fmt.Errorf("failed to create user profile: %w", err)
+				}
+			}
+		}
+
+		return nil
+	})
+
 	app.OnRecordCreateRequest("users").BindFunc(func(e *core.RecordRequestEvent) error {
+		info, err := e.RequestInfo()
+		if err != nil {
+			return err
+		}
+
+		// OAuth2 user creation is handled by OnRecordAuthWithOAuth2Request.
+		if info.Context == core.RequestInfoContextOAuth2 {
+			return e.Next()
+		}
+
 		if e.Record.GetString("email") == "" {
 			return e.String(http.StatusBadRequest, "email is required")
 		}
@@ -124,20 +216,20 @@ func main() {
 			return err
 		}
 
-		// User is now persisted — safe to create the profile
+		// User is now persisted — safe to create the profile.
 		email := e.Record.GetString("email")
 		displayName := e.Record.GetString("display_name")
 
-		_, err := app.FindFirstRecordByFilter("user_profiles", "email = {:email}", dbx.Params{"email": email})
+		_, err = app.FindFirstRecordByFilter("user_profiles", "user = {:user}", dbx.Params{"user": e.Record.Id})
 		if err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
 				return fmt.Errorf("profile lookup failed: %w", err)
 			}
-			collection, err := app.FindCollectionByNameOrId("user_profiles")
+			col, err := app.FindCollectionByNameOrId("user_profiles")
 			if err != nil {
 				return fmt.Errorf("failed to find user_profiles collection: %w", err)
 			}
-			profile := core.NewRecord(collection)
+			profile := core.NewRecord(col)
 			profile.Set("user", e.Record.Id)
 			profile.Set("email", email)
 			profile.Set("display_name", displayName)
@@ -213,6 +305,7 @@ func main() {
 						record.Set("renews_at", payload.Data.Attributes.RenewsAt)
 					}
 					app.Save(record)
+					unfreezeAllProjects(userID, app)
 				}
 			}
 
@@ -222,6 +315,7 @@ func main() {
 					record.Set("subscription_status", "expired")
 					record.Set("renews_at", "")
 					app.Save(record)
+					freezeExcessProjects(userID, app)
 				}
 			}
 
@@ -232,6 +326,11 @@ func main() {
 					record.Set("subscription_status", status)
 					record.Set("renews_at", payload.Data.Attributes.RenewsAt)
 					app.Save(record)
+					if hasPaidSubscription(record) {
+						unfreezeAllProjects(userID, app)
+					} else {
+						freezeExcessProjects(userID, app)
+					}
 				}
 			}
 
@@ -242,6 +341,13 @@ func main() {
 					record.Set("renews_at", "")
 					record.Set("ends_at", payload.Data.Attributes.EndsAt)
 					app.Save(record)
+					// If ends_at is still in the future the user retains access until then;
+					// freeze only once the subscription is no longer active.
+					if hasPaidSubscription(record) {
+						unfreezeAllProjects(userID, app)
+					} else {
+						freezeExcessProjects(userID, app)
+					}
 				}
 			}
 
@@ -334,6 +440,12 @@ func main() {
 			return e.Next()
 		}
 
+		if watch.GetBool("is_frozen") {
+			return apis.NewApiError(http.StatusForbidden, "ProjectFrozen", map[string]any{
+				"message": "This project is frozen because your plan limit is 2 active projects. Reactivate Pro or archive another watch to unlock.",
+			})
+		}
+
 		// Count existing photos for this watch.
 		photos, err := e.App.FindRecordsByFilter(
 			"watch_photos",
@@ -355,6 +467,59 @@ func main() {
 		}
 
 		return e.Next()
+	})
+
+	// Block updates to frozen watches for free-tier users.
+	app.OnRecordUpdate("watches").BindFunc(func(e *core.RecordEvent) error {
+		if !e.Record.GetBool("is_frozen") {
+			return e.Next()
+		}
+		userID := e.Record.GetString("user")
+		user, err := e.App.FindRecordById("users", userID)
+		if err != nil || hasPro(user) {
+			return e.Next()
+		}
+		return apis.NewApiError(http.StatusForbidden, "ProjectFrozen", map[string]any{
+			"message": "This project is frozen because your plan limit is 2 active projects. Reactivate Pro or archive another watch to unlock.",
+		})
+	})
+
+	// Block timegrapher readings on frozen watches for free-tier users.
+	app.OnRecordCreate("timegrapher_readings").BindFunc(func(e *core.RecordEvent) error {
+		watchID := e.Record.GetString("watch")
+		watch, err := e.App.FindRecordById("watches", watchID)
+		if err != nil {
+			return apis.NewApiError(http.StatusBadRequest, "watch not found", nil)
+		}
+		if !watch.GetBool("is_frozen") {
+			return e.Next()
+		}
+		user, err := e.App.FindRecordById("users", watch.GetString("user"))
+		if err != nil || hasPro(user) {
+			return e.Next()
+		}
+		return apis.NewApiError(http.StatusForbidden, "ProjectFrozen", map[string]any{
+			"message": "This project is frozen because your plan limit is 2 active projects. Reactivate Pro or archive another watch to unlock.",
+		})
+	})
+
+	// Block creating repair posts on frozen watches for free-tier users.
+	app.OnRecordCreate("repair_posts").BindFunc(func(e *core.RecordEvent) error {
+		watchID := e.Record.GetString("watch")
+		if watchID == "" {
+			return e.Next() // standalone post not tied to a watch
+		}
+		watch, err := e.App.FindRecordById("watches", watchID)
+		if err != nil || !watch.GetBool("is_frozen") {
+			return e.Next()
+		}
+		user, err := e.App.FindRecordById("users", watch.GetString("user"))
+		if err != nil || hasPro(user) {
+			return e.Next()
+		}
+		return apis.NewApiError(http.StatusForbidden, "ProjectFrozen", map[string]any{
+			"message": "This project is frozen because your plan limit is 2 active projects. Reactivate Pro or archive another watch to unlock.",
+		})
 	})
 
 	app.OnRecordCreate("parts_used").BindFunc(func(e *core.RecordEvent) error {

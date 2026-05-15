@@ -60,6 +60,7 @@ export type Watch = {
   notes: string;
   featured_image: string | null;
   featured_image_url?: string;
+  is_frozen?: boolean;
   photos: WatchPhoto[];
   expand?: {
     watch_photos_via_watch?: WatchPhoto[];
@@ -224,6 +225,7 @@ export type CreateWishlistItem = Omit<
 >;
 
 export const SubscriptionStatus = {
+  FREE: 'free',
   ON_TRIAL: 'on_trial',
   PAUSED: 'paused',
   PAST_DUE: 'past_due',

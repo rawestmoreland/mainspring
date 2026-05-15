@@ -97,8 +97,10 @@ function RouteComponent() {
     );
   }
 
+  const isFrozen = !!watch.is_frozen && !isPro;
   const photos = watch.photos ?? [];
-  const canUploadPhotos = isPro || photos.length < FREE_PHOTO_LIMIT;
+  const canUploadPhotos =
+    !isFrozen && (isPro || photos.length < FREE_PHOTO_LIMIT);
   const displayedPhotos =
     stageFilter === 'all'
       ? photos
@@ -160,6 +162,26 @@ function RouteComponent() {
         ← Back to Watches
       </Link>
 
+      {/* Frozen banner */}
+      {isFrozen && (
+        <div className='flex items-center gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3'>
+          <LockIcon className='w-4 h-4 text-amber-400 shrink-0' />
+          <div className='flex-1 min-w-0'>
+            <p className='font-mono text-xs text-foreground'>
+              This project is frozen — you&apos;ve reached the 2-project limit
+              on the free plan.
+            </p>
+            <p className='font-mono text-[11px] text-muted-foreground mt-0.5'>
+              Archive another watch or{' '}
+              <Link to='/pro' className='text-amber-400 hover:text-amber-300'>
+                upgrade to Pro
+              </Link>{' '}
+              to edit.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className='flex flex-wrap items-start justify-between gap-3'>
         <div className='flex items-start gap-3'>
@@ -175,8 +197,8 @@ function RouteComponent() {
               />
               <button
                 type='button'
-                onClick={() => featuredInputRef.current?.click()}
-                disabled={uploadFeaturedImage.isPending}
+                onClick={() => !isFrozen && featuredInputRef.current?.click()}
+                disabled={uploadFeaturedImage.isPending || isFrozen}
                 className='relative w-12 h-12 rounded-lg overflow-hidden border border-border bg-zinc-900 cursor-pointer p-0 block disabled:opacity-50'
                 aria-label={
                   watch.featured_image_url
@@ -216,7 +238,7 @@ function RouteComponent() {
               <span>{watch.year}</span>
               <span className='text-muted-foreground/60'>·</span>
               {user ? (
-                <StatusPicker watch={watch} />
+                <StatusPicker watch={watch} disabled={watch.is_frozen} />
               ) : (
                 <StatusBadge status={watch.status} />
               )}
@@ -233,7 +255,7 @@ function RouteComponent() {
               View Gallery →
             </Link>
           )}
-          {user && (
+          {user && !isFrozen && (
             <Link
               to='/watches/$watchId/edit'
               params={{ watchId }}
@@ -264,7 +286,7 @@ function RouteComponent() {
                   shots.
                 </p>
               </div>
-              {user && (
+              {user && !isFrozen && (
                 <div className='px-4 pb-5'>
                   {canUploadPhotos ? (
                     <>
@@ -343,7 +365,7 @@ function RouteComponent() {
                   <div className='absolute top-2 left-2'>
                     <StageTag stage={activePhoto.stage} />
                   </div>
-                  {user && (
+                  {user && !isFrozen && (
                     <div className='absolute top-2 right-2'>
                       <Button
                         className='cursor-pointer'
@@ -400,7 +422,7 @@ function RouteComponent() {
               )}
 
               {/* Compact photo-actions footer */}
-              {user && (
+              {user && !isFrozen && (
                 <>
                   <div className='flex items-center px-4 py-2.5 border-t border-border'>
                     <button
@@ -505,7 +527,7 @@ function RouteComponent() {
               <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
                 Details
               </span>
-              {user && (
+              {user && !isFrozen && (
                 <Link
                   to='/watches/$watchId/edit'
                   params={{ watchId }}
@@ -609,7 +631,7 @@ function RouteComponent() {
                 {postCount === 0 ? (
                   <div className='text-center py-8 text-xs font-mono text-muted-foreground'>
                     No repair sessions yet.{' '}
-                    {user && (
+                    {user && !isFrozen && (
                       <Link
                         to='/watches/$watchId/posts/new'
                         params={{ watchId }}
@@ -645,7 +667,7 @@ function RouteComponent() {
                       ))}
                     </ul>
                     <div className='flex items-center justify-between px-4 py-2.5 border-t border-border'>
-                      {user && (
+                      {user && !isFrozen && (
                         <Link
                           to='/watches/$watchId/posts/new'
                           params={{ watchId }}
@@ -675,7 +697,7 @@ function RouteComponent() {
                 {timegrapherReadings.length === 0 ? (
                   <div className='text-center py-8 text-xs font-mono text-muted-foreground'>
                     No timegrapher sessions yet.{' '}
-                    {user && (
+                    {user && !isFrozen && (
                       <Link
                         to='/watches/$watchId/timegrapher'
                         params={{ watchId }}
@@ -761,7 +783,9 @@ function RouteComponent() {
                     <span className='font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground'>
                       Parts Used
                     </span>
-                    {user && <AddPartUsedDialog watchId={watchId} />}
+                    {user && !isFrozen && (
+                      <AddPartUsedDialog watchId={watchId} />
+                    )}
                   </div>
                   {partsUsed.length === 0 ? (
                     <p className='px-4 py-3 font-mono text-xs italic text-muted-foreground/50'>
@@ -808,7 +832,7 @@ function RouteComponent() {
                               <td className='px-3.5 py-2.5 text-right text-foreground'>
                                 {fmt(total)}
                               </td>
-                              {user && (
+                              {user && !isFrozen && (
                                 <td className='px-3.5 py-2.5 text-right'>
                                   <button
                                     onClick={() => {
@@ -1015,7 +1039,7 @@ function RouteComponent() {
                         No notes yet.
                       </p>
                     )}
-                    {user && (
+                    {user && !isFrozen && (
                       <button
                         onClick={() => {
                           setDraftNotes(watch.notes ?? '');

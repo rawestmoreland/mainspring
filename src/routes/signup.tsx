@@ -6,8 +6,13 @@ import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
 import { Field, FieldError, FieldGroup } from '#/components/ui/field';
+import { GoogleSignInButton } from '#/components/primitives/GoogleSignInButton';
+import { AppleSignInButton } from '#/components/primitives/AppleSignInButton';
+import { DiscordSignInButton } from '#/components/primitives/DiscordSignInButton';
 // import { useJoinWaitlist } from '#/hooks/waitlist';
-import { useSignup } from '#/hooks/user';
+import { useSignup, useOauth2Login } from '#/hooks/user';
+import { useEffect } from 'react';
+import { toast } from 'sonner';
 
 const schema = z.object({
   display_name: z
@@ -26,8 +31,18 @@ function SignupPage() {
 
   // const { mutateAsync: joinWaitlist, isPending, error } = useJoinWaitlist();
   const { mutateAsync: signup, isPending, error } = useSignup();
+  const { mutateAsync: oauthLogin, isPending: oauthPending } = useOauth2Login();
 
-  const { control, handleSubmit } = useForm<FormData>({
+  const onOauthSubmit = async (provider: 'google' | 'apple' | 'discord') => {
+    try {
+      await oauthLogin({ provider });
+      navigate({ to: '/', replace: true });
+    } catch {
+      toast.error('Sign-in failed. Please try again.');
+    }
+  };
+
+  const { control, handleSubmit, watch, setValue } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { display_name: '', email: '', password: '' },
   });
@@ -40,6 +55,16 @@ function SignupPage() {
     });
     navigate({ to: '/', replace: true });
   };
+
+  const emailWatch = watch('email');
+
+  useEffect(() => {
+    if (!!emailWatch) {
+      setValue('display_name', emailWatch.split('@')[0], { shouldDirty: true });
+    } else {
+      setValue('display_name', '', { shouldDirty: true });
+    }
+  }, [emailWatch]);
 
   return (
     <div className='min-h-screen bg-background flex items-center justify-center p-4'>
@@ -57,27 +82,30 @@ function SignupPage() {
         </div>
 
         <div className='bg-card border border-border rounded-xl shadow-sm p-6'>
+          <div className='flex flex-col gap-2'>
+            <GoogleSignInButton
+              onClick={() => onOauthSubmit('google')}
+              loading={oauthPending}
+              label='Sign up with Google'
+            />
+            <AppleSignInButton
+              onClick={() => onOauthSubmit('apple')}
+              loading={oauthPending}
+              label='Sign up with Apple'
+            />
+            <DiscordSignInButton
+              onClick={() => onOauthSubmit('discord')}
+              loading={oauthPending}
+              label='Sign up with Discord'
+            />
+          </div>
+          <div className='flex items-center my-4'>
+            <div className='h-0.5 w-full border' />
+            <span className='px-4 text-sm'>OR</span>
+            <div className='h-0.5 w-full border' />
+          </div>
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
             <FieldGroup>
-              <Controller
-                name='display_name'
-                control={control}
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <Label htmlFor='display_name'>Display name</Label>
-                    <Input
-                      id='display_name'
-                      autoComplete='name'
-                      autoFocus
-                      placeholder='Your name'
-                      {...field}
-                    />
-                    {fieldState.invalid && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
               <Controller
                 name='email'
                 control={control}
@@ -124,7 +152,7 @@ function SignupPage() {
             )}
 
             <Button type='submit' className='w-full' disabled={isPending}>
-              {isPending ? 'Joining waitlist...' : 'Join waitlist'}
+              {isPending ? 'Signing up...' : 'Sign up'}
             </Button>
           </form>
         </div>

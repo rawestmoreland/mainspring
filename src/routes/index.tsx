@@ -6,6 +6,7 @@ import { SectionLabel } from '#/components/primitives/SectionLabel';
 import { PublicProfileSkeleton } from '#/components/skeletons';
 import type { UserProfile, Watch, RepairPost } from '#/types';
 import { Skeleton } from '#/components/ui/skeleton';
+import { Avatar, AvatarImage } from '#/components/ui/avatar';
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
@@ -34,10 +35,17 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     queryKey: ['public', 'watches', tenant.user],
     queryFn: async () => {
       const res = await fetch(
-        `${pbUrl}/api/collections/watches/records?filter=user%3D%22${tenant.user}%22&sort=-created&perPage=100`,
+        `${pbUrl}/api/collections/watches/records?filter=user%3D%22${tenant.user}%22&sort=-created&perPage=100&expand=watch_photos_via_watch`,
       );
       if (!res.ok) return [];
-      return ((await res.json()) as { items?: Watch[] }).items ?? [];
+      const data = ((await res.json()) as { items?: Watch[] }).items ?? [];
+      const watches = data.map((w) => ({
+        ...w,
+        featured_image_url: !!w.featured_image
+          ? `${pbUrl}/api/files/watches/${w.id}/${w.featured_image}`
+          : undefined,
+      }));
+      return watches;
     },
   });
 
@@ -45,7 +53,7 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     queryKey: ['public', 'posts', tenant.user],
     queryFn: async () => {
       const res = await fetch(
-        `${pbUrl}/api/collections/repair_posts/records?filter=user%3D%22${tenant.user}%22&sort=-session_date&perPage=50`,
+        `${pbUrl}/api/collections/repair_posts/records?filter=user%3D%22${tenant.user}%22&sort=-updated_at&perPage=50`,
       );
       if (!res.ok) return [];
       return ((await res.json()) as { items?: RepairPost[] }).items ?? [];
@@ -74,9 +82,12 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     <div className='min-h-screen'>
       {/* Nav — mirrors the AppShell header */}
       <header className='fixed top-0 inset-x-0 z-50 h-14 flex items-center gap-3 px-5 border-b border-border bg-background/90 backdrop-blur-md'>
-        <Link to='/' className='font-serif font-bold text-foreground'>
+        <a
+          href='https://hairspring.app'
+          className='font-serif font-bold text-foreground'
+        >
           Hairspring
-        </Link>
+        </a>
         <span className='text-border'>·</span>
         <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
           {tenant.display_name || tenant.subdomain}
@@ -148,9 +159,15 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
 
       <footer className='border-t border-border py-6'>
         <div className='max-w-3xl mx-auto px-5'>
-          <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-            Powered by Hairspring
-          </span>
+          <a
+            href={'https://hairspring.app'}
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+              Powered by Hairspring
+            </span>
+          </a>
         </div>
       </footer>
     </div>
@@ -165,6 +182,7 @@ function WatchProjectCard({
   posts: RepairPost[];
 }) {
   const meta = [w.reference, w.year].filter(Boolean).join(' · ');
+  console.log(w);
   return (
     <div className='bg-card border border-border rounded overflow-hidden'>
       {/* Watch header row */}
@@ -175,6 +193,11 @@ function WatchProjectCard({
       >
         <div>
           <div className='flex flex-wrap items-center gap-2'>
+            {!!w.featured_image && (
+              <Avatar className='size-8 bg-primary/10 flex items-center justify-center shrink-0'>
+                <AvatarImage src={w.featured_image_url} alt={w.make} />
+              </Avatar>
+            )}
             <span className='font-serif font-semibold text-foreground text-sm'>
               {w.make} {w.model}
             </span>
@@ -343,7 +366,7 @@ function LandingPage() {
               to='/signup'
               className='font-mono text-sm bg-primary text-primary-foreground font-bold px-7 py-3 rounded hover:bg-primary/90 transition-colors w-full sm:w-auto text-center'
             >
-              Join the waitlist →
+              Get started →
             </Link>
             <Link
               to='/login'
@@ -514,7 +537,7 @@ function LandingPage() {
             to='/signup'
             className='inline-block font-mono text-sm bg-primary text-primary-foreground font-bold px-10 py-3.5 rounded hover:bg-primary/90 transition-colors'
           >
-            Join the waitlist →
+            Get started →
           </Link>
         </div>
       </div>

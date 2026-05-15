@@ -35,26 +35,10 @@ export function AppleSignInButton({
       )}
     >
       <span className='shrink-0 flex items-center justify-center'>
-        {loading ? (
-          <svg
-            className='animate-spin'
-            xmlns='http://www.w3.org/2000/svg'
-            width={18}
-            height={18}
-            viewBox='0 0 24 24'
-            fill='none'
-            stroke='white'
-            strokeWidth={2.5}
-            strokeLinecap='round'
-          >
-            <path d='M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83' />
-          </svg>
-        ) : (
-          <AppleIcon size={18} color='white' />
-        )}
+        <AppleIcon size={18} color='white' />
       </span>
       <span className='font-[-apple-system,BlinkMacSystemFont,"SF_Pro_Text",sans-serif]'>
-        {loading ? 'Signing in…' : label}
+        {label}
       </span>
     </button>
   );
