@@ -1,8 +1,4 @@
-import {
-  hasPro,
-  isAppTrialPro,
-  trialDaysRemainingCeil,
-} from '#/lib/helpers';
+import { hasPro, isAppTrialPro, trialDaysRemainingFloor } from '#/lib/helpers';
 import { SubscriptionStatus } from '#/types';
 import { useAuth } from './auth';
 
@@ -33,9 +29,7 @@ export const useSubscription = (): {
 
   const isPro = hasPro(subArgs);
   const isAppTrial = isAppTrialPro(subArgs);
-  const trialDaysRemaining = trialDaysRemainingCeil(
-    trialEndsAt || undefined,
-  );
+  const trialDaysRemaining = trialDaysRemainingFloor(trialEndsAt || undefined);
   const subscriptionId = user?.subscription_id;
   const lsCustomerId = user?.lemon_squeezy_customer_id;
 

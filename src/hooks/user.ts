@@ -23,6 +23,27 @@ export const useLogin = () => {
   });
 };
 
+export const useSignup = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      email,
+      password,
+      displayName,
+    }: {
+      email: string;
+      password: string;
+      displayName: string;
+    }) => {
+      return UserApi.signup(email, password, displayName);
+    },
+    onError: (error) => console.error(error),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+    },
+  });
+};
+
 export const useOauth2Login = () => {
   const queryClient = useQueryClient();
   return useMutation({

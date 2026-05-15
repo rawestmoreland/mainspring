@@ -84,15 +84,15 @@ export const isActiveAppTrial = (trialEndsAt: string | undefined): boolean => {
   return new Date(trialEndsAt) > new Date();
 };
 
-/** Whole days remaining until trial end (ceil), or `null` if none / expired. */
-export const trialDaysRemainingCeil = (
+/** Whole days remaining until trial end (floor, min 1), or `null` if none / expired. */
+export const trialDaysRemainingFloor = (
   trialEndsAt: string | undefined,
 ): number | null => {
   if (!trialEndsAt) return null;
   const end = new Date(trialEndsAt);
   const now = new Date();
   if (end <= now) return null;
-  return Math.max(1, Math.ceil((end.getTime() - now.getTime()) / MS_PER_DAY));
+  return Math.max(1, Math.floor((end.getTime() - now.getTime()) / MS_PER_DAY));
 };
 
 export const hasPro = ({
@@ -108,7 +108,9 @@ export const hasPro = ({
 };
 
 /** Pro access from the 14-day app trial only (not an active paid LS subscription). */
-export const isAppTrialPro = (args: PaidSubscriptionArgs & { trialEndsAt?: string }) =>
+export const isAppTrialPro = (
+  args: PaidSubscriptionArgs & { trialEndsAt?: string },
+) =>
   isActiveAppTrial(args.trialEndsAt) &&
   !hasPaidSubscription({
     subscriptionStatus: args.subscriptionStatus,

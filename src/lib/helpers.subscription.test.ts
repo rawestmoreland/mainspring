@@ -4,7 +4,7 @@ import {
   hasPro,
   isActiveAppTrial,
   isAppTrialPro,
-  trialDaysRemainingCeil,
+  trialDaysRemainingFloor,
 } from '#/lib/helpers';
 import { SubscriptionStatus } from '#/types';
 
@@ -132,10 +132,10 @@ describe('isAppTrialPro', () => {
   });
 });
 
-describe('trialDaysRemainingCeil', () => {
+describe('trialDaysRemainingFloor', () => {
   it('returns null when expired', () => {
     expect(
-      trialDaysRemainingCeil(new Date(Date.now() - 1000).toISOString()),
+      trialDaysRemainingFloor(new Date(Date.now() - 1000).toISOString()),
     ).toBe(null);
   });
 
@@ -143,7 +143,7 @@ describe('trialDaysRemainingCeil', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-01-01T12:00:00.000Z'));
     expect(
-      trialDaysRemainingCeil('2026-01-01T18:00:00.000Z'),
+      trialDaysRemainingFloor('2026-01-01T18:00:00.000Z'),
     ).toBeGreaterThanOrEqual(1);
   });
 });
