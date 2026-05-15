@@ -169,7 +169,6 @@ function RootComponent() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AppShell>
-            <GoogleAnalytics measurementId='G-7TWPVSWCR2' />
             <Outlet />
           </AppShell>
           <TanStackDevtools
@@ -183,6 +182,7 @@ function RootComponent() {
           />
         </TooltipProvider>
       </QueryClientProvider>
+      <GoogleAnalytics measurementId='G-7TWPVSWCR2' />
     </RootDocument>
   );
 }

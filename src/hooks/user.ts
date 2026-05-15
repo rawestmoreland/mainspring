@@ -52,7 +52,6 @@ export const useOauth2Login = () => {
     }: {
       provider: 'google' | 'apple' | 'discord';
     }) => {
-      console.log(provider);
       return UserApi.oauthLogin(provider);
     },
     onError: (error) => console.error(error),

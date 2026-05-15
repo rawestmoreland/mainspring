@@ -182,7 +182,6 @@ function WatchProjectCard({
   posts: RepairPost[];
 }) {
   const meta = [w.reference, w.year].filter(Boolean).join(' · ');
-  console.log(w);
   return (
     <div className='bg-card border border-border rounded overflow-hidden'>
       {/* Watch header row */}
