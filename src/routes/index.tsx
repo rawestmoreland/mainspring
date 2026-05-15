@@ -35,10 +35,11 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     queryKey: ['public', 'watches', tenant.user],
     queryFn: async () => {
       const res = await fetch(
-        `${pbUrl}/api/collections/watches/records?filter=user%3D%22${tenant.user}%22&sort=-created&perPage=100&expand=watch_photos_via_watch`,
+        `${pbUrl}/api/collections/watches/records?filter=user%3D%22${tenant.user}%22&sort=-created&perPage=100&expand=timegrapher_readings_via_watch`,
       );
       if (!res.ok) return [];
       const data = ((await res.json()) as { items?: Watch[] }).items ?? [];
+      console.log(data);
       const watches = data.map((w) => ({
         ...w,
         featured_image_url: !!w.featured_image

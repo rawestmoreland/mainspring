@@ -15,11 +15,58 @@ import type {
   WatchPhoto,
   WatchStage,
   RepairPost,
+  TimegrapherReading,
 } from '#/types';
 
 export const Route = createFileRoute('/watch/$watchId')({
   component: PublicWatchDetailPage,
 });
+
+const TG_POSITIONS = ['du', 'dd', 'cu', 'cd', 'cl', 'cr'] as const;
+
+function tgMeanRate(r: TimegrapherReading): number | null {
+  const vals = TG_POSITIONS.map(
+    (k) => r[`${k}_rate` as keyof TimegrapherReading] as number | undefined,
+  ).filter((v): v is number => v !== undefined && v !== null);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
+function tgAvgAmp(r: TimegrapherReading): number | null {
+  const vals = TG_POSITIONS.map(
+    (k) => r[`${k}_amp` as keyof TimegrapherReading] as number | undefined,
+  ).filter((v): v is number => v !== undefined && v !== null);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
+function tgAvgBe(r: TimegrapherReading): number | null {
+  const vals = TG_POSITIONS.map(
+    (k) => r[`${k}_be` as keyof TimegrapherReading] as number | undefined,
+  ).filter((v): v is number => v !== undefined && v !== null);
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+}
+
+function tgRateClass(rate: number | null | undefined): string {
+  if (rate == null) return 'text-muted-foreground';
+  const abs = Math.abs(rate);
+  if (abs <= 3) return 'text-green-400';
+  if (abs <= 6) return 'text-amber-400';
+  return 'text-red-400';
+}
+
+function fmtTgRate(r: number | null | undefined): string {
+  if (r == null) return '—';
+  return (r >= 0 ? '+' : '') + r.toFixed(1);
+}
+
+function fmtTgNum(n: number | null | undefined, decimals = 0): string {
+  if (n == null) return '—';
+  return n.toFixed(decimals);
+}
+
+function avgOf(values: (number | null)[]): number | null {
+  const defined = values.filter((v): v is number => v !== null);
+  return defined.length ? defined.reduce((a, b) => a + b, 0) / defined.length : null;
+}
 
 type RawPhoto = {
   id: string;
@@ -92,6 +139,18 @@ function PublicWatchDetailPage() {
     enabled: !!ctx.tenant,
   });
 
+  const { data: tgReadings } = useQuery<TimegrapherReading[]>({
+    queryKey: ['public', 'watch-timegrapher', watchId],
+    queryFn: async () => {
+      const res = await fetch(
+        `${pbUrl}/api/collections/timegrapher_readings/records?filter=watch%3D%22${watchId}%22&sort=-created&perPage=200`,
+      );
+      if (!res.ok) return [];
+      return ((await res.json()) as { items?: TimegrapherReading[] }).items ?? [];
+    },
+    enabled: !!ctx.tenant,
+  });
+
   if (!ctx.tenant) {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
@@ -130,6 +189,10 @@ function PublicWatchDetailPage() {
 
   const p = watch ? profit(watch) : null;
   const r = watch ? roi(watch) : null;
+
+  const tgAvgRate = tgReadings?.length ? avgOf(tgReadings.map(tgMeanRate)) : null;
+  const tgAvgAmplitude = tgReadings?.length ? avgOf(tgReadings.map(tgAvgAmp)) : null;
+  const tgAvgBeatError = tgReadings?.length ? avgOf(tgReadings.map(tgAvgBe)) : null;
 
   return (
     <div className='min-h-screen'>
@@ -387,6 +450,52 @@ function PublicWatchDetailPage() {
                     </ul>
                   )}
                 </section>
+
+                {/* Timegrapher */}
+                {tgReadings && tgReadings.length > 0 && (
+                  <section className='rounded-xl border border-border bg-card overflow-hidden'>
+                    <div className='px-4 py-2.5 border-b border-border'>
+                      <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+                        Timegrapher
+                      </span>
+                    </div>
+                    {(
+                      [
+                        [
+                          'Avg Rate',
+                          <span className={tgRateClass(tgAvgRate)}>
+                            {fmtTgRate(tgAvgRate)} s/d
+                          </span>,
+                        ],
+                        [
+                          'Avg Amplitude',
+                          tgAvgAmplitude !== null
+                            ? `${fmtTgNum(tgAvgAmplitude)}°`
+                            : '—',
+                        ],
+                        [
+                          'Avg Beat Error',
+                          tgAvgBeatError !== null
+                            ? `${fmtTgNum(tgAvgBeatError, 1)} ms`
+                            : '—',
+                        ],
+                        ['Sessions', tgReadings.length],
+                      ] as [string, React.ReactNode][]
+                    ).map(([k, v]) => (
+                      <div
+                        key={k}
+                        className='flex justify-between items-center gap-4 px-4 py-2.5 border-b border-border last:border-0'
+                      >
+                        <span className='font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground'>
+                          {k}
+                        </span>
+                        <span className='font-mono text-[11.5px] text-foreground'>
+                          {v}
+                        </span>
+                      </div>
+                    ))}
+                  </section>
+                )}
               </div>
             </div>
           </>

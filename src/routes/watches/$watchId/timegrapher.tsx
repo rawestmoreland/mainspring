@@ -48,6 +48,10 @@ const POSITIONS = [
   { key: 'cr', label: 'Crown Right' },
 ] as const;
 
+const BANNER_DISMISSED_KEY = 'timegrapher_chart_preview_dismissed';
+
+const SAMPLE_RATES = [1.2, 3.5, -2.1, 4.8, 0.8, -1.5] as const;
+
 function rateClass(rate: number | undefined): string {
   if (rate === undefined || rate === null) return 'text-muted-foreground';
   const abs = Math.abs(rate);
@@ -196,6 +200,98 @@ function PositionChart({ reading }: { reading: TimegrapherReading }) {
   );
 }
 
+// ── Premium chart preview banner ─────────────────────────────────────────────
+
+function PremiumChartBanner({ onDismiss }: { onDismiss: () => void }) {
+  const maxAbs = Math.max(...SAMPLE_RATES.map(Math.abs), 4);
+
+  return (
+    <div className='relative rounded-xl border border-amber-500/30 bg-card overflow-hidden'>
+      <button
+        type='button'
+        onClick={onDismiss}
+        aria-label='Dismiss banner'
+        className='absolute top-3 right-3 z-20 w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors bg-transparent border-none cursor-pointer text-base leading-none'
+      >
+        ×
+      </button>
+
+      <div className='p-5'>
+        <div className='mb-4'>
+          <span className='font-mono text-[9px] uppercase tracking-widest text-amber-400'>
+            Pro Feature
+          </span>
+          <h3 className='mt-1 font-serif text-sm font-semibold text-foreground'>
+            6-Position Rate Tracking
+          </h3>
+          <p className='mt-0.5 font-mono text-[11px] text-muted-foreground max-w-lg'>
+            Track rate, amplitude, and beat error in every orientation — dial up, dial down, crown up, crown down, crown left, and crown right.
+          </p>
+        </div>
+
+        <div className='relative rounded-lg border border-border bg-muted/10 p-4 select-none'>
+          <div className='grid grid-cols-6 gap-3'>
+            {POSITIONS.map((pos, i) => {
+              const rate = SAMPLE_RATES[i] ?? 0;
+              const pct = (Math.abs(rate) / maxAbs) * 45;
+              const isPositive = rate >= 0;
+              const colorClass =
+                Math.abs(rate) <= 3
+                  ? 'bg-green-400/60'
+                  : Math.abs(rate) <= 6
+                    ? 'bg-amber-400/60'
+                    : 'bg-red-400/60';
+              return (
+                <div key={pos.key} className='flex flex-col items-center gap-2'>
+                  <span className='font-mono text-[8.5px] text-muted-foreground uppercase tracking-wide'>
+                    {pos.label}
+                  </span>
+                  <div className='relative w-full h-16 flex flex-col'>
+                    <div className='flex-1 flex items-end'>
+                      {isPositive && (
+                        <div
+                          className={cn('w-full rounded-t', colorClass)}
+                          style={{ height: `${pct}%` }}
+                        />
+                      )}
+                    </div>
+                    <div className='w-full h-px bg-border' />
+                    <div className='flex-1 flex items-start'>
+                      {!isPositive && (
+                        <div
+                          className={cn('w-full rounded-b', colorClass)}
+                          style={{ height: `${pct}%` }}
+                        />
+                      )}
+                    </div>
+                  </div>
+                  <span className={cn('font-mono text-[10px] font-medium', rateClass(rate))}>
+                    {fmtRate(rate)}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className='absolute inset-0 rounded-lg backdrop-blur-[2px] bg-card/65 flex flex-col items-center justify-center gap-2'>
+            <span className='font-serif text-sm font-semibold text-foreground'>
+              Rate by Position
+            </span>
+            <span className='font-mono text-[10px] text-muted-foreground'>
+              Available with Pro
+            </span>
+            <Link
+              to='/pro'
+              className='mt-1 font-mono text-[10px] tracking-widest uppercase px-3 py-1.5 rounded bg-amber-500 text-zinc-950 hover:bg-amber-400 transition-colors'
+            >
+              View Pro →
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Free-tier simple form ────────────────────────────────────────────────────
 
 const freeSchema = z.object({
@@ -203,6 +299,7 @@ const freeSchema = z.object({
   lift_angle: z.string().min(1, 'Required'),
   avg_rate: z.string().optional(),
   avg_amp: z.string().optional(),
+  avg_be: z.string().optional(),
 });
 
 type FreeFormData = z.infer<typeof freeSchema>;
@@ -237,6 +334,7 @@ function FreeAddSessionForm({
       lift_angle: parseFloat(data.lift_angle),
       du_rate: parseOptNum(data.avg_rate),
       du_amp: parseOptNum(data.avg_amp),
+      du_be: parseOptNum(data.avg_be),
     });
     onSuccess();
   };
@@ -286,7 +384,7 @@ function FreeAddSessionForm({
         </div>
       </div>
 
-      <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
+      <div className='grid grid-cols-1 sm:grid-cols-3 gap-3'>
         <div className='space-y-1'>
           <Controller
             name='avg_rate'
@@ -320,6 +418,26 @@ function FreeAddSessionForm({
                   step='1'
                   id='free-amp'
                   placeholder='e.g. 298'
+                  className={inputCls}
+                />
+                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+              </Field>
+            )}
+          />
+        </div>
+        <div className='space-y-1'>
+          <Controller
+            name='avg_be'
+            control={control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor='free-be'>Beat Error (ms)</FieldLabel>
+                <Input
+                  {...field}
+                  type='number'
+                  step='0.1'
+                  id='free-be'
+                  placeholder='e.g. 0.3'
                   className={inputCls}
                 />
                 {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
@@ -613,6 +731,9 @@ function TimegrapherPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(
+    () => typeof window !== 'undefined' && localStorage.getItem(BANNER_DISMISSED_KEY) === 'true',
+  );
 
   if (watchLoading || readingsLoading) {
     return (
@@ -741,8 +862,18 @@ function TimegrapherPage() {
       {/* Position chart — Pro only */}
       {isPro && chartReading && <PositionChart reading={chartReading} />}
 
-      {/* Pro upsell nudge for free users */}
-      {!isPro && (
+      {/* Premium chart preview banner */}
+      {!isPro && !bannerDismissed && (
+        <PremiumChartBanner
+          onDismiss={() => {
+            localStorage.setItem(BANNER_DISMISSED_KEY, 'true');
+            setBannerDismissed(true);
+          }}
+        />
+      )}
+
+      {/* Pro upsell nudge for free users — only shown once preview banner is dismissed */}
+      {!isPro && bannerDismissed && (
         <div className='flex items-center gap-3 rounded-lg border border-amber-500/40 bg-amber-950/80 px-4 py-3'>
           <span className='font-mono text-[11px] text-amber-200'>
             Upgrade to Pro for 6-position logging (DU · DD · CU · CD · CL · CR) and delta tracking.
@@ -890,6 +1021,7 @@ function TimegrapherPage() {
                   <Th>Lift °</Th>
                   <Th>Avg Rate</Th>
                   <Th>Avg Amplitude</Th>
+                  <Th>Beat Error</Th>
                   {user && <Th>{''}</Th>}
                 </tr>
               </thead>
@@ -910,6 +1042,9 @@ function TimegrapherPage() {
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
                       {r.du_amp !== undefined && r.du_amp !== null ? `${fmtNum(r.du_amp)}°` : '—'}
+                    </Td>
+                    <Td className='font-mono text-[11px] text-muted-foreground'>
+                      {r.du_be !== undefined && r.du_be !== null ? `${fmtNum(r.du_be, 1)} ms` : '—'}
                     </Td>
                     {user && (
                       <Td>
