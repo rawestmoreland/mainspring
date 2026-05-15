@@ -55,16 +55,16 @@ var (
 )
 
 // hasPaidSubscription mirrors hasPaidSubscription() in src/lib/helpers.ts.
-func hasPaidSubscription(user *core.Record) bool {
-	status := user.GetString("subscription_status")
+func hasPaidSubscription(sub *core.Record) bool {
+	status := sub.GetString("subscription_status")
 	now := time.Now()
 
 	switch status {
 	case "active", "on_trial", "paid", "cancelled":
-		endsAt := user.GetDateTime("ends_at")
+		endsAt := sub.GetDateTime("ends_at")
 		return endsAt.IsZero() || endsAt.Time().After(now)
 	case "past_due":
-		renewsAt := user.GetDateTime("renews_at")
+		renewsAt := sub.GetDateTime("renews_at")
 		if renewsAt.IsZero() {
 			return false
 		}
@@ -75,8 +75,8 @@ func hasPaidSubscription(user *core.Record) bool {
 }
 
 // hasPro mirrors hasPro() in src/lib/helpers.ts.
-func hasPro(user *core.Record) bool {
-	return hasPaidSubscription(user)
+func hasPro(sub *core.Record) bool {
+	return hasPaidSubscription(sub)
 }
 
 // freezeExcessProjects keeps the 2 most-recently-updated non-sold watches
@@ -291,7 +291,7 @@ func main() {
 			userID := payload.Meta.CustomData.UserID
 
 			if (eventName == "order_created" || eventName == "subscription_created" || eventName == "subscription_payment_success") && userID != "" {
-				record, err := app.FindRecordById("users", userID)
+				record, err := app.FindRecordById("subscriptions", userID)
 				if err == nil {
 					record.Set("subscription_status", "active")
 					record.Set("ends_at", payload.Data.Attributes.EndsAt)
@@ -309,8 +309,8 @@ func main() {
 				}
 			}
 
-			if eventName == "subscription_expired" {
-				record, err := app.FindRecordById("users", userID)
+			if eventName == "subscription_expired" && userID != "" {
+				record, err := app.FindRecordById("subscriptions", userID)
 				if err == nil {
 					record.Set("subscription_status", "expired")
 					record.Set("renews_at", "")
@@ -319,8 +319,8 @@ func main() {
 				}
 			}
 
-			if eventName == "subscription_updated" || eventName == "subscription_resumed" {
-				record, err := app.FindRecordById("users", userID)
+			if (eventName == "subscription_updated" || eventName == "subscription_resumed") && userID != "" {
+				record, err := app.FindRecordById("subscriptions", userID)
 				if err == nil {
 					status := payload.Data.Attributes.Status
 					record.Set("subscription_status", status)
@@ -334,8 +334,8 @@ func main() {
 				}
 			}
 
-			if eventName == "subscription_cancelled" {
-				record, err := app.FindRecordById("users", userID)
+			if eventName == "subscription_cancelled" && userID != "" {
+				record, err := app.FindRecordById("subscriptions", userID)
 				if err == nil {
 					record.Set("subscription_status", payload.Data.Attributes.Status)
 					record.Set("renews_at", "")
@@ -390,12 +390,12 @@ func main() {
 			return e.Next()
 		}
 
-		user, err := e.App.FindRecordById("users", userID)
+		subscription, err := e.App.FindFirstRecordByData("subscriptions", "user", userID)
 		if err != nil {
-			return apis.NewApiError(http.StatusForbidden, "user not found", nil)
+			return apis.NewApiError(http.StatusForbidden, "subscription not found", nil)
 		}
 
-		if hasPro(user) {
+		if hasPro(subscription) {
 			return e.Next()
 		}
 
@@ -431,12 +431,12 @@ func main() {
 			return apis.NewApiError(http.StatusBadRequest, "watch not found", nil)
 		}
 
-		user, err := e.App.FindRecordById("users", watch.GetString("user"))
+		subscription, err := e.App.FindFirstRecordByData("subscriptions", "user", watch.GetString("user"))
 		if err != nil {
-			return apis.NewApiError(http.StatusForbidden, "user not found", nil)
+			return apis.NewApiError(http.StatusForbidden, "subscription not found", nil)
 		}
 
-		if hasPro(user) {
+		if hasPro(subscription) {
 			return e.Next()
 		}
 
@@ -475,8 +475,8 @@ func main() {
 			return e.Next()
 		}
 		userID := e.Record.GetString("user")
-		user, err := e.App.FindRecordById("users", userID)
-		if err != nil || hasPro(user) {
+		subscription, err := e.App.FindFirstRecordByData("subscriptions", "user", userID)
+		if err != nil || hasPro(subscription) {
 			return e.Next()
 		}
 		return apis.NewApiError(http.StatusForbidden, "ProjectFrozen", map[string]any{
@@ -494,8 +494,8 @@ func main() {
 		if !watch.GetBool("is_frozen") {
 			return e.Next()
 		}
-		user, err := e.App.FindRecordById("users", watch.GetString("user"))
-		if err != nil || hasPro(user) {
+		subscription, err := e.App.FindFirstRecordByData("subscriptions", "user", watch.GetString("user"))
+		if err != nil || hasPro(subscription) {
 			return e.Next()
 		}
 		return apis.NewApiError(http.StatusForbidden, "ProjectFrozen", map[string]any{
@@ -513,8 +513,8 @@ func main() {
 		if err != nil || !watch.GetBool("is_frozen") {
 			return e.Next()
 		}
-		user, err := e.App.FindRecordById("users", watch.GetString("user"))
-		if err != nil || hasPro(user) {
+		subscription, err := e.App.FindFirstRecordByData("subscriptions", "user", watch.GetString("user"))
+		if err != nil || hasPro(subscription) {
 			return e.Next()
 		}
 		return apis.NewApiError(http.StatusForbidden, "ProjectFrozen", map[string]any{

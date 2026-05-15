@@ -224,6 +224,16 @@ export type CreateWishlistItem = Omit<
   'id' | 'created' | 'updated'
 >;
 
+export type Subscription = {
+  id: string;
+  user: string;
+  subscription_id?: string;
+  subscription_status?: SubscriptionStatus;
+  renews_at?: string;
+  ends_at?: string;
+  lemon_squeezy_customer_id?: string;
+};
+
 export const SubscriptionStatus = {
   FREE: 'free',
   ON_TRIAL: 'on_trial',

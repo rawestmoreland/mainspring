@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import pb from '#/lib/pocketbase';
-import { SubscriptionStatus, type UserProfile } from '#/types';
+import { Subscription, SubscriptionStatus, type UserProfile } from '#/types';
 import { RecordModel } from 'pocketbase';
 import { useSearch } from '@tanstack/react-router';
 
@@ -13,6 +13,7 @@ export function useAuth() {
   const { data, isLoading } = useQuery<{
     profile: UserProfile | null;
     user: RecordModel | null;
+    subscription: Subscription | null;
   } | null>({
     queryKey: ['auth', 'profile', authRecord?.id],
     queryFn: async () => {
@@ -21,16 +22,19 @@ export function useAuth() {
         .collection('user_profiles')
         .getFirstListItem<UserProfile>(`user = "${authRecord.id}"`)
         .catch(() => null);
-      const { record } = await pb.collection('users').authRefresh();
+      const subscription = await pb
+        .collection('subscriptions')
+        .getFirstListItem<Subscription>(`user = "${authRecord.id}"`)
+        .catch(() => null);
 
-      return { profile, user: record };
+      return { profile, user: authRecord, subscription };
     },
     enabled: !!authRecord?.id,
     staleTime: 60_000,
     refetchInterval: (query) => {
-      const updatedUser = query.state.data?.user;
       const isSubscribed =
-        updatedUser?.subscription_status === SubscriptionStatus.ACTIVE;
+        query.state.data?.subscription?.subscription_status ===
+        SubscriptionStatus.ACTIVE;
       const isReturningFromCheckout = search.checkout_success === true;
 
       // Stop polling as soon as the status is active OR if they aren't returning from checkout
@@ -43,6 +47,7 @@ export function useAuth() {
   return {
     user: data?.user ?? authRecord ?? null,
     profile: data?.profile ?? null,
+    subscription: data?.subscription ?? null,
     isLoading,
   };
 }
