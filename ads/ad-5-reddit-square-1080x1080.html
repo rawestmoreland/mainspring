@@ -20,7 +20,6 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
 }
 
-/* Warm gradient overlay at bottom */
 .grad {
   position: absolute;
   bottom: 0; left: 0; right: 0;
@@ -30,7 +29,6 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   z-index: 0;
 }
 
-/* Top brass bar */
 .brass-bar {
   height: 3px;
   background: linear-gradient(90deg, #b8893f, #d9b072 50%, #b8893f);
@@ -46,7 +44,6 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   padding: 48px 56px 50px;
 }
 
-/* Logo + nav */
 .top-row {
   display: flex;
   align-items: center;
@@ -64,26 +61,27 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   font-weight: 700;
   color: #221a12;
 }
+/* light bg: #6b5640 gives 6.6:1 on #f9f8f6 ✓ */
 .logo-sub {
   font-family: 'DM Mono', monospace;
   font-size: 8.5px;
-  color: #9a8b73;
+  color: #6b5640;
   text-transform: uppercase;
   letter-spacing: 0.16em;
   margin-top: 2px;
 }
+/* light bg: #6b5640 gives 6.6:1 on #f9f8f6 ✓ */
 .platform-tag {
   font-family: 'DM Mono', monospace;
   font-size: 9px;
-  color: #9a8b73;
+  color: #6b5640;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  border: 1px solid rgba(34,26,18,0.1);
+  border: 1px solid rgba(34,26,18,0.15);
   padding: 5px 11px;
   border-radius: 2px;
 }
 
-/* Main headline area */
 .headline-area {
   margin-bottom: 40px;
 }
@@ -96,16 +94,17 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   letter-spacing: -0.025em;
   margin-bottom: 18px;
 }
-.hed em { font-style: italic; color: #b8893f; }
+/* large text 52px bold: #6b4f14 gives 7.2:1 on #f9f8f6 ✓ */
+.hed em { font-style: italic; color: #6b4f14; }
+/* light bg: #5a4a35 gives 7.1:1 on #f9f8f6 ✓ */
 .dek {
   font-family: 'Lora', serif;
   font-size: 17px;
-  color: #7a6a53;
+  color: #5a4a35;
   line-height: 1.65;
   max-width: 680px;
 }
 
-/* Three-column feature list */
 .features {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -124,11 +123,13 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   gap: 8px;
   margin-bottom: 10px;
 }
+/* light bg: #6b4f14 gives 6.5:1 on #f0eeeb ✓ */
 .feat-sym {
   font-size: 18px;
   line-height: 1;
-  color: #b8893f;
+  color: #6b4f14;
 }
+/* light bg: #5a4a35 gives 6.4:1 on #f0eeeb ✓ */
 .feat-title {
   font-family: 'DM Mono', monospace;
   font-size: 9.5px;
@@ -144,7 +145,6 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   line-height: 1.55;
 }
 
-/* Bottom section */
 .bottom {
   padding-top: 36px;
   border-top: 1px solid rgba(34,26,18,0.08);
@@ -158,14 +158,16 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   flex-direction: column;
   gap: 4px;
 }
+/* light bg: #6b5640 gives 6.6:1 on #f9f8f6 ✓ (Caveat 17px) */
 .proof-line {
   font-family: 'Caveat', cursive;
   font-size: 17px;
-  color: #9a8b73;
+  color: #6b5640;
 }
+/* light bg: #6b4f14 gives 7.2:1 on #f9f8f6 ✓ */
 .proof-line strong {
   font-weight: 600;
-  color: #b8893f;
+  color: #6b4f14;
 }
 .cta-group {
   display: flex;
@@ -173,6 +175,7 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   align-items: flex-end;
   gap: 8px;
 }
+/* dark ink #221a12 + light text #f5f4f1 = 14:1 ✓ */
 .cta-btn {
   display: inline-flex;
   align-items: center;
@@ -187,10 +190,11 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   padding: 15px 28px;
   border-radius: 4px;
 }
+/* light bg: #6b5640 gives 6.6:1 on #f9f8f6 ✓ */
 .cta-sub {
   font-family: 'DM Mono', monospace;
   font-size: 9px;
-  color: #c5b9a1;
+  color: #6b5640;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   text-align: right;

@@ -20,7 +20,6 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
 }
 
-/* Faint ruled-paper lines */
 .lines {
   position: absolute;
   inset: 0;
@@ -35,7 +34,6 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   z-index: 0;
 }
 
-/* Left margin red line — like a legal pad */
 .margin-line {
   position: absolute;
   left: 72px;
@@ -54,7 +52,6 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   padding: 52px 56px 48px 88px;
 }
 
-/* Header */
 .header {
   display: flex;
   align-items: flex-start;
@@ -62,10 +59,11 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   margin-bottom: 36px;
 }
 .header-left {}
+/* light bg: #6b4f14 gives 7.2:1 on #f9f8f6 ✓ */
 .eyebrow {
   font-family: 'DM Mono', monospace;
   font-size: 9.5px;
-  color: #b8893f;
+  color: #6b4f14;
   text-transform: uppercase;
   letter-spacing: 0.2em;
   margin-bottom: 8px;
@@ -79,11 +77,17 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   line-height: 1;
   margin-bottom: 6px;
 }
+/* large text 36px bold: #6b4f14 gives 7.2:1 on #f9f8f6 ✓ */
+.page-title em {
+  font-style: italic;
+  color: #6b4f14;
+}
+/* light bg: #6b5640 gives 6.6:1 on #f9f8f6 ✓ */
 .page-sub {
   font-family: 'Lora', serif;
   font-size: 14px;
   font-style: italic;
-  color: #9a8b73;
+  color: #6b5640;
 }
 
 .logo-row {
@@ -97,10 +101,11 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   font-weight: 700;
   color: #221a12;
 }
+/* light bg: #6b5640 gives 6.6:1 on #f9f8f6 ✓ */
 .logo-sub-sm {
   font-family: 'DM Mono', monospace;
   font-size: 8px;
-  color: #9a8b73;
+  color: #6b5640;
   text-transform: uppercase;
   letter-spacing: 0.15em;
   margin-top: 1px;
@@ -128,12 +133,13 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   height: 2px;
   background: #b8893f;
 }
+/* light bg: #6b5640 gives 5.9:1 on #f0eeeb ✓ */
 .kpi-lbl {
   font-family: 'DM Mono', monospace;
   font-size: 8px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #9a8b73;
+  color: #6b5640;
   margin-bottom: 4px;
 }
 .kpi-val {
@@ -145,7 +151,8 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   line-height: 1;
 }
 .kpi-val.g { color: #3a5a3a; }
-.kpi-val.b { color: #b8893f; }
+/* large text 24px bold: #6b4f14 gives 6.5:1 on #f0eeeb ✓ */
+.kpi-val.b { color: #6b4f14; }
 
 /* Ledger table */
 .ledger {
@@ -167,12 +174,13 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   padding: 10px 18px;
   gap: 8px;
 }
+/* light bg: #6b5640 gives 5.9:1 on #eeece9 ✓ */
 .th {
   font-family: 'DM Mono', monospace;
   font-size: 8px;
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  color: #9a8b73;
+  color: #6b5640;
 }
 .ledger-row {
   display: grid;
@@ -190,10 +198,11 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   font-size: 13px;
   color: #221a12;
 }
+/* light bg: #6b5640 gives 6.6:1 on white ✓ */
 .td-ref {
   font-family: 'DM Mono', monospace;
   font-size: 9.5px;
-  color: #c5b9a1;
+  color: #6b5640;
 }
 .td-mono {
   font-family: 'DM Mono', monospace;
@@ -202,8 +211,10 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
 }
 .td-g { font-family: 'DM Mono', monospace; font-size: 12px; color: #3a5a3a; font-weight: 500; }
 .td-r { font-family: 'DM Mono', monospace; font-size: 12px; color: #963a2e; }
-.td-b { font-family: 'DM Mono', monospace; font-size: 12px; color: #b8893f; }
-.td-dim { font-family: 'DM Mono', monospace; font-size: 12px; color: #c5b9a1; }
+/* light bg: #6b4f14 gives 7.2:1 on white ✓ */
+.td-b { font-family: 'DM Mono', monospace; font-size: 12px; color: #6b4f14; }
+/* light bg: #6b5640 gives 6.6:1 on white ✓ */
+.td-dim { font-family: 'DM Mono', monospace; font-size: 12px; color: #6b5640; }
 
 .badge {
   display: inline-flex;
@@ -220,7 +231,8 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
 }
 .badge.sold { background: rgba(58,90,58,0.12); color: #3a5a3a; }
 .badge.listed { background: rgba(44,74,107,0.12); color: #2c4a6b; }
-.badge.wip { background: rgba(184,137,63,0.14); color: #8c6624; }
+/* #6b4f14 on badge bg gives 6.3:1 ✓ */
+.badge.wip { background: rgba(184,137,63,0.14); color: #6b4f14; }
 .badge.acquired { background: rgba(90,58,90,0.12); color: #5a3a5a; }
 .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; display: inline-block; }
 
@@ -230,17 +242,19 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
   align-items: center;
   justify-content: space-between;
 }
+/* light bg: #6b5640 gives 6.6:1 on #f9f8f6 ✓ (Caveat 16px) */
 .footer-note {
   font-family: 'Caveat', cursive;
-  font-size: 16px;
-  color: #9a8b73;
+  font-size: 17px;
+  color: #6b5640;
 }
+/* brass bg #b8893f + dark ink #221a12 = 4.9:1 ✓ */
 .cta-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   background: #b8893f;
-  color: #f9f8f6;
+  color: #221a12;
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   font-weight: 500;
@@ -261,7 +275,7 @@ body { background: #ccc; display: flex; align-items: center; justify-content: ce
     <div class="header">
       <div class="header-left">
         <div class="eyebrow">Watch Ledger</div>
-        <div class="page-title">Know every flip,<br><em style="font-style:italic;color:#b8893f;">down to the dollar.</em></div>
+        <div class="page-title">Know every flip,<br><em>down to the dollar.</em></div>
         <div class="page-sub">Your complete flip history — profit, ROI, hours, every entry.</div>
       </div>
       <div class="logo-row">
