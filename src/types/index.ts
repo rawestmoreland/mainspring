@@ -66,9 +66,10 @@ export type Watch = {
     watch_photos_via_watch?: WatchPhoto[];
     parts_used_via_watch?: PartUsed[];
   };
+  updated: string;
 };
 
-export type CreateWatch = Omit<Watch, 'id' | 'photos'>;
+export type CreateWatch = Omit<Watch, 'id' | 'photos' | 'updated'>;
 
 export type InventoryItem = {
   id: string;

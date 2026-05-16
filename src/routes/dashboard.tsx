@@ -151,74 +151,92 @@ function Dashboard() {
         </thead>
         <tbody>
           {watches?.length ? (
-            watches?.map((w) => {
-              const p = profit(w);
-              const r = roi(w);
-              return (
-                <TableRow key={w.id}>
-                  <Td className='hidden sm:table-cell'>
-                    <ThumbStrip
-                      photos={w.photos}
-                      onClick={() =>
-                        navigate({
-                          to: '/watches/$watchId',
-                          params: { watchId: w.id },
-                        })
-                      }
-                    />
-                  </Td>
-                  <Td>
-                    <div
-                      className='cursor-pointer'
-                      onClick={() =>
-                        navigate({
-                          to: '/watches/$watchId',
-                          params: { watchId: w.id },
-                        })
-                      }
+            watches
+              ?.slice()
+              .sort((a, b) => {
+                const order: Record<string, number> = {
+                  in_progress: 0,
+                  acquired: 1,
+                  listed: 2,
+                  paused: 3,
+                  sold: 4,
+                };
+                const statusDiff =
+                  (order[a.status] ?? 99) - (order[b.status] ?? 99);
+                if (statusDiff !== 0) return statusDiff;
+                return (
+                  new Date(b.updated).getTime() -
+                  new Date(a.updated).getTime()
+                );
+              })
+              .map((w) => {
+                const p = profit(w);
+                const r = roi(w);
+                return (
+                  <TableRow key={w.id}>
+                    <Td className='hidden sm:table-cell'>
+                      <ThumbStrip
+                        photos={w.photos}
+                        onClick={() =>
+                          navigate({
+                            to: '/watches/$watchId',
+                            params: { watchId: w.id },
+                          })
+                        }
+                      />
+                    </Td>
+                    <Td>
+                      <div
+                        className='cursor-pointer'
+                        onClick={() =>
+                          navigate({
+                            to: '/watches/$watchId',
+                            params: { watchId: w.id },
+                          })
+                        }
+                      >
+                        <div className='font-medium text-foreground'>
+                          {w.make} {w.model}
+                        </div>
+                        <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
+                          {w.reference} · {w.year}
+                        </div>
+                      </div>
+                    </Td>
+                    <Td>
+                      <StatusPicker watch={w} disabled={w.is_frozen} />
+                    </Td>
+                    <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
+                    <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
+                      {fmt(w.parts_cost)}
+                    </Td>
+                    <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
+                    <Td
+                      className={cn(
+                        'font-mono text-xs',
+                        p === null ? '' : p >= 0 ? 'text-forest' : 'text-wax',
+                      )}
                     >
-                      <div className='font-medium text-foreground'>
-                        {w.make} {w.model}
-                      </div>
-                      <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
-                        {w.reference} · {w.year}
-                      </div>
-                    </div>
-                  </Td>
-                  <Td>
-                    <StatusPicker watch={w} disabled={w.is_frozen} />
-                  </Td>
-                  <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
-                  <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
-                    {fmt(w.parts_cost)}
-                  </Td>
-                  <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
-                  <Td
-                    className={cn(
-                      'font-mono text-xs',
-                      p === null ? '' : p >= 0 ? 'text-forest' : 'text-wax',
-                    )}
-                  >
-                    {fmt(p)}
-                  </Td>
-                  <Td
-                    className={cn(
-                      'font-mono text-xs',
-                      r === null
-                        ? ''
-                        : parseFloat(r) >= 0
-                          ? 'text-forest'
-                          : 'text-wax',
-                    )}
-                  >
-                    {fmtPct(r)}
-                  </Td>
-                  <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
-                    {w.hours_spent}h
-                  </Td>
-                </TableRow>
-              );
-            })
+                      {fmt(p)}
+                    </Td>
+                    <Td
+                      className={cn(
+                        'font-mono text-xs',
+                        r === null
+                          ? ''
+                          : parseFloat(r) >= 0
+                            ? 'text-forest'
+                            : 'text-wax',
+                      )}
+                    >
+                      {fmtPct(r)}
+                    </Td>
+                    <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
+                      {w.hours_spent}h
+                    </Td>
+                  </TableRow>
+                );
+              })
           ) : (
             <tr>
               <td
