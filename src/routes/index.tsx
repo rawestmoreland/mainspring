@@ -345,7 +345,7 @@ function LandingPage() {
               to='/signup'
               className='font-mono text-xs bg-primary text-primary-foreground font-semibold px-4 py-1.5 rounded hover:bg-primary/90 transition-colors'
             >
-              Waitlist
+              Sign up
             </Link>
           </div>
         </div>
@@ -579,7 +579,7 @@ function LandingPage() {
               to='/signup'
               className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors'
             >
-              Waitlist
+              Sign up
             </Link>
           </div>
         </div>
