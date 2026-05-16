@@ -12,7 +12,8 @@ import { useCreateWatch, useWatches } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
 import { useSubscription } from '#/hooks/subscription';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
-import { LockIcon } from 'lucide-react';
+import { WatchesApi } from '#/lib/api/watches';
+import { ImagePlusIcon, LockIcon } from 'lucide-react';
 import {
   Field,
   FieldContent,
@@ -77,7 +78,9 @@ function NewWatchRoute() {
   const navigate = useNavigate();
   const createWatch = useCreateWatch();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null);
   const editorRef = useRef<TiptapEditorRef>(null);
+  const featuredInputRef = useRef<HTMLInputElement>(null);
 
   const { data: user, isPending: isUserPending } = useUser();
   const { isPro } = useSubscription();
@@ -100,6 +103,11 @@ function NewWatchRoute() {
       notes: '',
     }),
     [],
+  );
+
+  const featuredPreviewUrl = useMemo(
+    () => (featuredImageFile ? URL.createObjectURL(featuredImageFile) : null),
+    [featuredImageFile],
   );
 
   const {
@@ -162,6 +170,9 @@ function NewWatchRoute() {
           featured_image: null,
         },
       });
+      if (featuredImageFile) {
+        await WatchesApi.uploadFeaturedImage(created.id, featuredImageFile);
+      }
       navigate({
         to: '/watches/$watchId',
         params: { watchId: created.id },
@@ -508,6 +519,68 @@ function NewWatchRoute() {
               </Field>
             )}
           />
+        </section>
+
+        <section>
+          <Field>
+            <FieldLabel htmlFor='featured_image'>Featured Image</FieldLabel>
+            <div className='flex items-center gap-4'>
+              <input
+                ref={featuredInputRef}
+                type='file'
+                accept='image/*'
+                id='featured_image'
+                className='sr-only'
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setFeaturedImageFile(file);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                type='button'
+                onClick={() => featuredInputRef.current?.click()}
+                className='relative w-20 h-20 rounded-lg overflow-hidden border border-border bg-zinc-900 cursor-pointer flex items-center justify-center shrink-0 hover:border-zinc-600 transition-colors'
+              >
+                {featuredPreviewUrl ? (
+                  <img
+                    src={featuredPreviewUrl}
+                    alt='Featured preview'
+                    className='w-full h-full object-cover'
+                  />
+                ) : (
+                  <ImagePlusIcon className='w-5 h-5 text-muted-foreground' />
+                )}
+              </button>
+              <div className='flex flex-col gap-1'>
+                <button
+                  type='button'
+                  onClick={() => featuredInputRef.current?.click()}
+                  className='text-xs font-mono text-amber-400 hover:text-amber-300 text-left'
+                >
+                  {featuredPreviewUrl ? 'Change image' : 'Upload image'}
+                </button>
+                {featuredImageFile ? (
+                  <>
+                    <span className='text-xs font-mono text-muted-foreground truncate max-w-48'>
+                      {featuredImageFile.name}
+                    </span>
+                    <button
+                      type='button'
+                      onClick={() => setFeaturedImageFile(null)}
+                      className='text-xs font-mono text-muted-foreground hover:text-red-400 text-left'
+                    >
+                      Remove
+                    </button>
+                  </>
+                ) : (
+                  <span className='text-xs font-mono text-muted-foreground'>
+                    Optional. Used as the watch thumbnail.
+                  </span>
+                )}
+              </div>
+            </div>
+          </Field>
         </section>
 
         <section>

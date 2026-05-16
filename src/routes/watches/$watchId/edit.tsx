@@ -9,6 +9,8 @@ import type { WatchCondition, WatchStatus } from '#/types';
 import { numberField } from '#/lib/helpers';
 import { useGetWatchById, useUpdateWatch } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
+import { WatchesApi } from '#/lib/api/watches';
+import { ImagePlusIcon } from 'lucide-react';
 import {
   Field,
   FieldContent,
@@ -80,7 +82,9 @@ function EditWatchRoute() {
   const { data: user, isLoading: isUserLoading } = useUser();
   const updateWatch = useUpdateWatch();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null);
   const editorRef = useRef<TiptapEditorRef>(null);
+  const featuredInputRef = useRef<HTMLInputElement>(null);
 
   const defaultValues = useMemo<FormValues>(() => {
     if (!watch) {
@@ -116,6 +120,14 @@ function EditWatchRoute() {
       notes: watch.notes ?? '',
     };
   }, [watch]);
+
+  const featuredPreviewUrl = useMemo(
+    () =>
+      featuredImageFile
+        ? URL.createObjectURL(featuredImageFile)
+        : (watch?.featured_image_url ?? null),
+    [featuredImageFile, watch?.featured_image_url],
+  );
 
   const {
     control,
@@ -166,6 +178,9 @@ function EditWatchRoute() {
 
     try {
       await updateWatch.mutateAsync(payload);
+      if (featuredImageFile) {
+        await WatchesApi.uploadFeaturedImage(watchId, featuredImageFile);
+      }
       navigate({
         to: '/watches/$watchId',
         params: { watchId },
@@ -509,6 +524,70 @@ function EditWatchRoute() {
               </Field>
             )}
           />
+        </section>
+
+        <section>
+          <Field>
+            <FieldLabel htmlFor='featured_image'>Featured Image</FieldLabel>
+            <div className='flex items-center gap-4'>
+              <input
+                ref={featuredInputRef}
+                type='file'
+                accept='image/*'
+                id='featured_image'
+                className='sr-only'
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setFeaturedImageFile(file);
+                  e.target.value = '';
+                }}
+              />
+              <button
+                type='button'
+                onClick={() => featuredInputRef.current?.click()}
+                className='relative w-20 h-20 rounded-lg overflow-hidden border border-border bg-zinc-900 cursor-pointer flex items-center justify-center shrink-0 hover:border-zinc-600 transition-colors'
+              >
+                {featuredPreviewUrl ? (
+                  <img
+                    src={featuredPreviewUrl}
+                    alt='Featured preview'
+                    className='w-full h-full object-cover'
+                  />
+                ) : (
+                  <ImagePlusIcon className='w-5 h-5 text-muted-foreground' />
+                )}
+              </button>
+              <div className='flex flex-col gap-1'>
+                <button
+                  type='button'
+                  onClick={() => featuredInputRef.current?.click()}
+                  className='text-xs font-mono text-amber-400 hover:text-amber-300 text-left'
+                >
+                  {featuredPreviewUrl ? 'Change image' : 'Upload image'}
+                </button>
+                {featuredImageFile ? (
+                  <>
+                    <span className='text-xs font-mono text-muted-foreground truncate max-w-48'>
+                      {featuredImageFile.name}
+                    </span>
+                    <button
+                      type='button'
+                      onClick={() => setFeaturedImageFile(null)}
+                      className='text-xs font-mono text-muted-foreground hover:text-red-400 text-left'
+                    >
+                      Remove
+                    </button>
+                  </>
+                ) : (
+                  <span className='text-xs font-mono text-muted-foreground'>
+                    {watch.featured_image_url
+                      ? 'Replace the current featured image.'
+                      : 'Optional. Used as the watch thumbnail.'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </Field>
         </section>
 
         <section>
