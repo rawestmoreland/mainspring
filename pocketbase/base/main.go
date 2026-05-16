@@ -91,7 +91,7 @@ func createFreeSubscription(userID string, app core.App) error {
 	}
 	sub := core.NewRecord(col)
 	sub.Set("user", userID)
-	sub.Set("subscription_status", "")
+	sub.Set("subscription_status", "free")
 	if err := app.Save(sub); err != nil {
 		return fmt.Errorf("failed to create subscription record: %w", err)
 	}
@@ -219,20 +219,21 @@ func main() {
 			return err
 		}
 
+		
 		// OAuth2 user creation is handled by OnRecordAuthWithOAuth2Request.
 		if info.Context == core.RequestInfoContextOAuth2 {
 			return e.Next()
 		}
-
+		
 		if e.Record.GetString("email") == "" {
 			return e.String(http.StatusBadRequest, "email is required")
 		}
 		if e.Record.GetString("password") == "" {
 			return e.String(http.StatusBadRequest, "password is required")
 		}
-		if e.Record.GetString("display_name") == "" {
-			return e.String(http.StatusBadRequest, "display name is required")
-		}
+		
+		// Capture display_name from raw request data before Next() discards it.
+		displayName, _ := info.Body["display_name"].(string)
 
 		if err := e.Next(); err != nil {
 			return err
@@ -240,7 +241,6 @@ func main() {
 
 		// User is now persisted — safe to create the profile.
 		email := e.Record.GetString("email")
-		displayName := e.Record.GetString("display_name")
 
 		_, err = app.FindFirstRecordByFilter("user_profiles", "user = {:user}", dbx.Params{"user": e.Record.Id})
 		if err != nil {
