@@ -1,6 +1,7 @@
 import { WatchesApi } from '#/lib/api/watches';
 import type { CreateWatch, Watch } from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useGoogleAnalytics } from 'tanstack-router-ga4';
 
 export const useWatches = () => {
   return useQuery<Watch[]>({
@@ -10,10 +11,18 @@ export const useWatches = () => {
 };
 
 export const useCreateWatch = () => {
+  const ga4 = useGoogleAnalytics();
+
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ watch }: { watch: CreateWatch }) =>
       WatchesApi.createWatch(watch),
+    onSuccess: (data) => {
+      ga4.event('create_watch', {
+        category: 'Watch',
+        label: 'Created a new watch',
+      });
+    },
     onError: (error) => {
       console.error(error);
     },

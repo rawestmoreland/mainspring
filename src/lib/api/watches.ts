@@ -27,14 +27,18 @@ export const WatchesApi = {
         })) ?? [],
       parts_cost:
         w.expand?.parts_used_via_watch?.reduce(
-          (sum, p: PartUsed) => sum + (p.qty_used ?? 0) * (p.expand?.inventory_item?.unit_cost ?? 0),
+          (sum, p: PartUsed) =>
+            sum +
+            (p.qty_used ?? 0) * (p.expand?.inventory_item?.unit_cost ?? 0),
           0,
         ) ?? 0,
     }));
   },
   createWatch: async (watch: CreateWatch): Promise<Watch> => {
     const userId = pb.authStore.record?.id;
-    const newWatch = await pb.collection('watches').create<Watch>({ ...watch, user: userId } as never);
+    const newWatch = await pb
+      .collection('watches')
+      .create<Watch>({ ...watch, user: userId } as never);
     return newWatch;
   },
   updateWatch: async (id: string, watch: Watch): Promise<Watch> => {
@@ -50,11 +54,9 @@ export const WatchesApi = {
     await pb.collection('watch_photos').delete(photoId);
   },
   uploadFeaturedImage: async (watchId: string, file: File): Promise<Watch> => {
-    const updated = await pb.collection('watches').update<Watch>(
-      watchId,
-      { featured_image: file },
-      { requestKey: null },
-    );
+    const updated = await pb
+      .collection('watches')
+      .update<Watch>(watchId, { featured_image: file }, { requestKey: null });
     return {
       ...updated,
       featured_image_url: updated.featured_image
@@ -116,7 +118,9 @@ export const WatchesApi = {
         })) ?? [],
       parts_cost:
         watch.expand?.parts_used_via_watch?.reduce(
-          (sum, p: PartUsed) => sum + (p.qty_used ?? 0) * (p.expand?.inventory_item?.unit_cost ?? 0),
+          (sum, p: PartUsed) =>
+            sum +
+            (p.qty_used ?? 0) * (p.expand?.inventory_item?.unit_cost ?? 0),
           0,
         ) ?? 0,
     };
