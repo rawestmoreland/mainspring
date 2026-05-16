@@ -28,6 +28,8 @@ import (
 	"github.com/NdoleStudio/lemonsqueezy-go"
 
 	_ "mainspring/migrations"
+
+	"mainspring/analytics"
 )
 
 func init() {
@@ -77,6 +79,23 @@ func hasPaidSubscription(sub *core.Record) bool {
 // hasPro mirrors hasPro() in src/lib/helpers.ts.
 func hasPro(sub *core.Record) bool {
 	return hasPaidSubscription(sub)
+}
+
+// createFreeSubscription inserts a blank subscription row for a new user.
+// The record ID is set to the user's ID so the webhook handler can locate it
+// with FindRecordById("subscriptions", userID).
+func createFreeSubscription(userID string, app core.App) error {
+	col, err := app.FindCollectionByNameOrId("subscriptions")
+	if err != nil {
+		return fmt.Errorf("failed to find subscriptions collection: %w", err)
+	}
+	sub := core.NewRecord(col)
+	sub.Set("user", userID)
+	sub.Set("subscription_status", "")
+	if err := app.Save(sub); err != nil {
+		return fmt.Errorf("failed to create subscription record: %w", err)
+	}
+	return nil
 }
 
 // freezeExcessProjects keeps the 2 most-recently-updated non-sold watches
@@ -185,6 +204,9 @@ func main() {
 				if err := app.Save(profile); err != nil {
 					return fmt.Errorf("failed to create user profile: %w", err)
 				}
+				if err := createFreeSubscription(e.Record.Id, app); err != nil {
+					return err
+				}
 			}
 		}
 
@@ -236,6 +258,9 @@ func main() {
 			if err := app.Save(profile); err != nil {
 				return fmt.Errorf("failed to create user profile: %w", err)
 			}
+			if err := createFreeSubscription(e.Record.Id, app); err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -271,6 +296,7 @@ func main() {
 					EventName  string `json:"event_name"`
 					CustomData struct {
 						UserID string `json:"user_id"`
+						ClientID string `json:"ga_client_id"`
 					} `json:"custom_data"`
 				} `json:"meta"`
 				Data struct {
@@ -289,9 +315,10 @@ func main() {
 
 			eventName := payload.Meta.EventName
 			userID := payload.Meta.CustomData.UserID
+			clientID := payload.Meta.CustomData.ClientID
 
 			if (eventName == "order_created" || eventName == "subscription_created" || eventName == "subscription_payment_success") && userID != "" {
-				record, err := app.FindRecordById("subscriptions", userID)
+				record, err := app.FindFirstRecordByData("subscriptions", "user", userID)
 				if err == nil {
 					record.Set("subscription_status", "active")
 					record.Set("ends_at", payload.Data.Attributes.EndsAt)
@@ -305,12 +332,50 @@ func main() {
 						record.Set("renews_at", payload.Data.Attributes.RenewsAt)
 					}
 					app.Save(record)
+					if clientID != "" && clientID != "unknown" {
+						tracker := analytics.NewTracker(os.Getenv("GA4_API_URL"), clientID)
+						tracker.TrackEvent(context.Background(), "purchase", map[string]any{
+							"user_id": userID,
+							"event": eventName,
+						})
+					}
+					unfreezeAllProjects(userID, app)
+				} else {
+					fmt.Printf("Subscription record not found for user %s\n", userID)
+					// Create the subscription record if it doesn't exist
+					col, err := app.FindCollectionByNameOrId("subscriptions")
+					if err != nil {
+						return fmt.Errorf("failed to find subscriptions collection: %w", err)
+					}
+					subscription := core.NewRecord(col)
+					subscription.Set("user", userID)
+					subscription.Set("subscription_status", "active")
+					subscription.Set("ends_at", payload.Data.Attributes.EndsAt)
+					if payload.Data.ID != "" {
+						subscription.Set("subscription_id", payload.Data.ID)
+					}
+					if payload.Data.Attributes.CustomerID != 0 {
+						subscription.Set("lemon_squeezy_customer_id", fmt.Sprintf("%d", payload.Data.Attributes.CustomerID))
+					}
+					if payload.Data.Attributes.RenewsAt != "" {
+						subscription.Set("renews_at", payload.Data.Attributes.RenewsAt)
+					}
+					if err := app.Save(subscription); err != nil {
+						return fmt.Errorf("failed to create subscription record: %w", err)
+					}
+					if clientID != "" && clientID != "unknown" {
+						tracker := analytics.NewTracker(os.Getenv("GA4_API_URL"), clientID)
+						tracker.TrackEvent(context.Background(), "purchase", map[string]any{
+							"user_id": userID,
+							"event": eventName,
+						})
+					}
 					unfreezeAllProjects(userID, app)
 				}
 			}
 
 			if eventName == "subscription_expired" && userID != "" {
-				record, err := app.FindRecordById("subscriptions", userID)
+				record, err := app.FindFirstRecordByData("subscriptions", "user", userID)
 				if err == nil {
 					record.Set("subscription_status", "expired")
 					record.Set("renews_at", "")
@@ -320,7 +385,7 @@ func main() {
 			}
 
 			if (eventName == "subscription_updated" || eventName == "subscription_resumed") && userID != "" {
-				record, err := app.FindRecordById("subscriptions", userID)
+				record, err := app.FindFirstRecordByData("subscriptions", "user", userID)
 				if err == nil {
 					status := payload.Data.Attributes.Status
 					record.Set("subscription_status", status)
@@ -335,7 +400,7 @@ func main() {
 			}
 
 			if eventName == "subscription_cancelled" && userID != "" {
-				record, err := app.FindRecordById("subscriptions", userID)
+				record, err := app.FindFirstRecordByData("subscriptions", "user", userID)
 				if err == nil {
 					record.Set("subscription_status", payload.Data.Attributes.Status)
 					record.Set("renews_at", "")

@@ -48,7 +48,6 @@ export const UserApi = {
       password,
       passwordConfirm: password,
       display_name: displayName,
-      subscription_status: 'free',
     });
     const auth = await pb.collection('users').authWithPassword(email, password);
     return auth;

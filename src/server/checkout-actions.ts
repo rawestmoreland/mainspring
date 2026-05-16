@@ -14,12 +14,21 @@ export const startProCheckout = createServerFn({
   method: 'POST',
 })
   .inputValidator(
-    ({ userId, pathname }: { userId: string; pathname: string }) => ({
+    ({
       userId,
       pathname,
+      gaClientId,
+    }: {
+      userId: string;
+      pathname: string;
+      gaClientId: string;
+    }) => ({
+      userId,
+      pathname,
+      gaClientId,
     }),
   )
-  .handler(async ({ data: { userId, pathname } }) => {
+  .handler(async ({ data: { userId, pathname, gaClientId } }) => {
     const storeId = process.env.LEMONSQUEEZY_STORE_ID!;
     const variantId = process.env.PRODUCT_VARIANT_ID ?? '1622808';
 
@@ -34,6 +43,7 @@ export const startProCheckout = createServerFn({
       checkoutData: {
         custom: {
           user_id: userId,
+          ga_client_id: gaClientId,
         },
       },
     });
