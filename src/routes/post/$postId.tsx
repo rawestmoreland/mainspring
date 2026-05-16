@@ -2,12 +2,14 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns/format';
 import type { UserProfile, RepairPost } from '#/types';
+import { useGoogleAnalytics } from 'tanstack-router-ga4';
 
 export const Route = createFileRoute('/post/$postId')({
   component: PublicPostDetailPage,
 });
 
 function PublicPostDetailPage() {
+  const ga4 = useGoogleAnalytics();
   const ctx = Route.useRouteContext() as { tenant?: UserProfile | null };
   const { postId } = Route.useParams();
 
@@ -140,6 +142,12 @@ function PublicPostDetailPage() {
             href={'https://hairspring.app'}
             target='_blank'
             rel='noopener noreferrer'
+            onClick={() => {
+              ga4.event('click_hairspring_attribution', {
+                category: 'Navigation',
+                label: 'Hairspring Attribution Link',
+              });
+            }}
           >
             <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
               Powered by Hairspring

@@ -17,6 +17,7 @@ import type {
   RepairPost,
   TimegrapherReading,
 } from '#/types';
+import { useGoogleAnalytics } from 'tanstack-router-ga4';
 
 export const Route = createFileRoute('/watch/$watchId')({
   component: PublicWatchDetailPage,
@@ -65,7 +66,9 @@ function fmtTgNum(n: number | null | undefined, decimals = 0): string {
 
 function avgOf(values: (number | null)[]): number | null {
   const defined = values.filter((v): v is number => v !== null);
-  return defined.length ? defined.reduce((a, b) => a + b, 0) / defined.length : null;
+  return defined.length
+    ? defined.reduce((a, b) => a + b, 0) / defined.length
+    : null;
 }
 
 type RawPhoto = {
@@ -87,6 +90,7 @@ type RawWatchRecord = {
 } & Record<string, unknown>;
 
 function PublicWatchDetailPage() {
+  const ga4 = useGoogleAnalytics();
   const ctx = Route.useRouteContext() as { tenant?: UserProfile | null };
   const { watchId } = Route.useParams();
 
@@ -146,7 +150,9 @@ function PublicWatchDetailPage() {
         `${pbUrl}/api/collections/timegrapher_readings/records?filter=watch%3D%22${watchId}%22&sort=-created&perPage=200`,
       );
       if (!res.ok) return [];
-      return ((await res.json()) as { items?: TimegrapherReading[] }).items ?? [];
+      return (
+        ((await res.json()) as { items?: TimegrapherReading[] }).items ?? []
+      );
     },
     enabled: !!ctx.tenant,
   });
@@ -190,9 +196,15 @@ function PublicWatchDetailPage() {
   const p = watch ? profit(watch) : null;
   const r = watch ? roi(watch) : null;
 
-  const tgAvgRate = tgReadings?.length ? avgOf(tgReadings.map(tgMeanRate)) : null;
-  const tgAvgAmplitude = tgReadings?.length ? avgOf(tgReadings.map(tgAvgAmp)) : null;
-  const tgAvgBeatError = tgReadings?.length ? avgOf(tgReadings.map(tgAvgBe)) : null;
+  const tgAvgRate = tgReadings?.length
+    ? avgOf(tgReadings.map(tgMeanRate))
+    : null;
+  const tgAvgAmplitude = tgReadings?.length
+    ? avgOf(tgReadings.map(tgAvgAmp))
+    : null;
+  const tgAvgBeatError = tgReadings?.length
+    ? avgOf(tgReadings.map(tgAvgBe))
+    : null;
 
   return (
     <div className='min-h-screen'>
@@ -508,6 +520,12 @@ function PublicWatchDetailPage() {
             href={'https://hairspring.app'}
             target='_blank'
             rel='noopener noreferrer'
+            onClick={() => {
+              ga4.event('click_hairspring_attribution', {
+                category: 'Navigation',
+                label: 'Hairspring Attribution Link',
+              });
+            }}
           >
             <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
               Powered by Hairspring

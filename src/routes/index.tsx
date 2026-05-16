@@ -7,6 +7,7 @@ import { PublicProfileSkeleton } from '#/components/skeletons';
 import type { UserProfile, Watch, RepairPost } from '#/types';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Avatar, AvatarImage } from '#/components/ui/avatar';
+import { useGoogleAnalytics } from 'tanstack-router-ga4';
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
@@ -30,6 +31,8 @@ function IndexPage() {
 
 function PublicProfile({ tenant }: { tenant: UserProfile }) {
   const pbUrl = import.meta.env.VITE_POCKETBASE_URL;
+
+  const ga4 = useGoogleAnalytics();
 
   const { data: watches, isLoading: watchesLoading } = useQuery<Watch[]>({
     queryKey: ['public', 'watches', tenant.user],
@@ -86,6 +89,12 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
         <a
           href='https://hairspring.app'
           className='font-serif font-bold text-foreground'
+          onClick={() => {
+            ga4.event('click_hairspring_logo', {
+              category: 'Navigation',
+              label: 'Hairspring Logo',
+            });
+          }}
         >
           Hairspring
         </a>
@@ -164,6 +173,12 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
             href={'https://hairspring.app'}
             target='_blank'
             rel='noopener noreferrer'
+            onClick={() => {
+              ga4.event('click_hairspring_attribution', {
+                category: 'Navigation',
+                label: 'Hairspring Attribution Link',
+              });
+            }}
           >
             <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
               Powered by Hairspring
