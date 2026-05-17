@@ -18,10 +18,11 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
 
-  const measurementId = 'G-7TWPVSWCR2';
+  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
+    if (!measurementId) return;
 
     const attemptFetch = () => {
       try {

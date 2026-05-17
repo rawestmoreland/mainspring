@@ -187,6 +187,7 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: ReactNode }) {
+  const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.createLemonSqueezy?.();
@@ -200,7 +201,7 @@ function RootDocument({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Toaster />
-        <GoogleAnalytics measurementId='G-7TWPVSWCR2' />
+        {gaId && <GoogleAnalytics measurementId={gaId} />}
         <script src='https://app.lemonsqueezy.com/js/lemon.js' defer></script>
         <Scripts />
       </body>
