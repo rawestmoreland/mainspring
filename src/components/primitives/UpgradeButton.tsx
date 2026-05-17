@@ -46,6 +46,16 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
     return () => clearInterval(intervalId);
   }, [ga4, measurementId]);
 
+  useEffect(() => {
+    if (checkoutUrl) {
+      ga4.event('upgrade_modal_viewed', {
+        category: 'Subscription',
+        label: 'Checkout iframe displayed',
+        userInfo: { userId: pbUserId },
+      });
+    }
+  }, [checkoutUrl]);
+
   const handleUpgrade = async () => {
     setLoading(true);
     ga4.event('begin_checkout', {
@@ -79,7 +89,16 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
       </Button>
       <Dialog
         open={!!checkoutUrl}
-        onOpenChange={(open) => !open && setCheckoutUrl(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            ga4.event('checkout_dismissed', {
+              category: 'Subscription',
+              label: 'User closed checkout without completing',
+              userInfo: { userId: pbUserId },
+            });
+            setCheckoutUrl(null);
+          }
+        }}
       >
         <DialogContent className='max-w-2xl p-0 overflow-hidden'>
           <DialogHeader className='sr-only'>

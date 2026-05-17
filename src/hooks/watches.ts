@@ -1,5 +1,5 @@
 import { WatchesApi } from '#/lib/api/watches';
-import type { CreateWatch, Watch } from '#/types';
+import { WatchStatus, type CreateWatch, type Watch } from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
 import { useAuth } from './auth';
@@ -20,7 +20,7 @@ export const useCreateWatch = () => {
     mutationFn: ({ watch }: { watch: CreateWatch }) =>
       WatchesApi.createWatch(watch),
     onSuccess: () => {
-      ga4.event('create_watch', {
+      ga4.event('watch_added', {
         category: 'Watch',
         label: 'Created a new watch',
       });
@@ -36,8 +36,24 @@ export const useCreateWatch = () => {
 
 export const useUpdateWatch = () => {
   const queryClient = useQueryClient();
+  const ga4 = useGoogleAnalytics();
   return useMutation({
-    mutationFn: (watch: Watch) => WatchesApi.updateWatch(watch.id, watch),
+    mutationFn: (watch: Watch) => {
+      return WatchesApi.updateWatch(watch.id, watch);
+    },
+    onSuccess: (data) => {
+      if (data.status === WatchStatus.SOLD) {
+        ga4.event('watch_sold', {
+          category: 'Watch',
+          label: 'Watch status updated to Sold',
+        });
+      }
+      ga4.event('watch_updated', {
+        category: 'Watch',
+        label: 'Updated watch details',
+        userInfo: { watchId: data.id },
+      });
+    },
     onError: (error) => {
       console.error(error);
     },
@@ -76,9 +92,16 @@ export const useUploadFeaturedImage = (watchId: string) => {
 
 export const useUploadWatchPhotos = (watchId: string) => {
   const queryClient = useQueryClient();
+  const ga4 = useGoogleAnalytics();
   return useMutation({
     mutationFn: (photos: { file: File; stage: string; caption: string }[]) => {
       return WatchesApi.uploadWatchPhotoBatch(watchId, photos);
+    },
+    onSuccess: () => {
+      ga4.event('watch_photos_uploaded', {
+        category: 'Watch',
+        label: 'Uploaded photos for watch',
+      });
     },
     onError: (error) => {
       console.error(error);

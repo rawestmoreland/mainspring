@@ -1,10 +1,12 @@
 export type WatchStage = 'before' | 'during' | 'after' | 'listing';
-export type WatchStatus =
-  | 'sold'
-  | 'in_progress'
-  | 'listed'
-  | 'acquired'
-  | 'paused';
+export const WatchStatus = {
+  SOLD: 'sold',
+  IN_PROGRESS: 'in_progress',
+  LISTED: 'listed',
+  ACQUIRED: 'acquired',
+  PAUSED: 'paused',
+} as const;
+export type WatchStatus = (typeof WatchStatus)[keyof typeof WatchStatus];
 export type WatchCondition = 'worn' | 'parts_only' | 'good' | 'fair' | 'poor';
 export type InventoryCategory =
   | 'movement'
