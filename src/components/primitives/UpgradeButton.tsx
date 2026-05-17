@@ -48,6 +48,13 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
 
   const handleUpgrade = async () => {
     setLoading(true);
+    ga4.event('begin_checkout', {
+      category: 'Subscription',
+      label: 'User initiated upgrade to Pro',
+      userInfo: {
+        userId: pbUserId,
+      },
+    });
     try {
       const url = await startProCheckout({
         data: {
