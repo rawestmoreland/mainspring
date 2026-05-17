@@ -187,7 +187,7 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: ReactNode }) {
-  const gaId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+  const gaId = import.meta.env.VITE_GA4_MEASUREMENT_ID;
   useEffect(() => {
     if (typeof window !== 'undefined') {
       window.createLemonSqueezy?.();

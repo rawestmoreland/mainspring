@@ -18,7 +18,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
 
-  const measurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
+  const measurementId = import.meta.env.VITE_GA4_MEASUREMENT_ID;
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
