@@ -2,10 +2,12 @@ import { WatchesApi } from '#/lib/api/watches';
 import type { CreateWatch, Watch } from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
+import { useAuth } from './auth';
 
 export const useWatches = () => {
+  const { user } = useAuth();
   return useQuery<Watch[]>({
-    queryKey: ['watches'],
+    queryKey: ['watches', { userId: user?.id }],
     queryFn: () => WatchesApi.getWatches(),
   });
 };
@@ -17,7 +19,7 @@ export const useCreateWatch = () => {
   return useMutation({
     mutationFn: ({ watch }: { watch: CreateWatch }) =>
       WatchesApi.createWatch(watch),
-    onSuccess: (data) => {
+    onSuccess: () => {
       ga4.event('create_watch', {
         category: 'Watch',
         label: 'Created a new watch',
@@ -67,7 +69,7 @@ export const useUploadFeaturedImage = (watchId: string) => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['watches'] });
-      queryClient.invalidateQueries({ queryKey: ['watches', watchId] });
+      queryClient.invalidateQueries({ queryKey: ['watches', { watchId }] });
     },
   });
 };
@@ -82,7 +84,7 @@ export const useUploadWatchPhotos = (watchId: string) => {
       console.error(error);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['watches', watchId] });
+      queryClient.invalidateQueries({ queryKey: ['watches', { watchId }] });
     },
   });
 };
@@ -95,14 +97,14 @@ export const useDeleteWatchPhoto = (watchId: string) => {
       console.error(error);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['watches', watchId] });
+      queryClient.invalidateQueries({ queryKey: ['watches', { watchId }] });
     },
   });
 };
 
 export const useGetWatchById = (id: string) => {
   return useQuery<Watch>({
-    queryKey: ['watches', id],
+    queryKey: ['watches', { watchId: id }],
     queryFn: () => WatchesApi.getWatchById(id),
   });
 };

@@ -1,10 +1,12 @@
 import { InventoryApi } from '#/lib/api/inventory';
 import type { CreateInventoryItem, Inventory } from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from './auth';
 
 export const useInventory = () => {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ['inventory'],
+    queryKey: ['inventory', { userId: user?.id }],
     queryFn: () => InventoryApi.getInventory(),
   });
 };
@@ -53,7 +55,7 @@ export const useDeleteInventory = () => {
 
 export const useGetInventoryById = (id: string) => {
   return useQuery({
-    queryKey: ['inventory', id],
+    queryKey: ['inventory', { inventoryId: id }],
     queryFn: () => InventoryApi.getInventoryById(id),
     enabled: !!id,
   });

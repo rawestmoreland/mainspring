@@ -1,10 +1,12 @@
 import { EquipmentApi } from '#/lib/api/equipment';
 import type { CreateEquipment, Equipment } from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from './auth';
 
 export const useEquipment = (page: number = 1, limit: number = 100) => {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ['equipment', page, limit],
+    queryKey: ['equipment', { userId: user?.id }, page, limit],
     queryFn: () => EquipmentApi.getEquipment(page, limit),
   });
 };
@@ -53,7 +55,7 @@ export const useDeleteEquipment = () => {
 
 export const useGetEquipmentById = (id: string) => {
   return useQuery({
-    queryKey: ['equipment', id],
+    queryKey: ['equipment', { equipmentId: id }],
     queryFn: () => EquipmentApi.getEquipmentById(id),
   });
 };
