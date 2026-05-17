@@ -219,19 +219,18 @@ func main() {
 			return err
 		}
 
-		
 		// OAuth2 user creation is handled by OnRecordAuthWithOAuth2Request.
 		if info.Context == core.RequestInfoContextOAuth2 {
 			return e.Next()
 		}
-		
+
 		if e.Record.GetString("email") == "" {
 			return e.String(http.StatusBadRequest, "email is required")
 		}
 		if e.Record.GetString("password") == "" {
 			return e.String(http.StatusBadRequest, "password is required")
 		}
-		
+
 		// Capture display_name from raw request data before Next() discards it.
 		displayName, _ := info.Body["display_name"].(string)
 
@@ -295,17 +294,26 @@ func main() {
 				Meta struct {
 					EventName  string `json:"event_name"`
 					CustomData struct {
-						UserID string `json:"user_id"`
+						UserID   string `json:"user_id"`
 						ClientID string `json:"ga_client_id"`
 					} `json:"custom_data"`
 				} `json:"meta"`
 				Data struct {
 					ID         string `json:"id"`
 					Attributes struct {
-						CustomerID int    `json:"customer_id"`
-						RenewsAt   string `json:"renews_at"`
-						EndsAt     string `json:"ends_at"`
-						Status     string `json:"status"`
+						CustomerID     int    `json:"customer_id"`
+						RenewsAt       string `json:"renews_at"`
+						EndsAt         string `json:"ends_at"`
+						Status         string `json:"status"`
+						TotalUSD       int    `json:"total_usd"`
+						Currency       string `json:"currency"`
+						TaxUSD         int    `json:"tax_usd"`
+						FirstOrderItem struct {
+							ID        string `json:"id"`
+							ProductID string `json:"product_id"`
+							VariantID string `json:"variant_id"`
+							Price     int    `json:"price"`
+						}
 					} `json:"attributes"`
 				} `json:"data"`
 			}
@@ -336,7 +344,21 @@ func main() {
 						tracker := analytics.NewTracker(os.Getenv("GA4_API_URL"), clientID)
 						tracker.TrackEvent(context.Background(), "purchase", map[string]any{
 							"user_id": userID,
-							"event": eventName,
+							"event":   eventName,
+							"ecommerce": map[string]any{
+								"transaction_id": payload.Data.ID,
+								"value":          float64(payload.Data.Attributes.TotalUSD) * 0.01,
+								"tax":            float64(payload.Data.Attributes.TaxUSD) * 0.01,
+								"currency":       payload.Data.Attributes.Currency,
+								"items": []map[string]any{
+									{
+										"item_id":      payload.Data.Attributes.FirstOrderItem.ProductID,
+										"item_variant": payload.Data.Attributes.FirstOrderItem.VariantID,
+										"price":        float64(payload.Data.Attributes.FirstOrderItem.Price) * 0.01,
+										"quantity":     1,
+									},
+								},
+							},
 						})
 					}
 					unfreezeAllProjects(userID, app)
@@ -367,7 +389,7 @@ func main() {
 						tracker := analytics.NewTracker(os.Getenv("GA4_API_URL"), clientID)
 						tracker.TrackEvent(context.Background(), "purchase", map[string]any{
 							"user_id": userID,
-							"event": eventName,
+							"event":   eventName,
 						})
 					}
 					unfreezeAllProjects(userID, app)
@@ -406,6 +428,13 @@ func main() {
 					record.Set("renews_at", "")
 					record.Set("ends_at", payload.Data.Attributes.EndsAt)
 					app.Save(record)
+					if clientID != "" && clientID != "unknown" {
+						tracker := analytics.NewTracker(os.Getenv("GA4_API_URL"), clientID)
+						tracker.TrackEvent(context.Background(), "subscription_cancelled", map[string]any{
+							"user_id": userID,
+							"event":   eventName,
+						})
+					}
 					// If ends_at is still in the future the user retains access until then;
 					// freeze only once the subscription is no longer active.
 					if hasPaidSubscription(record) {
