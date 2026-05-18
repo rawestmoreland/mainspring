@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #333; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 40px; }
+
+.ad {
+  width: 1080px;
+  height: 1080px;
+  background: #0d0b08;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  font-family: 'DM Mono', monospace;
+}
+
+/* Subtle grid texture */
+.tex {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(184,137,63,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184,137,63,0.025) 1px, transparent 1px);
+  background-size: 54px 54px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Amber glow top-right */
+.glow {
+  position: absolute;
+  top: -120px; right: -80px;
+  width: 420px; height: 420px;
+  background: radial-gradient(circle, rgba(184,137,63,0.07) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 40px 48px 40px;
+  gap: 0;
+}
+
+/* ── Top bar ── */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  flex-shrink: 0;
+}
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.logo-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #f0ede6;
+  letter-spacing: -0.01em;
+}
+.logo-sub {
+  font-size: 9px;
+  color: #9a8b73;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-top: 2px;
+}
+.page-label {
+  font-size: 9px;
+  color: #9a8b73;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  border: 1px solid rgba(184,137,63,0.2);
+  padding: 5px 12px;
+  border-radius: 2px;
+}
+
+/* ── Headline ── */
+.headline {
+  font-family: 'Playfair Display', serif;
+  font-size: 38px;
+  font-weight: 700;
+  color: #f0ede6;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+.headline em {
+  font-style: italic;
+  color: #b8893f;
+}
+.sub-copy {
+  font-size: 13px;
+  color: #9a8b73;
+  letter-spacing: 0.04em;
+  margin-bottom: 26px;
+  flex-shrink: 0;
+}
+
+/* ── KPI strip ── */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+.kpi {
+  background: #1a1510;
+  border: 1px solid rgba(184,137,63,0.12);
+  border-radius: 4px;
+  padding: 14px 16px;
+}
+.kpi-val {
+  font-size: 26px;
+  font-weight: 500;
+  color: #f0ede6;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+.kpi-val.amber { color: #b8893f; }
+.kpi-val.green { color: #5aad6c; }
+.kpi-lbl {
+  font-size: 8.5px;
+  color: #9a8b73;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+/* ── Watch table ── */
+.table-wrap {
+  background: #141108;
+  border: 1px solid rgba(184,137,63,0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  flex: 1;
+}
+.tbl-header {
+  display: grid;
+  grid-template-columns: 1fr 120px 80px 72px 90px;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(184,137,63,0.1);
+  background: #1a1510;
+}
+.th {
+  font-size: 8.5px;
+  color: #6b5a45;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+.th.right { text-align: right; }
+
+.watch-row {
+  display: grid;
+  grid-template-columns: 1fr 120px 80px 72px 90px;
+  padding: 13px 18px;
+  border-bottom: 1px solid rgba(184,137,63,0.065);
+  align-items: center;
+}
+.watch-row:last-child { border-bottom: none; }
+.watch-row:hover { background: rgba(184,137,63,0.03); }
+
+.watch-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: #f0ede6;
+  line-height: 1.2;
+}
+.watch-ref {
+  font-size: 9px;
+  color: #6b5a45;
+  letter-spacing: 0.1em;
+  margin-top: 2px;
+}
+
+/* Status badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 99px;
+  border: 1px solid;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.badge-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.badge.in-progress {
+  color: #d4950a;
+  background: rgba(212,149,10,0.1);
+  border-color: rgba(212,149,10,0.25);
+}
+.badge.acquired {
+  color: #a87bd4;
+  background: rgba(168,123,212,0.1);
+  border-color: rgba(168,123,212,0.22);
+}
+.badge.listed {
+  color: #5a9fd4;
+  background: rgba(90,159,212,0.1);
+  border-color: rgba(90,159,212,0.22);
+}
+.badge.sold {
+  color: #5aad6c;
+  background: rgba(90,173,108,0.1);
+  border-color: rgba(90,173,108,0.22);
+}
+.badge.paused {
+  color: #9a8b73;
+  background: rgba(154,139,115,0.08);
+  border-color: rgba(154,139,115,0.18);
+}
+
+.cell { font-size: 13px; color: #c8bfb0; }
+.cell.right { text-align: right; }
+.cell.muted { color: #5a4a35; }
+.cell.green { color: #5aad6c; font-weight: 500; }
+.cell.amber { color: #b8893f; }
+
+/* ── Bottom bar ── */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 22px;
+  margin-top: 20px;
+  border-top: 1px solid rgba(184,137,63,0.1);
+  flex-shrink: 0;
+}
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #b8893f;
+  color: #0d0b08;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 13px 26px;
+  border-radius: 3px;
+}
+.cta-note {
+  font-size: 8.5px;
+  color: #6b5a45;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  text-align: right;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div class="ad">
+  <div class="tex"></div>
+  <div class="glow"></div>
+
+  <div class="inner">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="logo-row">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" width="28" height="28">
+          <circle cx="16" cy="16" r="14.5" stroke="#b8893f" stroke-width="1" fill="none"/>
+          <path d="M16 16 m 0 0 a 1 1 0 0 1 1 0 a 2.2 2.2 0 0 1 0 3.2 a 4 4 0 0 1 -5.6 -0.4 a 6 6 0 0 1 0.6 -8.4 a 8 8 0 0 1 11 0.6 a 10.5 10.5 0 0 1 -0.7 14.4" stroke="#b8893f" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <circle cx="16" cy="16" r="0.9" fill="#b8893f"/>
+        </svg>
+        <div>
+          <div class="logo-name">Hairspring</div>
+          <div class="logo-sub">Watch Tracker</div>
+        </div>
+      </div>
+      <div class="page-label">My Bench</div>
+    </div>
+
+    <!-- Headline -->
+    <div class="headline">Every project.<br>Every <em>number.</em></div>
+    <div class="sub-copy">The tracker built for hobbyist watchmakers who want the full picture.</div>
+
+    <!-- KPI strip -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="kpi-val">4</div>
+        <div class="kpi-lbl">Active Projects</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val">$1,205</div>
+        <div class="kpi-lbl">Capital In</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-val">28h</div>
+        <div class="kpi-lbl">Bench Hours</div>
+      </div>
+      <div class="kpi" style="background: rgba(90,173,108,0.07); border-color: rgba(90,173,108,0.18);">
+        <div class="kpi-val green">+$340</div>
+        <div class="kpi-lbl">Realized P&amp;L</div>
+      </div>
+    </div>
+
+    <!-- Watch table -->
+    <div class="table-wrap">
+      <div class="tbl-header">
+        <div class="th">Watch</div>
+        <div class="th">Status</div>
+        <div class="th right">In</div>
+        <div class="th right">Hours</div>
+        <div class="th right">P&amp;L</div>
+      </div>
+
+      <div class="watch-row">
+        <div>
+          <div class="watch-name">Seiko 6309-7040</div>
+          <div class="watch-ref">Vintage Diver · 1978</div>
+        </div>
+        <div><span class="badge in-progress"><span class="badge-dot"></span>In Progress</span></div>
+        <div class="cell right">$85</div>
+        <div class="cell right">6h</div>
+        <div class="cell right muted">—</div>
+      </div>
+
+      <div class="watch-row">
+        <div>
+          <div class="watch-name">Omega CK2998</div>
+          <div class="watch-ref">Ref. 2998-1 · 1960</div>
+        </div>
+        <div><span class="badge acquired"><span class="badge-dot"></span>Acquired</span></div>
+        <div class="cell right">$440</div>
+        <div class="cell right muted">—</div>
+        <div class="cell right muted">—</div>
+      </div>
+
+      <div class="watch-row">
+        <div>
+          <div class="watch-name">Hamilton Khaki Field</div>
+          <div class="watch-ref">H70605963 · ETA 2804-2</div>
+        </div>
+        <div><span class="badge listed"><span class="badge-dot"></span>Listed</span></div>
+        <div class="cell right">$195</div>
+        <div class="cell right">4h</div>
+        <div class="cell right amber">$285 ask</div>
+      </div>
+
+      <div class="watch-row">
+        <div>
+          <div class="watch-name">Longines Heritage</div>
+          <div class="watch-ref">L2.798.4 · Cal. L888</div>
+        </div>
+        <div><span class="badge sold"><span class="badge-dot"></span>Sold</span></div>
+        <div class="cell right">$280</div>
+        <div class="cell right">3h</div>
+        <div class="cell right green">+$115 · 41%</div>
+      </div>
+
+      <div class="watch-row">
+        <div>
+          <div class="watch-name">Bulova Accutron 214</div>
+          <div class="watch-ref">Spaceview · 1967</div>
+        </div>
+        <div><span class="badge in-progress"><span class="badge-dot"></span>In Progress</span></div>
+        <div class="cell right">$85</div>
+        <div class="cell right">9h</div>
+        <div class="cell right muted">—</div>
+      </div>
+
+      <div class="watch-row">
+        <div>
+          <div class="watch-name">Seiko 6105-8110</div>
+          <div class="watch-ref">Captain Willard · 1972</div>
+        </div>
+        <div><span class="badge paused"><span class="badge-dot"></span>Paused</span></div>
+        <div class="cell right">$320</div>
+        <div class="cell right">6h</div>
+        <div class="cell right muted">—</div>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottom-bar">
+      <div>
+        <div style="font-family:'Playfair Display',serif; font-size:16px; font-style:italic; color:#9a8b73; margin-bottom:4px;">
+          Built for hobbyists who keep too many watches in ziplock bags.
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+        <div class="cta-btn">hairspring.app &rarr;</div>
+        <div class="cta-note">Free to start · No card required</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -24,10 +24,12 @@ import { Toaster } from 'sonner';
 import dmMonoUrl from '@fontsource/dm-mono/files/dm-mono-latin-400-normal.woff2?url';
 import playfairUrl from '@fontsource/playfair-display/files/playfair-display-latin-600-normal.woff2?url';
 import loraUrl from '@fontsource/lora/files/lora-latin-400-normal.woff2?url';
+import redditPixelCode from '#/lib/scripts/reddit-pixel.js?raw';
 
 declare global {
   interface Window {
     createLemonSqueezy?: () => void;
+    rdt?: (...args: unknown[]) => void;
   }
 }
 
@@ -135,6 +137,10 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isPublicRoute = isPublicPath(pathname);
 
+  useEffect(() => {
+    window.rdt?.('track', 'PageVisit');
+  }, [pathname]);
+
   if (subdomainNotFound) {
     return (
       <RootDocument>
@@ -198,6 +204,9 @@ function RootDocument({ children }: { children: ReactNode }) {
     <html lang='en' className='light'>
       <head>
         <HeadContent />
+        {/* Reddit Pixel — DO NOT MODIFY UNLESS TO REPLACE A USER IDENTIFIER */}
+        <script dangerouslySetInnerHTML={{ __html: redditPixelCode }} />
+        {/* End Reddit Pixel */}
       </head>
       <body>
         <PostHogProvider

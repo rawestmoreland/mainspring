@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #333; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 40px; }
+
+.ad {
+  width: 1080px;
+  height: 1080px;
+  background: #0d0b08;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  font-family: 'DM Mono', monospace;
+}
+
+.tex {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(184,137,63,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184,137,63,0.022) 1px, transparent 1px);
+  background-size: 54px 54px;
+  pointer-events: none;
+  z-index: 0;
+}
+.glow-bl {
+  position: absolute;
+  bottom: -100px; left: -60px;
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, rgba(184,137,63,0.06) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 40px 48px 38px;
+}
+
+/* ── Top bar ── */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 26px;
+  flex-shrink: 0;
+}
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.logo-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #f0ede6;
+  letter-spacing: -0.01em;
+}
+.logo-sub {
+  font-size: 9px;
+  color: #9a8b73;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-top: 2px;
+}
+.page-crumb {
+  font-size: 9px;
+  color: #6b5a45;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+.page-crumb span { color: #9a8b73; }
+
+/* ── Watch project header ── */
+.project-header {
+  background: #1a1510;
+  border: 1px solid rgba(184,137,63,0.14);
+  border-radius: 5px;
+  padding: 18px 22px;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.project-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #f0ede6;
+  letter-spacing: -0.01em;
+}
+.project-ref {
+  font-size: 9px;
+  color: #9a8b73;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-top: 4px;
+}
+.project-meta {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-shrink: 0;
+}
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.meta-val {
+  font-size: 16px;
+  font-weight: 500;
+  color: #f0ede6;
+}
+.meta-lbl {
+  font-size: 8px;
+  color: #6b5a45;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+.badge-in-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid rgba(212,149,10,0.25);
+  background: rgba(212,149,10,0.1);
+  color: #d4950a;
+  letter-spacing: 0.08em;
+}
+.badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+/* ── Section label ── */
+.section-lbl {
+  font-size: 8.5px;
+  color: #6b5a45;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Repair sessions ── */
+.sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.session-card {
+  background: #141108;
+  border: 1px solid rgba(184,137,63,0.1);
+  border-radius: 5px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.session-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 18px;
+  border-bottom: 1px solid rgba(184,137,63,0.08);
+  background: #1a1510;
+}
+.session-date {
+  font-size: 9px;
+  color: #b8893f;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+.session-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0ede6;
+}
+.session-duration {
+  font-size: 10px;
+  color: #9a8b73;
+  border: 1px solid rgba(184,137,63,0.15);
+  padding: 3px 9px;
+  border-radius: 2px;
+}
+.session-body {
+  padding: 14px 18px;
+}
+.session-notes {
+  font-family: 'Lora', serif;
+  font-size: 13.5px;
+  color: #c8bfb0;
+  line-height: 1.6;
+  font-style: italic;
+  margin-bottom: 12px;
+}
+.session-notes::before { content: '"'; color: #b8893f; margin-right: 2px; }
+.session-notes::after  { content: '"'; color: #b8893f; margin-left: 2px; }
+
+.parts-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.parts-lbl {
+  font-size: 8px;
+  color: #6b5a45;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+.part-chip {
+  font-size: 9.5px;
+  color: #9a8b73;
+  background: rgba(154,139,115,0.08);
+  border: 1px solid rgba(154,139,115,0.14);
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+/* ── Parts used panel ── */
+.parts-panel {
+  background: #141108;
+  border: 1px solid rgba(184,137,63,0.1);
+  border-radius: 5px;
+  padding: 14px 18px;
+  flex-shrink: 0;
+}
+.parts-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.parts-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.parts-item-name { font-size: 10.5px; color: #c8bfb0; }
+.parts-item-cat  { font-size: 8px; color: #6b5a45; text-transform: uppercase; letter-spacing: 0.12em; }
+
+/* ── Bottom bar ── */
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  margin-top: 18px;
+  border-top: 1px solid rgba(184,137,63,0.1);
+  flex-shrink: 0;
+}
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #b8893f;
+  color: #0d0b08;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 13px 26px;
+  border-radius: 3px;
+}
+.cta-note {
+  font-size: 8.5px;
+  color: #6b5a45;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  text-align: right;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<div class="ad">
+  <div class="tex"></div>
+  <div class="glow-bl"></div>
+
+  <div class="inner">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="logo-row">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" width="28" height="28">
+          <circle cx="16" cy="16" r="14.5" stroke="#b8893f" stroke-width="1" fill="none"/>
+          <path d="M16 16 m 0 0 a 1 1 0 0 1 1 0 a 2.2 2.2 0 0 1 0 3.2 a 4 4 0 0 1 -5.6 -0.4 a 6 6 0 0 1 0.6 -8.4 a 8 8 0 0 1 11 0.6 a 10.5 10.5 0 0 1 -0.7 14.4" stroke="#b8893f" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <circle cx="16" cy="16" r="0.9" fill="#b8893f"/>
+        </svg>
+        <div>
+          <div class="logo-name">Hairspring</div>
+          <div class="logo-sub">Watch Tracker</div>
+        </div>
+      </div>
+      <div class="page-crumb">My Bench <span>/ Seiko 6309</span></div>
+    </div>
+
+    <!-- Watch project header -->
+    <div class="project-header">
+      <div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+          <div class="project-title">Seiko 6309-7040</div>
+          <span class="badge-in-progress"><span class="badge-dot"></span>In Progress</span>
+        </div>
+        <div class="project-ref">Cal. 6309A · Vintage Diver · 1978 · Bought $85</div>
+      </div>
+      <div class="project-meta">
+        <div class="meta-item">
+          <div class="meta-val">$112</div>
+          <div class="meta-lbl">Total In</div>
+        </div>
+        <div style="width:1px; height:32px; background:rgba(184,137,63,0.12);"></div>
+        <div class="meta-item">
+          <div class="meta-val">9h 45m</div>
+          <div class="meta-lbl">Bench Time</div>
+        </div>
+        <div style="width:1px; height:32px; background:rgba(184,137,63,0.12);"></div>
+        <div class="meta-item">
+          <div class="meta-val">3</div>
+          <div class="meta-lbl">Sessions</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Repair sessions -->
+    <div class="section-lbl">Repair Log</div>
+    <div class="sessions">
+
+      <div class="session-card">
+        <div class="session-head">
+          <div>
+            <div class="session-date">Jan 18, 2025</div>
+            <div class="session-title">Full service &amp; regulation</div>
+          </div>
+          <div class="session-duration">2h 15m</div>
+        </div>
+        <div class="session-body">
+          <div class="session-notes">Cleaned in L&amp;R. New balance staff fitted. Running +8 s/day flat, amplitude 252°. Beat error 0.3ms. Case back sealed and pressure tested to 5ATM.</div>
+          <div class="parts-row">
+            <div class="parts-lbl">Parts used:</div>
+            <span class="part-chip">Balance Staff (6309A)</span>
+            <span class="part-chip">9010 Oil</span>
+            <span class="part-chip">HP-1300 Grease</span>
+            <span class="part-chip">Caseback Gasket</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="session-card">
+        <div class="session-head">
+          <div>
+            <div class="session-date">Jan 12, 2025</div>
+            <div class="session-title">Teardown &amp; parts assessment</div>
+          </div>
+          <div class="session-duration">1h 30m</div>
+        </div>
+        <div class="session-body">
+          <div class="session-notes">Disassembled movement. Balance staff bent — impact damage. Mainspring fatigued, set flat. Dial is good, hands slightly faded but original. Ordered parts.</div>
+          <div class="parts-row">
+            <div class="parts-lbl">Parts used:</div>
+            <span class="part-chip" style="color:#5a4a35; border-color:rgba(90,74,53,0.18);">None</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Parts used panel -->
+    <div style="margin-top:14px; flex-shrink:0;">
+      <div class="section-lbl" style="margin-bottom:10px;">Parts Consumed — This Project</div>
+      <div class="parts-panel">
+        <div class="parts-grid">
+          <div class="parts-item">
+            <div class="parts-item-name">Balance Staff</div>
+            <div class="parts-item-cat">Movement · Qty 1</div>
+          </div>
+          <div class="parts-item">
+            <div class="parts-item-name">Mainspring 6309</div>
+            <div class="parts-item-cat">Mainspring · Qty 1</div>
+          </div>
+          <div class="parts-item">
+            <div class="parts-item-name">Moebius 9010</div>
+            <div class="parts-item-cat">Oil · Qty 1</div>
+          </div>
+          <div class="parts-item">
+            <div class="parts-item-name">Caseback Gasket</div>
+            <div class="parts-item-cat">Gasket · Qty 1</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom bar -->
+    <div class="bottom-bar">
+      <div>
+        <div style="font-family:'Playfair Display',serif; font-size:28px; font-weight:700; color:#f0ede6; line-height:1.1; letter-spacing:-0.02em;">
+          Six watches in pieces.<br><span style="font-style:italic; color:#b8893f;">Zero spreadsheets.</span>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+        <div class="cta-btn">hairspring.app &rarr;</div>
+        <div class="cta-note">Free to start · No card required</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

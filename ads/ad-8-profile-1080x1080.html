@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Caveat:wght@400;600&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #ccc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 40px; }
+
+.ad {
+  width: 1080px;
+  height: 1080px;
+  background: #f9f8f6;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}
+
+.grad {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 280px;
+  background: linear-gradient(to top, rgba(34,26,18,0.04), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.brass-bar {
+  height: 3px;
+  background: linear-gradient(90deg, #b8893f, #d9b072 50%, #b8893f);
+  flex-shrink: 0;
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 48px 56px 50px;
+}
+
+.top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 48px;
+}
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.logo-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #221a12;
+}
+.logo-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  color: #6b5640;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-top: 2px;
+}
+.platform-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #6b5640;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  border: 1px solid rgba(34,26,18,0.15);
+  padding: 5px 11px;
+  border-radius: 2px;
+}
+
+.headline-area {
+  margin-bottom: 36px;
+}
+.hed {
+  font-family: 'Playfair Display', serif;
+  font-size: 52px;
+  font-weight: 700;
+  color: #221a12;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin-bottom: 18px;
+}
+.hed em { font-style: italic; color: #6b4f14; }
+.dek {
+  font-family: 'Lora', serif;
+  font-size: 17px;
+  color: #5a4a35;
+  line-height: 1.65;
+  max-width: 680px;
+}
+
+/* ── Profile preview card ── */
+.profile-preview {
+  background: #f0eeeb;
+  border: 1px solid rgba(34,26,18,0.09);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 18px;
+  flex-shrink: 0;
+}
+.profile-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  background: #e8e5e0;
+  border-bottom: 1px solid rgba(34,26,18,0.09);
+}
+.nav-dots {
+  display: flex;
+  gap: 5px;
+}
+.nav-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: rgba(34,26,18,0.15);
+}
+.nav-url {
+  flex: 1;
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  color: #6b5640;
+  background: #f0eeeb;
+  border: 1px solid rgba(34,26,18,0.12);
+  border-radius: 3px;
+  padding: 4px 12px;
+  letter-spacing: 0.04em;
+}
+.nav-url .url-accent { color: #6b4f14; font-weight: 500; }
+
+.profile-body {
+  padding: 18px 22px 16px;
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+/* Left: profile info */
+.profile-left {
+  flex: 1;
+}
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(34,26,18,0.07);
+}
+.profile-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(107,79,20,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: #6b4f14;
+  flex-shrink: 0;
+}
+.profile-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #221a12;
+}
+.profile-bio {
+  font-family: 'Lora', serif;
+  font-size: 10.5px;
+  color: #9a8b73;
+  font-style: italic;
+  margin-top: 1px;
+}
+.profile-stats {
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  color: #9a8b73;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 3px;
+}
+
+.section-lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 7.5px;
+  color: #9a8b73;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  margin-bottom: 7px;
+}
+.watch-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(34,26,18,0.06);
+}
+.watch-entry:last-child { border-bottom: none; }
+.watch-entry-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #221a12;
+}
+.watch-entry-ref {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  color: #9a8b73;
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+.badge-sm {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  border: 1px solid;
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.badge-sm-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+.badge-sm.sold  { color: #2d5a38; background: rgba(45,87,58,0.10); border-color: rgba(45,87,58,0.24); }
+.badge-sm.in-progress { color: #6d4512; background: rgba(166,124,46,0.10); border-color: rgba(166,124,46,0.28); }
+.badge-sm.listed { color: #2c4a6b; background: rgba(31,89,138,0.08); border-color: rgba(31,89,138,0.22); }
+
+/* Right: repair log entries */
+.profile-right {
+  width: 280px;
+  flex-shrink: 0;
+  border-left: 1px solid rgba(34,26,18,0.07);
+  padding-left: 20px;
+}
+.log-entry {
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(34,26,18,0.06);
+}
+.log-entry:last-child { border-bottom: none; }
+.log-title {
+  font-family: 'Lora', serif;
+  font-size: 11px;
+  color: #221a12;
+  line-height: 1.3;
+}
+.log-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  color: #9a8b73;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+/* ── Feature strip ── */
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: auto;
+}
+.feat {
+  background: #f0eeeb;
+  border: 1px solid rgba(34,26,18,0.09);
+  border-radius: 5px;
+  padding: 16px 18px;
+}
+.feat-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.feat-sym { font-size: 18px; line-height: 1; color: #6b4f14; }
+.feat-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #5a4a35;
+  font-weight: 500;
+}
+.feat-body {
+  font-family: 'Lora', serif;
+  font-size: 12.5px;
+  color: #221a12;
+  line-height: 1.5;
+}
+
+/* ── Bottom ── */
+.bottom {
+  padding-top: 32px;
+  border-top: 1px solid rgba(34,26,18,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 28px;
+}
+.social-proof { display: flex; flex-direction: column; gap: 4px; }
+.proof-line { font-family: 'Caveat', cursive; font-size: 17px; color: #6b5640; }
+.proof-line strong { font-weight: 600; color: #6b4f14; }
+.cta-group { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.cta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #221a12;
+  color: #f5f4f1;
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  padding: 15px 28px;
+  border-radius: 4px;
+}
+.cta-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: #6b5640;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: right;
+}
+</style>
+</head>
+<body>
+<div class="ad">
+  <div class="grad"></div>
+  <div class="brass-bar"></div>
+
+  <div class="inner">
+    <div class="top-row">
+      <div class="logo-row">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none" width="28" height="28">
+          <circle cx="16" cy="16" r="14.5" stroke="#b8893f" stroke-width="1" fill="none"/>
+          <path d="M16 16 m 0 0 a 1 1 0 0 1 1 0 a 2.2 2.2 0 0 1 0 3.2 a 4 4 0 0 1 -5.6 -0.4 a 6 6 0 0 1 0.6 -8.4 a 8 8 0 0 1 11 0.6 a 10.5 10.5 0 0 1 -0.7 14.4" stroke="#b8893f" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <circle cx="16" cy="16" r="0.9" fill="#b8893f"/>
+        </svg>
+        <div>
+          <div class="logo-name">Hairspring</div>
+          <div class="logo-sub">Watch Tracker</div>
+        </div>
+      </div>
+      <div class="platform-tag">For the bench community</div>
+    </div>
+
+    <div class="headline-area">
+      <div class="hed">Show<br>your <em>work.</em></div>
+      <div class="dek">Hairspring gives every hobbyist their own page — watch projects, repair logs, and photos — all at <strong style="font-weight:600; color:#6b4f14;">yourname.hairspring.app</strong>.</div>
+    </div>
+
+    <!-- Profile preview mockup -->
+    <div class="profile-preview">
+      <div class="profile-nav">
+        <div class="nav-dots">
+          <div class="nav-dot"></div>
+          <div class="nav-dot"></div>
+          <div class="nav-dot"></div>
+        </div>
+        <div class="nav-url"><span class="url-accent">richard</span>.hairspring.app</div>
+      </div>
+      <div class="profile-body">
+        <!-- Left col: profile + watches -->
+        <div class="profile-left">
+          <div class="profile-header">
+            <div class="profile-avatar">RW</div>
+            <div>
+              <div class="profile-name">Richard W.</div>
+              <div class="profile-bio">Hobbyist restorer, mostly vintage Seiko &amp; Omega</div>
+              <div class="profile-stats">8 projects · 34 repair logs</div>
+            </div>
+          </div>
+          <div class="section-lbl">Watch Projects</div>
+          <div class="watch-entry">
+            <div>
+              <div class="watch-entry-name">Seiko 6309-7040</div>
+              <div class="watch-entry-ref">Vintage Diver · 1978</div>
+            </div>
+            <span class="badge-sm in-progress"><span class="badge-sm-dot"></span>In Progress</span>
+          </div>
+          <div class="watch-entry">
+            <div>
+              <div class="watch-entry-name">Omega CK2998</div>
+              <div class="watch-entry-ref">Ref. 2998-1 · 1960</div>
+            </div>
+            <span class="badge-sm sold"><span class="badge-sm-dot"></span>Sold</span>
+          </div>
+          <div class="watch-entry">
+            <div>
+              <div class="watch-entry-name">Bulova Accutron 214</div>
+              <div class="watch-entry-ref">Spaceview · 1967</div>
+            </div>
+            <span class="badge-sm listed"><span class="badge-sm-dot"></span>Listed</span>
+          </div>
+        </div>
+        <!-- Right col: recent repair logs -->
+        <div class="profile-right">
+          <div class="section-lbl">Recent Repair Logs</div>
+          <div class="log-entry">
+            <div class="log-title">Full service &amp; regulation</div>
+            <div class="log-meta">Seiko 6309 · Jan 18, 2025 · 2h 15m</div>
+          </div>
+          <div class="log-entry">
+            <div class="log-title">Balance staff replacement</div>
+            <div class="log-meta">Seiko 6309 · Jan 12, 2025 · 1h 30m</div>
+          </div>
+          <div class="log-entry">
+            <div class="log-title">Keyless works service</div>
+            <div class="log-meta">Omega CK2998 · Dec 4, 2024 · 45m</div>
+          </div>
+          <div class="log-entry">
+            <div class="log-title">Tuning fork coil replacement</div>
+            <div class="log-meta">Bulova 214 · Nov 29, 2024 · 3h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Feature strip -->
+    <div class="features">
+      <div class="feat">
+        <div class="feat-icon-row">
+          <span class="feat-sym">◎</span>
+          <span class="feat-title">Your Subdomain</span>
+        </div>
+        <div class="feat-body">yourname.hairspring.app — a permanent home for your work, not a disappearing Reddit post</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon-row">
+          <span class="feat-sym">◈</span>
+          <span class="feat-title">Watch Portfolio</span>
+        </div>
+        <div class="feat-body">Every project with photos, status, and reference details — let people see what's on your bench</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon-row">
+          <span class="feat-sym">◷</span>
+          <span class="feat-title">Repair Archive</span>
+        </div>
+        <div class="feat-body">All your bench sessions, publicly shareable. Let the community follow your work from teardown to regulation</div>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <div class="social-proof">
+        <div class="proof-line">Built by a hobbyist, <strong>for hobbyists.</strong></div>
+        <div class="proof-line">No subscriptions. <strong>Start free today.</strong></div>
+      </div>
+      <div class="cta-group">
+        <div class="cta-btn">hairspring.app &rarr;</div>
+        <div class="cta-sub">Free to start · No CC required</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
