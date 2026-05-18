@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { usePostHog } from '@posthog/react';
 import { Btn } from '#/components/primitives/Button';
 import { numberField } from '#/lib/helpers';
 import { useUser } from '#/hooks/user';
@@ -33,6 +34,7 @@ type FormData = z.infer<typeof formSchema>;
 
 function NewEquipmentRoute() {
   const navigate = useNavigate();
+  const posthog = usePostHog();
   const createEquipment = useCreateEquipment();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -71,8 +73,13 @@ function NewEquipmentRoute() {
       await createEquipment.mutateAsync({
         equipment: { ...data, user: user.id },
       });
+      posthog.capture('equipment_added', {
+        name: data.name,
+        cost: data.cost,
+      });
       navigate({ to: '/equipment' });
     } catch (e) {
+      posthog.captureException(e);
       const msg = e instanceof Error ? e.message : 'Failed to create item.';
       setSubmitError(msg);
     }

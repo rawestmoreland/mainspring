@@ -3,6 +3,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRef, useState } from 'react';
+import { usePostHog } from '@posthog/react';
 import { useCreatePost } from '#/hooks/posts';
 import { useSubscription } from '#/hooks/subscription';
 import { useUser } from '#/hooks/user';
@@ -27,6 +28,7 @@ function NewPostPage() {
   const { data: user } = useUser();
   const { data: watch } = useGetWatchById(watchId);
   const navigate = useNavigate();
+  const posthog = usePostHog();
   const { isPro } = useSubscription();
   const createPost = useCreatePost(watchId);
   const editorRef = useRef<TiptapEditorRef>(null);
@@ -74,6 +76,14 @@ function NewPostPage() {
 
     pendingEntries.forEach(([blobUrl]) => URL.revokeObjectURL(blobUrl));
     pendingImagesRef.current.clear();
+
+    posthog.capture('repair_session_created', {
+      watch_id: watchId,
+      make: watch?.make,
+      model: watch?.model,
+      has_images: imageFiles.length > 0,
+      image_count: imageFiles.length,
+    });
 
     navigate({
       to: '/watches/$watchId/posts/$postId',

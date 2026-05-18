@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { usePostHog } from '@posthog/react';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/signup')({ component: SignupPage });
 
 function SignupPage() {
   const navigate = useNavigate();
+  const posthog = usePostHog();
 
   // const { mutateAsync: joinWaitlist, isPending, error } = useJoinWaitlist();
   const { mutateAsync: signup, isPending, error } = useSignup();
@@ -35,7 +37,9 @@ function SignupPage() {
 
   const onOauthSubmit = async (provider: 'google' | 'apple' | 'discord') => {
     try {
-      await oauthLogin({ provider });
+      const result = await oauthLogin({ provider });
+      posthog.identify(result.record.id, { email: result.record.email });
+      posthog.capture('oauth_sign_in', { provider });
       navigate({ to: '/', replace: true });
     } catch {
       toast.error('Sign-in failed. Please try again.');
@@ -48,11 +52,13 @@ function SignupPage() {
   });
 
   const onSubmit = async (data: FormData) => {
-    await signup({
+    const result = await signup({
       displayName: data.display_name,
       email: data.email,
       password: data.password,
     });
+    posthog.identify(result.record.id, { email: result.record.email });
+    posthog.capture('user_signed_up', { method: 'email' });
     navigate({ to: '/', replace: true });
   };
 

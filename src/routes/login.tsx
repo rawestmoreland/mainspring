@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { usePostHog } from '@posthog/react';
 import { useLogin, useOauth2Login } from '#/hooks/user';
 import { Button } from '#/components/ui/button';
 import { GoogleSignInButton } from '#/components/primitives/GoogleSignInButton';
@@ -45,6 +46,7 @@ function LoginPage() {
   const { mutateAsync: oauthLogin, isPending: oauthPending } = useOauth2Login();
   const [resetOpen, setResetOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const posthog = usePostHog();
 
   const { control, handleSubmit } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -52,13 +54,17 @@ function LoginPage() {
   });
 
   const onSubmit = async (data: FormData) => {
-    await login(data);
+    const result = await login(data);
+    posthog.identify(result.record.id, { email: result.record.email });
+    posthog.capture('user_signed_in', { method: 'email' });
     navigate({ to: from ?? '/', replace: true });
   };
 
   const onOauthSubmit = async (provider: 'google' | 'apple' | 'discord') => {
     try {
-      await oauthLogin({ provider });
+      const result = await oauthLogin({ provider });
+      posthog.identify(result.record.id, { email: result.record.email });
+      posthog.capture('oauth_sign_in', { provider });
       navigate({ to: from ?? '/', replace: true });
     } catch {
       toast.error('Google sign-in failed. Please try again.');
@@ -181,10 +187,12 @@ function LoginPage() {
                   }
                   try {
                     await UserApi.passwordReset(email);
+                    posthog.capture('password_reset_requested');
                     toast.success(
                       'If an account exists for this email, you will receive instructions shortly',
                     );
                   } catch (error) {
+                    posthog.captureException(error);
                     toast.error('There was an error during the submission');
                   } finally {
                     setSubmitting(false);

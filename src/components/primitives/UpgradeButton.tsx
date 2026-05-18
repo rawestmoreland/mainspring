@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { usePostHog } from '@posthog/react';
 import { startProCheckout } from '#/server/checkout-actions';
 import { Button } from '#/components/ui/button';
 import {
@@ -12,6 +13,7 @@ import { useLocation } from '@tanstack/react-router';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
 
 export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
+  const posthog = usePostHog();
   const ga4 = useGoogleAnalytics();
   const location = useLocation();
   const [loading, setLoading] = useState(false);
@@ -59,6 +61,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
 
   const handleUpgrade = async () => {
     setLoading(true);
+    posthog.capture('upgrade_initiated', { user_id: pbUserId, source: location.pathname });
     ga4.event('begin_checkout', {
       category: 'Subscription',
       label: 'User initiated upgrade to Pro',
@@ -76,6 +79,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
       });
       setCheckoutUrl(url);
     } catch (err) {
+      posthog.captureException(err);
       toast.error('Could not start checkout. Please try again.');
       console.error(err);
     } finally {
@@ -92,6 +96,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
         open={!!checkoutUrl}
         onOpenChange={(open) => {
           if (!open) {
+            posthog.capture('checkout_dismissed', { user_id: pbUserId });
             ga4.event('checkout_dismissed', {
               category: 'Subscription',
               label: 'User closed checkout without completing',

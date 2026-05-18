@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { usePostHog } from '@posthog/react';
 import type { WatchCondition, WatchStatus } from '#/types';
 import { numberField } from '#/lib/helpers';
 import { FREE_PROJECT_LIMIT } from '#/lib/constants';
@@ -76,6 +77,7 @@ type FormData = z.infer<typeof formSchema>;
 
 function NewWatchRoute() {
   const navigate = useNavigate();
+  const posthog = usePostHog();
   const createWatch = useCreateWatch();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null);
@@ -173,11 +175,20 @@ function NewWatchRoute() {
       if (featuredImageFile) {
         await WatchesApi.uploadFeaturedImage(created.id, featuredImageFile);
       }
+      posthog.capture('watch_created', {
+        make: data.make,
+        model: data.model,
+        status: data.status,
+        condition_bought: data.condition_bought,
+        bought_price: data.bought_price,
+        has_featured_image: !!featuredImageFile,
+      });
       navigate({
         to: '/watches/$watchId',
         params: { watchId: created.id },
       });
     } catch (e) {
+      posthog.captureException(e);
       const msg = e instanceof Error ? e.message : 'Failed to create watch.';
       setSubmitError(msg);
     }

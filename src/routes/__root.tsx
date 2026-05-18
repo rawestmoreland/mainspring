@@ -8,6 +8,7 @@ import {
   useRouterState,
 } from '@tanstack/react-router';
 import { createIsomorphicFn } from '@tanstack/react-start';
+import { PostHogProvider } from '@posthog/react';
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools';
 import { TanStackDevtools } from '@tanstack/react-devtools';
 import type { QueryClient } from '@tanstack/react-query';
@@ -199,7 +200,17 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <PostHogProvider
+          apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN!}
+          options={{
+            api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+            defaults: '2025-05-24',
+            capture_exceptions: true,
+            debug: import.meta.env.DEV,
+          }}
+        >
+          {children}
+        </PostHogProvider>
         <Toaster />
         {gaId && <GoogleAnalytics measurementId={gaId} />}
         <script src='https://app.lemonsqueezy.com/js/lemon.js' defer></script>

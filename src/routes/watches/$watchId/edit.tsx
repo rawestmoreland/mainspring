@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { usePostHog } from '@posthog/react';
 import type { WatchCondition, WatchStatus } from '#/types';
 import { numberField } from '#/lib/helpers';
 import { useGetWatchById, useUpdateWatch } from '#/hooks/watches';
@@ -78,6 +79,7 @@ type FormValues = z.input<typeof formSchema>;
 function EditWatchRoute() {
   const { watchId } = Route.useParams();
   const navigate = useNavigate();
+  const posthog = usePostHog();
   const { data: watch, isLoading: isWatchLoading } = useGetWatchById(watchId);
   const { data: user, isLoading: isUserLoading } = useUser();
   const updateWatch = useUpdateWatch();
@@ -181,11 +183,19 @@ function EditWatchRoute() {
       if (featuredImageFile) {
         await WatchesApi.uploadFeaturedImage(watchId, featuredImageFile);
       }
+      posthog.capture('watch_updated', {
+        make: payload.make,
+        model: payload.model,
+        status: payload.status,
+        previous_status: watch.status,
+        sold_price: payload.sold_price,
+      });
       navigate({
         to: '/watches/$watchId',
         params: { watchId },
       });
     } catch (e) {
+      posthog.captureException(e);
       const msg = e instanceof Error ? e.message : 'Failed to save watch.';
       setSubmitError(msg);
     }

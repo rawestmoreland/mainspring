@@ -5,6 +5,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { usePostHog } from '@posthog/react';
 import { InventoryCategory, InventoryItem } from '#/types';
 import { Btn } from '#/components/primitives/Button';
 import { numberField } from '#/lib/helpers';
@@ -100,6 +101,7 @@ type FormData = z.infer<typeof formSchema>;
 
 function NewInventoryRoute() {
   const navigate = useNavigate();
+  const posthog = usePostHog();
   const createInventory = useCreateInventory();
   const createDonorMovement = useCreateDonorMovement();
   const createMovementPart = useCreateMovementPart();
@@ -160,6 +162,11 @@ function NewInventoryRoute() {
           missing_parts: data.missing_parts,
           ...(data.jewels !== undefined ? { jewels: data.jewels } : {}),
         });
+        posthog.capture('donor_movement_added', {
+          caliber: data.caliber,
+          manufacturer: data.manufacturer,
+          missing_parts_count: data.missing_parts.length,
+        });
         if (data.missing_parts.length > 0) {
           pendingDonorRef.current = {
             caliber: data.caliber,
@@ -174,9 +181,15 @@ function NewInventoryRoute() {
         await createInventory.mutateAsync({
           inventory: { ...data, user: user.id },
         });
+        posthog.capture('inventory_item_created', {
+          category: data.category,
+          qty: data.qty,
+          unit_cost: data.unit_cost,
+        });
         navigate({ to: '/inventory' });
       }
     } catch (e) {
+      posthog.captureException(e);
       const msg = e instanceof Error ? e.message : 'Failed to create item.';
       setSubmitError(msg);
     }
