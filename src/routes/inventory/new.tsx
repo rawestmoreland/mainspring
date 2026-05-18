@@ -195,7 +195,7 @@ function NewInventoryRoute() {
     }
   };
 
-  function handleInventoryConfirm(selectedParts: string[]) {
+  async function handleInventoryConfirm(selectedParts: string[]) {
     const ctx = pendingDonorRef.current;
     if (ctx) {
       for (const partName of selectedParts) {
@@ -203,9 +203,9 @@ function NewInventoryRoute() {
           (item) => item.name.toLowerCase() === partName.toLowerCase(),
         ) as InventoryItem | undefined;
         if (existing) {
-          updateInventory.mutate({ ...existing, qty: existing.qty + 1 });
+          await updateInventory.mutateAsync({ ...existing, qty: existing.qty + 1 });
         } else {
-          createInventory.mutate({
+          await createInventory.mutateAsync({
             inventory: {
               name: `${partName} (from ${ctx.caliber})`,
               category: InventoryCategory.HARVESTED_PART,
