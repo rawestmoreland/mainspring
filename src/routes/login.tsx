@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { AppleSignInButton } from '#/components/primitives/AppleSignInButton';
 import { DiscordSignInButton } from '#/components/primitives/DiscordSignInButton';
+import { useAuth } from '#/hooks/auth';
 
 const schema = z.object({
   email: z.email('Enter a valid email'),
@@ -41,6 +42,7 @@ export const Route = createFileRoute('/login')({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
   const { from } = Route.useSearch();
   const { mutateAsync: login, isPending, error } = useLogin();
   const { mutateAsync: oauthLogin, isPending: oauthPending } = useOauth2Login();
@@ -70,6 +72,12 @@ function LoginPage() {
       toast.error('Google sign-in failed. Please try again.');
     }
   };
+
+  useEffect(() => {
+    if (!isLoading && user) {
+      navigate({ to: from ?? '/dashboard', replace: true });
+    }
+  }, [isLoading, user]);
 
   return (
     <div className='min-h-screen bg-background flex items-center justify-center p-4'>

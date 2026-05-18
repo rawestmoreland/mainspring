@@ -14,6 +14,7 @@ import { DiscordSignInButton } from '#/components/primitives/DiscordSignInButton
 import { useSignup, useOauth2Login } from '#/hooks/user';
 import { useEffect } from 'react';
 import { toast } from 'sonner';
+import { useAuth } from '#/hooks/auth';
 
 const schema = z.object({
   display_name: z
@@ -28,6 +29,7 @@ type FormData = z.infer<typeof schema>;
 export const Route = createFileRoute('/signup')({ component: SignupPage });
 
 function SignupPage() {
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const posthog = usePostHog();
 
@@ -71,6 +73,12 @@ function SignupPage() {
       setValue('display_name', '', { shouldDirty: true });
     }
   }, [emailWatch]);
+
+  useEffect(() => {
+    if (!isLoading && !!user) {
+      navigate({ to: '/dashboard', replace: true });
+    }
+  }, [user, isLoading]);
 
   return (
     <div className='min-h-screen bg-background flex items-center justify-center p-4'>

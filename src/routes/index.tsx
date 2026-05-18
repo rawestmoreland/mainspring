@@ -8,6 +8,7 @@ import type { UserProfile, Watch, RepairPost } from '#/types';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Avatar, AvatarImage } from '#/components/ui/avatar';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
+import { useAuth } from '#/hooks/auth';
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
@@ -300,6 +301,7 @@ const FEATURES = [
 ] as const;
 
 function LandingPage() {
+  const { user, isLoading } = useAuth();
   const { data: landingData, isPending } = useQuery({
     queryKey: ['landingstats'],
     queryFn: async () => {
@@ -307,6 +309,8 @@ function LandingPage() {
       return await pb.collection('homepage_stats').getOne('1');
     },
   });
+
+  const loggedIn = useMemo(() => !!user && !isLoading, [user, isLoading]);
 
   return (
     <div className='min-h-screen bg-background text-foreground'>
@@ -334,20 +338,33 @@ function LandingPage() {
           <span className='font-serif text-lg font-bold text-primary tracking-tight'>
             Hairspring
           </span>
-          <div className='flex items-center gap-3'>
-            <Link
-              to='/login'
-              className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5'
-            >
-              Sign in
-            </Link>
-            <Link
-              to='/signup'
-              className='font-mono text-xs bg-primary text-primary-foreground font-semibold px-4 py-1.5 rounded hover:bg-primary/90 transition-colors'
-            >
-              Sign up
-            </Link>
-          </div>
+          {isLoading ? (
+            <></>
+          ) : !!loggedIn ? (
+            <div>
+              <Link
+                to='/dashboard'
+                className='font-mono text-xs bg-primary text-primary-foreground font-semibold px-4 py-1.5 rounded hover:bg-primary/90 transition-colors'
+              >
+                Dashboard
+              </Link>
+            </div>
+          ) : (
+            <div className='flex items-center gap-3'>
+              <Link
+                to='/login'
+                className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5'
+              >
+                Sign in
+              </Link>
+              <Link
+                to='/signup'
+                className='font-mono text-xs bg-primary text-primary-foreground font-semibold px-4 py-1.5 rounded hover:bg-primary/90 transition-colors'
+              >
+                Sign up
+              </Link>
+            </div>
+          )}
         </div>
       </nav>
 
@@ -376,7 +393,9 @@ function LandingPage() {
             details, parts on hand, repair notes, and photos. Built for the
             people who actually love this stuff.
           </p>
-          <div className='ms-fade-up-4 flex flex-col sm:flex-row items-center justify-center gap-3'>
+          <div
+            className={`${!!loggedIn ? 'hidden' : 'ms-fade-up-4 flex flex-col sm:flex-row items-center justify-center gap-3'}`}
+          >
             <Link
               to='/signup'
               className='font-mono text-sm bg-primary text-primary-foreground font-bold px-7 py-3 rounded hover:bg-primary/90 transition-colors w-full sm:w-auto text-center'
@@ -537,25 +556,27 @@ function LandingPage() {
       </section>
 
       {/* ── CTA block ───────────────────────────────────────────────────── */}
-      <div className='px-5 my-8'>
-        <div className='bg-card rounded-2xl p-10 sm:p-14 mx-auto max-w-2xl text-center border border-border'>
-          <p className='font-mono text-xs uppercase tracking-[0.2em] text-primary mb-4'>
-            Free to start
-          </p>
-          <h2 className='font-serif font-bold text-foreground text-3xl sm:text-4xl mb-3'>
-            Ready to bring order to the bench?
-          </h2>
-          <p className='text-muted-foreground text-base mb-8'>
-            Free to use. No credit card required.
-          </p>
-          <Link
-            to='/signup'
-            className='inline-block font-mono text-sm bg-primary text-primary-foreground font-bold px-10 py-3.5 rounded hover:bg-primary/90 transition-colors'
-          >
-            Get started →
-          </Link>
+      {!loggedIn && (
+        <div className='px-5 my-8'>
+          <div className='bg-card rounded-2xl p-10 sm:p-14 mx-auto max-w-2xl text-center border border-border'>
+            <p className='font-mono text-xs uppercase tracking-[0.2em] text-primary mb-4'>
+              Free to start
+            </p>
+            <h2 className='font-serif font-bold text-foreground text-3xl sm:text-4xl mb-3'>
+              Ready to bring order to the bench?
+            </h2>
+            <p className='text-muted-foreground text-base mb-8'>
+              Free to use. No credit card required.
+            </p>
+            <Link
+              to='/signup'
+              className='inline-block font-mono text-sm bg-primary text-primary-foreground font-bold px-10 py-3.5 rounded hover:bg-primary/90 transition-colors'
+            >
+              Get started →
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className='max-w-6xl mx-auto px-5 py-10 mt-8 border-t border-border'>
@@ -568,20 +589,22 @@ function LandingPage() {
               &copy; {new Date().getFullYear()} · Built for bench hobbyists.
             </span>
           </div>
-          <div className='flex items-center gap-5'>
-            <Link
-              to='/login'
-              className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors'
-            >
-              Sign in
-            </Link>
-            <Link
-              to='/signup'
-              className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors'
-            >
-              Sign up
-            </Link>
-          </div>
+          {!loggedIn && (
+            <div className='flex items-center gap-5'>
+              <Link
+                to='/login'
+                className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors'
+              >
+                Sign in
+              </Link>
+              <Link
+                to='/signup'
+                className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors'
+              >
+                Sign up
+              </Link>
+            </div>
+          )}
         </div>
       </footer>
     </div>
