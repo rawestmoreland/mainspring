@@ -1,4 +1,5 @@
 import { UserApi } from '#/lib/api/user';
+import { usePostHog } from '@posthog/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
 
@@ -87,10 +88,12 @@ export const useOauth2Login = () => {
 
 export const useLogout = () => {
   const queryClient = useQueryClient();
+  const posthog = usePostHog();
   return useMutation({
     mutationFn: () => UserApi.logout(),
     onSuccess: () => {
       queryClient.clear();
+      posthog.reset();
     },
   });
 };
