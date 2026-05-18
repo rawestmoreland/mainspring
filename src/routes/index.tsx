@@ -30,7 +30,7 @@ function IndexPage() {
 // ─── Public profile (subdomain visitors) ────────────────────────────────────
 
 function PublicProfile({ tenant }: { tenant: UserProfile }) {
-  const pbUrl = import.meta.env.VITE_POCKETBASE_URL;
+  const pbUrl = import.meta.env.VITE_PUBLIC_POCKETBASE_URL;
 
   const ga4 = useGoogleAnalytics();
 

@@ -17,7 +17,7 @@ function toRepairPost(r: Record<string, unknown>): RepairPost {
     images,
     imageUrls: images.map(
       (filename) =>
-        `${import.meta.env.VITE_ASSET_URL}/${r.collectionId}/${r.id}/${filename}`,
+        `${import.meta.env.VITE_PUBLIC_ASSET_URL}/${r.collectionId}/${r.id}/${filename}`,
     ),
   };
 }

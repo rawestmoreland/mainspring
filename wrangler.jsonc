@@ -11,8 +11,8 @@
   },
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "VITE_ASSET_URL": "https://ms-assets.westmorelandcreative.com",
-    "VITE_POCKETBASE_URL": "https://api.hairspring.app",
+    "VITE_PUBLIC_ASSET_URL": "https://ms-assets.westmorelandcreative.com",
+    "VITE_PUBLIC_POCKETBASE_URL": "https://api.hairspring.app",
   },
   "routes": [
     {

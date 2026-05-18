@@ -13,8 +13,8 @@ function PublicPostDetailPage() {
   const ctx = Route.useRouteContext() as { tenant?: UserProfile | null };
   const { postId } = Route.useParams();
 
-  const pbUrl = import.meta.env.VITE_POCKETBASE_URL as string;
-  const assetUrl = import.meta.env.VITE_ASSET_URL as string;
+  const pbUrl = import.meta.env.VITE_PUBLIC_POCKETBASE_URL as string;
+  const assetUrl = import.meta.env.VITE_PUBLIC_ASSET_URL as string;
 
   const { data: post, isLoading } = useQuery<RepairPost | null>({
     queryKey: ['public', 'post', postId],

@@ -1,8 +1,9 @@
 import type { UserProfile } from '#/types';
 
 const POCKETBASE_URL =
-  typeof import.meta !== 'undefined' && import.meta.env?.VITE_POCKETBASE_URL
-    ? import.meta.env.VITE_POCKETBASE_URL
+  typeof import.meta !== 'undefined' &&
+  import.meta.env?.VITE_PUBLIC_POCKETBASE_URL
+    ? import.meta.env.VITE_PUBLIC_POCKETBASE_URL
     : 'http://127.0.0.1:8080';
 
 /**

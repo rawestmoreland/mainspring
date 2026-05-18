@@ -15,7 +15,7 @@ export const WatchesApi = {
     return watches.items.map((w) => ({
       ...w,
       featured_image_url: w.featured_image
-        ? `${import.meta.env.VITE_POCKETBASE_URL}/api/files/watches/${w.id}/${w.featured_image}?thumb=600x400`
+        ? `${import.meta.env.VITE_PUBLIC_POCKETBASE_URL}/api/files/watches/${w.id}/${w.featured_image}?thumb=600x400`
         : undefined,
       photos:
         w.expand?.watch_photos_via_watch?.map((p: WatchPhoto) => ({
@@ -23,7 +23,7 @@ export const WatchesApi = {
           collectionId: p.collectionId,
           stage: p.stage,
           caption: p.caption,
-          image: `${import.meta.env.VITE_POCKETBASE_URL}/api/files/${p.collectionId}/${p.id}/${p.image}?thumb=100x100`,
+          image: `${import.meta.env.VITE_PUBLIC_POCKETBASE_URL}/api/files/${p.collectionId}/${p.id}/${p.image}?thumb=100x100`,
         })) ?? [],
       parts_cost:
         w.expand?.parts_used_via_watch?.reduce(
@@ -60,7 +60,7 @@ export const WatchesApi = {
     return {
       ...updated,
       featured_image_url: updated.featured_image
-        ? `${import.meta.env.VITE_POCKETBASE_URL}/api/files/watches/${updated.id}/${updated.featured_image}?thumb=600x400`
+        ? `${import.meta.env.VITE_PUBLIC_POCKETBASE_URL}/api/files/watches/${updated.id}/${updated.featured_image}?thumb=600x400`
         : undefined,
       photos: [],
     };
@@ -106,7 +106,7 @@ export const WatchesApi = {
     return {
       ...watch,
       featured_image_url: watch.featured_image
-        ? `${import.meta.env.VITE_POCKETBASE_URL}/api/files/watches/${watch.id}/${watch.featured_image}?thumb=600x400`
+        ? `${import.meta.env.VITE_PUBLIC_POCKETBASE_URL}/api/files/watches/${watch.id}/${watch.featured_image}?thumb=600x400`
         : undefined,
       photos:
         watch.expand?.watch_photos_via_watch?.map((p: WatchPhoto) => ({
@@ -114,7 +114,7 @@ export const WatchesApi = {
           collectionId: p.collectionId,
           stage: p.stage,
           caption: p.caption,
-          image: `${import.meta.env.VITE_ASSET_URL}/${p.collectionId}/${p.id}/${p.image}`,
+          image: `${import.meta.env.VITE_PUBLIC_ASSET_URL}/${p.collectionId}/${p.id}/${p.image}`,
         })) ?? [],
       parts_cost:
         watch.expand?.parts_used_via_watch?.reduce(

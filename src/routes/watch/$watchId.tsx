@@ -101,8 +101,8 @@ function PublicWatchDetailPage() {
     index: number;
   } | null>(null);
 
-  const pbUrl = import.meta.env.VITE_POCKETBASE_URL as string;
-  const assetUrl = import.meta.env.VITE_ASSET_URL as string;
+  const pbUrl = import.meta.env.VITE_PUBLIC_POCKETBASE_URL as string;
+  const assetUrl = import.meta.env.VITE_PUBLIC_ASSET_URL as string;
 
   const { data: watch, isLoading } = useQuery<Watch | null>({
     queryKey: ['public', 'watch', watchId],
