@@ -401,6 +401,7 @@ function LandingPage() {
             <Link
               to='/signup'
               className='font-mono text-sm bg-primary text-primary-foreground font-bold px-7 py-3 rounded hover:bg-primary/90 transition-colors w-full sm:w-auto text-center'
+              onClick={() => window.rdt?.('track', 'Lead', { conversionId: crypto.randomUUID() })}
             >
               Get started →
             </Link>
@@ -573,6 +574,7 @@ function LandingPage() {
             <Link
               to='/signup'
               className='inline-block font-mono text-sm bg-primary text-primary-foreground font-bold px-10 py-3.5 rounded hover:bg-primary/90 transition-colors'
+              onClick={() => window.rdt?.('track', 'Lead', { conversionId: crypto.randomUUID() })}
             >
               Get started →
             </Link>

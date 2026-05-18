@@ -42,6 +42,7 @@ function SignupPage() {
       const result = await oauthLogin({ provider });
       posthog.identify(result.record.id, { email: result.record.email });
       posthog.capture('oauth_sign_in', { provider });
+      window.rdt?.('track', 'SignUp', { conversionId: result.record.id });
       navigate({ to: '/', replace: true });
     } catch {
       toast.error('Sign-in failed. Please try again.');
@@ -61,6 +62,7 @@ function SignupPage() {
     });
     posthog.identify(result.record.id, { email: result.record.email });
     posthog.capture('user_signed_up', { method: 'email' });
+    window.rdt?.('track', 'SignUp', { conversionId: result.record.id });
     navigate({ to: '/', replace: true });
   };
 
