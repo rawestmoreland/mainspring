@@ -20,7 +20,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
 
-  const measurementId = import.meta.env.VITE_GA4_MEASUREMENT_ID;
+  const measurementId = import.meta.env.VITE_PUBLIC_GA4_MEASUREMENT_ID;
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
@@ -61,7 +61,10 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
 
   const handleUpgrade = async () => {
     setLoading(true);
-    posthog.capture('upgrade_initiated', { user_id: pbUserId, source: location.pathname });
+    posthog.capture('upgrade_initiated', {
+      user_id: pbUserId,
+      source: location.pathname,
+    });
     ga4.event('begin_checkout', {
       category: 'Subscription',
       label: 'User initiated upgrade to Pro',
