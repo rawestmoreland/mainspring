@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { createFileRoute, redirect, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
@@ -8,7 +8,6 @@ import type { UserProfile, Watch, RepairPost } from '#/types';
 import { Skeleton } from '#/components/ui/skeleton';
 import { Avatar, AvatarImage } from '#/components/ui/avatar';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
-import { useAuth } from '#/hooks/auth';
 
 export const Route = createFileRoute('/')({
   beforeLoad: async () => {
@@ -301,7 +300,14 @@ const FEATURES = [
 ] as const;
 
 function LandingPage() {
-  const { user, isLoading } = useAuth();
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  useEffect(() => {
+    import('#/lib/pocketbase').then(({ default: pb }) => {
+      setLoggedIn(pb.authStore.isValid);
+    });
+  }, []);
+
   const { data: landingData, isPending } = useQuery({
     queryKey: ['landingstats'],
     queryFn: async () => {
@@ -309,8 +315,6 @@ function LandingPage() {
       return await pb.collection('homepage_stats').getOne('1');
     },
   });
-
-  const loggedIn = useMemo(() => !!user && !isLoading, [user, isLoading]);
 
   return (
     <div className='min-h-screen bg-background text-foreground'>
@@ -338,9 +342,7 @@ function LandingPage() {
           <span className='font-serif text-lg font-bold text-primary tracking-tight'>
             Hairspring
           </span>
-          {isLoading ? (
-            <></>
-          ) : !!loggedIn ? (
+          {loggedIn ? (
             <div>
               <Link
                 to='/dashboard'
