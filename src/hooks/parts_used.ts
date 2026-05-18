@@ -11,7 +11,7 @@ export const useCreatePartUsed = (watchId: string) => {
       console.error(error);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['watches', watchId] });
+      queryClient.invalidateQueries({ queryKey: ['watches', { watchId }] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
   });
@@ -25,7 +25,7 @@ export const useDeletePartUsed = (watchId: string) => {
       console.error(error);
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['watches', watchId] });
+      queryClient.invalidateQueries({ queryKey: ['watches', { watchId }] });
       queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
   });

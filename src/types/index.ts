@@ -8,21 +8,32 @@ export const WatchStatus = {
 } as const;
 export type WatchStatus = (typeof WatchStatus)[keyof typeof WatchStatus];
 export type WatchCondition = 'worn' | 'parts_only' | 'good' | 'fair' | 'poor';
+export type MovementPart = {
+  id: string;
+  user: string;
+  name: string;
+};
+
+export const InventoryCategory = {
+  MOVEMENT: 'movement',
+  HARVESTED_PART: 'harvested_part',
+  MAINSPRING: 'mainspring',
+  CRYSTAL: 'crystal',
+  STRAP: 'strap',
+  BRACELET: 'bracelet',
+  CROWN: 'crown',
+  GASKET: 'gasket',
+  HAND: 'hand',
+  DIAL: 'dial',
+  BEZEL: 'bezel',
+  CASE: 'case',
+  TOOL: 'tool',
+  OIL: 'oil',
+  OTHER: 'other',
+} as const;
+
 export type InventoryCategory =
-  | 'movement'
-  | 'mainspring'
-  | 'crystal'
-  | 'strap'
-  | 'bracelet'
-  | 'crown'
-  | 'gasket'
-  | 'hand'
-  | 'dial'
-  | 'bezel'
-  | 'case'
-  | 'tool'
-  | 'oil'
-  | 'other';
+  (typeof InventoryCategory)[keyof typeof InventoryCategory];
 
 export type WatchPhoto = {
   id: string;
@@ -105,6 +116,22 @@ export type Equipment = {
 
 export type CreateEquipment = Omit<Equipment, 'id'>;
 
+export type DonorMovement = {
+  id: string;
+  user: string;
+  caliber: string;
+  manufacturer: string;
+  jewels?: number;
+  missing_parts?: string[];
+  created: string;
+  updated: string;
+};
+
+export type CreateDonorMovement = Omit<
+  DonorMovement,
+  'id' | 'created' | 'updated'
+>;
+
 export type Inventory = {
   id: string;
   user: string;
@@ -112,6 +139,10 @@ export type Inventory = {
   qty: number;
   unit_cost: number;
   category: InventoryCategory;
+  supplier?: string;
+  notes?: string;
+  is_donor?: boolean;
+  missing_parts?: string[];
 };
 
 export type CreateInventory = Omit<Inventory, 'id'>;

@@ -2,7 +2,7 @@
 
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { Inventory, InventoryCategory } from '#/types';
@@ -10,6 +10,11 @@ import { Btn } from '#/components/primitives/Button';
 import { numberField } from '#/lib/helpers';
 import { useUser } from '#/hooks/user';
 import { useGetInventoryById, useUpdateInventory } from '#/hooks/inventory';
+import {
+  usePartVocabulary,
+  useCreateMovementPart,
+} from '#/hooks/movementParts';
+import { PartTagInput } from '#/components/inventory/PartTagInput';
 import type { RecordModel } from 'pocketbase';
 import {
   Field,
@@ -31,6 +36,7 @@ export const Route = createFileRoute('/inventory/$inventoryId/edit')({
 });
 
 const INVENTORY_CATEGORIES: readonly InventoryCategory[] = [
+  'harvested_part',
   'movement',
   'mainspring',
   'crystal',
@@ -58,17 +64,22 @@ const formSchema = z.object({
   unit_cost: numberField({ min: 0, message: 'Unit cost must be 0 or more' }),
   supplier: z.string(),
   notes: z.string(),
+  is_donor: z.boolean(),
+  missing_parts: z.array(z.string()),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 function EditInventoryRoute() {
   const { inventoryId } = Route.useParams();
-  const { data: item, isLoading: isItemLoading } = useGetInventoryById(inventoryId);
+  const { data: item, isLoading: isItemLoading } =
+    useGetInventoryById(inventoryId);
   const { data: user, isLoading: isUserLoading } = useUser();
 
   if (isItemLoading || isUserLoading) {
-    return <div className='text-sm text-muted-foreground font-mono'>Loading…</div>;
+    return (
+      <div className='text-sm text-muted-foreground font-mono'>Loading…</div>
+    );
   }
 
   if (!item) {
@@ -95,9 +106,15 @@ function EditInventoryRoute() {
 function EditInventoryForm({ item }: { item: RecordModel }) {
   const navigate = useNavigate();
   const updateInventory = useUpdateInventory();
+  const createMovementPart = useCreateMovementPart();
+  const vocabulary = usePartVocabulary();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const { control, handleSubmit, formState: { isSubmitting } } = useForm<FormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: item.name as string,
@@ -106,8 +123,13 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
       unit_cost: item.unit_cost as number,
       supplier: (item.supplier as string) ?? '',
       notes: (item.notes as string) ?? '',
+      is_donor: (item.is_donor as boolean) ?? false,
+      missing_parts: (item.missing_parts as string[]) ?? [],
     },
   });
+
+  const category = useWatch({ control, name: 'category' });
+  const isDonor = useWatch({ control, name: 'is_donor' });
 
   const onSubmit = handleSubmit(async (data) => {
     setSubmitError(null);
@@ -120,6 +142,8 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
       category: data.category,
       supplier: data.supplier,
       notes: data.notes,
+      is_donor: data.is_donor,
+      missing_parts: data.missing_parts,
     } as Inventory;
     try {
       await updateInventory.mutateAsync(payload);
@@ -214,6 +238,54 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
             )}
           />
         </section>
+
+        {category === 'movement' && (
+          <Controller
+            name='is_donor'
+            control={control}
+            render={({ field }) => (
+              <label className='flex items-center gap-2.5 cursor-pointer w-fit'>
+                <input
+                  type='checkbox'
+                  checked={field.value}
+                  onChange={(e) => field.onChange(e.target.checked)}
+                  className='size-4 rounded border-input bg-transparent accent-amber-500 cursor-pointer'
+                />
+                <span className='font-mono text-xs text-foreground'>
+                  Donor movement
+                </span>
+                <span className='font-mono text-[10px] text-muted-foreground'>
+                  (cannibalize for parts)
+                </span>
+              </label>
+            )}
+          />
+        )}
+
+        {isDonor && (
+          <section>
+            <p className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5'>
+              Missing Parts
+            </p>
+            <p className='font-mono text-[10px] text-muted-foreground mb-2'>
+              Add the parts already harvested from this movement.
+            </p>
+            <Controller
+              name='missing_parts'
+              control={control}
+              render={({ field }) => (
+                <PartTagInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  vocabulary={vocabulary}
+                  onCreatePart={async (name) => {
+                    await createMovementPart.mutateAsync(name);
+                  }}
+                />
+              )}
+            />
+          </section>
+        )}
 
         <section className='grid grid-cols-2 gap-4'>
           <Controller

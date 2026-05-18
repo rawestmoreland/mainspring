@@ -2,7 +2,10 @@ import { useState } from 'react';
 import {
   DndContext,
   DragOverlay,
+  PointerSensor,
   useDroppable,
+  useSensor,
+  useSensors,
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
@@ -83,6 +86,11 @@ function DroppableColumn({ status, label, color, cards, selectedWatchId, onSelec
 export function KanbanBoard({ watches, selectedWatchId, onSelectWatch }: KanbanBoardProps) {
   const [activeWatchId, setActiveWatchId] = useState<string | null>(null);
   const { mutate: updateWatch } = useUpdateWatch();
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    }),
+  );
 
   const activeWatch = activeWatchId ? watches.find((w) => w.id === activeWatchId) ?? null : null;
 
@@ -99,7 +107,7 @@ export function KanbanBoard({ watches, selectedWatchId, onSelectWatch }: KanbanB
   }
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="flex gap-3 overflow-x-auto pb-3">
         {COLUMNS.map(({ status, label, color }) => {
           const cards = watches.filter((w) => w.status === status);

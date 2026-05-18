@@ -625,6 +625,8 @@ func main() {
 			newQty := max(0, inventoryRecord.GetInt("qty")-quantityUsed)
 			inventoryRecord.Set("qty", newQty)
 			e.App.Save(inventoryRecord)
+		} else {
+			fmt.Printf("Failed to expand inventory_item for parts_used record %s: %v\n", e.Record.Id, errs)
 		}
 
 		return e.Next()

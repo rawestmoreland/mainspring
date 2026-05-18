@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { startProCheckout } from '#/server/checkout-actions';
 import { Button } from '#/components/ui/button';

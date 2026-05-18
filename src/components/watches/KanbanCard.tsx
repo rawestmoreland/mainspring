@@ -29,7 +29,7 @@ export function KanbanCard({ watch, isSelected, onClick, dragDisabled }: KanbanC
       {...attributes}
       className={cn(
         'relative w-full text-left rounded-lg border bg-card p-3 transition-all block',
-        frozen ? 'cursor-default opacity-60' : 'cursor-grab active:cursor-grabbing',
+        frozen ? 'cursor-default opacity-60' : 'cursor-pointer',
         isDragging ? 'opacity-30' : '',
         isSelected
           ? 'border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/20'

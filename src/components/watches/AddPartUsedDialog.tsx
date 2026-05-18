@@ -40,12 +40,20 @@ type Props = {
 
 export function AddPartUsedDialog({ watchId }: Props) {
   const [open, setOpen] = useState(false);
-  const { data: inventory = [] } = useInventory();
+  const { data: rawInventory = [] } = useInventory();
+  const inventory = rawInventory.filter(
+    (i) => !(i as { is_donor?: boolean }).is_donor,
+  );
   const createPartUsed = useCreatePartUsed(watchId);
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
-  const { control, handleSubmit, reset, formState: { isSubmitting } } = useForm<FormData>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isSubmitting },
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       inventory_item: '',
@@ -69,33 +77,55 @@ export function AddPartUsedDialog({ watchId }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Btn sm ghost>+ Add Part</Btn>
+        <Btn sm ghost>
+          + Add Part
+        </Btn>
       </DialogTrigger>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
           <DialogTitle>Log Part Used</DialogTitle>
         </DialogHeader>
-        <form id='add-part-form' onSubmit={handleSubmit(onSubmit)} className='space-y-4 pt-1'>
+        <form
+          id='add-part-form'
+          onSubmit={handleSubmit(onSubmit)}
+          className='space-y-4 pt-1'
+        >
           <Controller
             name='inventory_item'
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor='inventory_item'>Part</FieldLabel>
-                <Select name={field.name} value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger id='inventory_item' aria-invalid={fieldState.invalid} className='w-full'>
+                <Select
+                  name={field.name}
+                  value={field.value}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger
+                    id='inventory_item'
+                    aria-invalid={fieldState.invalid}
+                    className='w-full'
+                  >
                     <SelectValue placeholder='Select a part…' />
                   </SelectTrigger>
                   <SelectContent position='popper'>
                     {inventory.map((item) => (
-                      <SelectItem key={item.id} value={item.id}>
+                      <SelectItem
+                        key={item.id}
+                        value={item.id}
+                        disabled={item.qty <= 0}
+                      >
                         {item.name}
-                        <span className='ml-1.5 text-muted-foreground text-[11px]'>({item.qty} in stock)</span>
+                        <span className='ml-1.5 text-muted-foreground text-[11px]'>
+                          ({item.qty} in stock)
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -117,7 +147,9 @@ export function AddPartUsedDialog({ watchId }: Props) {
                     autoComplete='off'
                     onChange={(e) => onChange(e.target.valueAsNumber)}
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
                 </Field>
               )}
             />
@@ -133,7 +165,9 @@ export function AddPartUsedDialog({ watchId }: Props) {
                     type='date'
                     aria-invalid={fieldState.invalid}
                   />
-                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
                 </Field>
               )}
             />
@@ -144,7 +178,12 @@ export function AddPartUsedDialog({ watchId }: Props) {
             control={control}
             render={({ field }) => (
               <Field>
-                <FieldLabel htmlFor='notes'>Notes <span className='text-muted-foreground font-normal'>(optional)</span></FieldLabel>
+                <FieldLabel htmlFor='notes'>
+                  Notes{' '}
+                  <span className='text-muted-foreground font-normal'>
+                    (optional)
+                  </span>
+                </FieldLabel>
                 <textarea
                   {...field}
                   id='notes'
