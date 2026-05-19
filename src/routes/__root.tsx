@@ -44,7 +44,12 @@ const PUBLIC_PATHS = new Set([
 ]);
 
 // Paths that belong on the apex marketing domain. Everything else redirects to app.hairspring.app.
-const MARKETING_PATHS = new Set(['/', '/about', '/privacy-policy', '/terms-of-service']);
+const MARKETING_PATHS = new Set([
+  '/',
+  '/about',
+  '/privacy-policy',
+  '/terms-of-service',
+]);
 
 function isPublicPath(pathname: string): boolean {
   return (
@@ -227,7 +232,7 @@ function RootDocument({ children }: { children: ReactNode }) {
           apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN!}
           options={{
             api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
-            defaults: '2025-05-24',
+            defaults: '2026-01-30',
             capture_exceptions: true,
             debug: import.meta.env.DEV,
           }}
