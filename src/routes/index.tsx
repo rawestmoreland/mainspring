@@ -266,6 +266,158 @@ function PostRow({ post: p }: { post: RepairPost }) {
 
 // ─── Landing page ────────────────────────────────────────────────────────────
 
+const MOCK_PROFILE = {
+  name: 'Thomas Brennan',
+  subdomain: 'thomas',
+  bio: 'Amateur watchmaker. Mostly vintage movements.',
+  watches: [
+    {
+      id: 'mock-1',
+      make: 'Rolex',
+      model: 'Oyster Perpetual',
+      reference: 'Ref. 6594',
+      year: '1958',
+      status: 'sold',
+      posts: [
+        { id: 'p1', title: 'Full service — movement cleaning and oiling', date: 'Nov 8, 2024' },
+        { id: 'p2', title: 'Replaced mainspring, adjusted beat error', date: 'Nov 14, 2024' },
+        { id: 'p3', title: 'Final timing — +2 s/d across positions', date: 'Nov 21, 2024' },
+      ],
+    },
+    {
+      id: 'mock-2',
+      make: 'Omega',
+      model: 'Constellation',
+      reference: 'Cal. 561',
+      year: '1969',
+      status: 'in_progress',
+      posts: [
+        { id: 'p4', title: 'Initial assessment — worn cannon pinion', date: 'Jan 12, 2025' },
+        { id: 'p5', title: 'Disassembly and ultrasonic cleaning', date: 'Jan 19, 2025' },
+      ],
+    },
+    {
+      id: 'mock-3',
+      make: 'Citizen',
+      model: 'Parashock',
+      reference: '',
+      year: '1972',
+      status: 'acquired',
+      posts: [],
+    },
+  ],
+};
+
+function ProfilePagePreview() {
+  const totalPosts = MOCK_PROFILE.watches.reduce((n, w) => n + w.posts.length, 0);
+  return (
+    <div className='max-w-2xl mx-auto rounded-xl border border-border overflow-hidden shadow-2xl shadow-black/40'>
+      {/* Browser chrome */}
+      <div className='flex items-center gap-3 px-4 py-2.5 bg-zinc-900 border-b border-zinc-700/60'>
+        <div className='flex gap-1.5'>
+          <div className='w-2.5 h-2.5 rounded-full bg-zinc-700' />
+          <div className='w-2.5 h-2.5 rounded-full bg-zinc-700' />
+          <div className='w-2.5 h-2.5 rounded-full bg-zinc-700' />
+        </div>
+        <div className='flex-1 mx-2'>
+          <div className='bg-zinc-800 rounded-md px-3 py-1 flex items-center gap-2'>
+            <svg className='w-2.5 h-2.5 text-zinc-500 shrink-0' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' /></svg>
+            <span className='font-mono text-[10px] text-zinc-400 truncate'>
+              thomas.hairspring.app
+            </span>
+          </div>
+        </div>
+        <span className='font-mono text-[9px] uppercase tracking-widest text-zinc-600 shrink-0'>
+          sample
+        </span>
+      </div>
+
+      {/* Profile content */}
+      <div className='bg-background overflow-y-auto max-h-[500px] pointer-events-none select-none'>
+        {/* Mini nav */}
+        <div className='h-12 flex items-center gap-3 px-5 border-b border-border bg-background/90'>
+          <span className='font-serif font-bold text-foreground text-sm'>Hairspring</span>
+          <span className='text-border'>·</span>
+          <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+            {MOCK_PROFILE.name}
+          </span>
+        </div>
+
+        <div className='px-5 pt-7 pb-10'>
+          {/* Profile header */}
+          <div className='flex items-center gap-4 mb-7 pb-6 border-b border-border'>
+            <div className='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0'>
+              <span className='font-mono text-xs font-bold text-primary'>TB</span>
+            </div>
+            <div>
+              <h1 className='font-serif text-lg font-bold text-foreground'>{MOCK_PROFILE.name}</h1>
+              <p className='text-xs text-muted-foreground mt-0.5'>{MOCK_PROFILE.bio}</p>
+              <div className='flex items-center gap-2 mt-1'>
+                <span className='font-mono text-[10px] text-muted-foreground'>
+                  {MOCK_PROFILE.watches.length} projects
+                </span>
+                <span className='text-border'>·</span>
+                <span className='font-mono text-[10px] text-muted-foreground'>
+                  {totalPosts} repair logs
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Watch projects */}
+          <div className='mb-3.5'>
+            <SectionLabel>Watch Projects</SectionLabel>
+          </div>
+          <div className='space-y-3'>
+            {MOCK_PROFILE.watches.map((w) => {
+              const meta = [w.reference, w.year].filter(Boolean).join(' · ');
+              return (
+                <div key={w.id} className='bg-card border border-border rounded overflow-hidden'>
+                  <div className='flex items-start justify-between gap-3 px-3.5 py-3 border-b border-border bg-muted/40'>
+                    <div>
+                      <div className='flex flex-wrap items-center gap-2'>
+                        <span className='font-serif font-semibold text-foreground text-sm'>
+                          {w.make} {w.model}
+                        </span>
+                        <StatusBadge status={w.status} />
+                      </div>
+                      {meta && (
+                        <span className='font-mono text-[10px] text-muted-foreground mt-0.5 block'>
+                          {meta}
+                        </span>
+                      )}
+                    </div>
+                    {w.posts.length > 0 && (
+                      <span className='font-mono text-[10px] text-muted-foreground shrink-0 pt-0.5'>
+                        {w.posts.length} log{w.posts.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </div>
+                  {w.posts.length > 0 ? (
+                    w.posts.map((p) => (
+                      <div
+                        key={p.id}
+                        className='flex justify-between items-start gap-3 px-3.5 py-2.5 border-b border-border last:border-0 text-sm'
+                      >
+                        <span className='text-foreground'>{p.title}</span>
+                        <span className='font-mono text-xs text-muted-foreground shrink-0'>{p.date}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className='px-3.5 py-2.5 text-xs text-muted-foreground italic'>
+                      No repair logs yet.
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const FEATURES = [
   {
     symbol: '◈',
@@ -539,6 +691,24 @@ function LandingPage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* ── Profile preview ─────────────────────────────────────────────── */}
+      <section className='max-w-6xl mx-auto px-5 py-20'>
+        <div className='mb-12 text-center'>
+          <p className='font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground mb-3'>
+            Built for sharing
+          </p>
+          <h2 className='font-serif font-bold text-foreground text-3xl sm:text-4xl mb-4'>
+            Your own profile. Your own subdomain.
+          </h2>
+          <p className='text-muted-foreground text-base max-w-xl mx-auto'>
+            Every account gets a personal page at{' '}
+            <span className='font-mono text-foreground'>yourname.hairspring.app</span>. Share your
+            projects and repair logs with the community.
+          </p>
+        </div>
+        <ProfilePagePreview />
       </section>
 
       {/* ── CTA block ───────────────────────────────────────────────────── */}
