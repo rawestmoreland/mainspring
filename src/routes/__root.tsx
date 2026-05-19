@@ -43,6 +43,9 @@ const PUBLIC_PATHS = new Set([
   '/terms-of-service',
 ]);
 
+// Paths that belong on the apex marketing domain. Everything else redirects to app.hairspring.app.
+const MARKETING_PATHS = new Set(['/', '/about', '/privacy-policy', '/terms-of-service']);
+
 function isPublicPath(pathname: string): boolean {
   return (
     PUBLIC_PATHS.has(pathname) ||
@@ -59,6 +62,10 @@ function isSubdomainPath(pathname: string): boolean {
   );
 }
 
+function isApexDomain(host: string): boolean {
+  return host.split('.').length === 2;
+}
+
 const getHost = createIsomorphicFn()
   .client(() => window.location.host)
   .server(async () => {
@@ -70,6 +77,13 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ location }) => {
     const host = await getHost();
     let tenant: UserProfile | null = null;
+
+    // Apex domain: only marketing paths stay here; everything else moves to the app subdomain.
+    if (host && isApexDomain(host) && !MARKETING_PATHS.has(location.pathname)) {
+      throw redirect({
+        href: `https://app.hairspring.app${location.pathname}${location.searchStr ?? ''}`,
+      });
+    }
 
     if (host) {
       tenant = await resolveTenant(host);
