@@ -56,6 +56,10 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
         label: 'Checkout iframe displayed',
         userInfo: { userId: pbUserId },
       });
+      posthog.capture('upgrade_modal_viewed', {
+        category: 'Subscription',
+        label: 'Checkout iframe displayed',
+      });
     }
   }, [checkoutUrl]);
 
@@ -99,7 +103,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
         open={!!checkoutUrl}
         onOpenChange={(open) => {
           if (!open) {
-            posthog.capture('checkout_dismissed', { user_id: pbUserId });
+            posthog.capture('checkout_dismissed');
             ga4.event('checkout_dismissed', {
               category: 'Subscription',
               label: 'User closed checkout without completing',
