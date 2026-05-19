@@ -13,7 +13,7 @@ const POCKETBASE_URL =
  * Uses fetch() directly so it works in both server (Cloudflare Worker) and
  * client (browser) environments without the PocketBase SDK's localStorage dep.
  */
-const RESERVED_SUBDOMAINS = new Set(['www', 'app', 'api']);
+const RESERVED_SUBDOMAINS = new Set(['www', 'app', 'api', 'j']);
 
 export async function resolveTenant(host: string): Promise<UserProfile | null> {
   const parts = host.split('.');
