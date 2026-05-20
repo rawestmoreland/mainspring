@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns/format';
@@ -107,7 +108,7 @@ function PublicPostDetailPage() {
             {post.body && (
               <div
                 className='prose max-w-none'
-                dangerouslySetInnerHTML={{ __html: post.body }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.body) }}
               />
             )}
 

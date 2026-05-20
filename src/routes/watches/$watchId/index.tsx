@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { useState, useRef } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import {
@@ -1032,7 +1033,7 @@ function RouteComponent() {
                     {!!watch.notes ? (
                       <div
                         className='prose text-sm max-w-none'
-                        dangerouslySetInnerHTML={{ __html: watch.notes }}
+                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(watch.notes ?? '') }}
                       />
                     ) : (
                       <p className='font-mono text-xs italic text-muted-foreground/50'>
