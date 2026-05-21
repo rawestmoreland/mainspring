@@ -5,7 +5,6 @@ import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
 import { PublicProfileSkeleton } from '#/components/skeletons';
 import type { UserProfile, Watch, RepairPost } from '#/types';
-import { Skeleton } from '#/components/ui/skeleton';
 import { Avatar, AvatarImage } from '#/components/ui/avatar';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
 
@@ -279,9 +278,21 @@ const MOCK_PROFILE = {
       year: '1958',
       status: 'sold',
       posts: [
-        { id: 'p1', title: 'Full service — movement cleaning and oiling', date: 'Nov 8, 2024' },
-        { id: 'p2', title: 'Replaced mainspring, adjusted beat error', date: 'Nov 14, 2024' },
-        { id: 'p3', title: 'Final timing — +2 s/d across positions', date: 'Nov 21, 2024' },
+        {
+          id: 'p1',
+          title: 'Full service — movement cleaning and oiling',
+          date: 'Nov 8, 2024',
+        },
+        {
+          id: 'p2',
+          title: 'Replaced mainspring, adjusted beat error',
+          date: 'Nov 14, 2024',
+        },
+        {
+          id: 'p3',
+          title: 'Final timing — +2 s/d across positions',
+          date: 'Nov 21, 2024',
+        },
       ],
     },
     {
@@ -292,8 +303,16 @@ const MOCK_PROFILE = {
       year: '1969',
       status: 'in_progress',
       posts: [
-        { id: 'p4', title: 'Initial assessment — worn cannon pinion', date: 'Jan 12, 2025' },
-        { id: 'p5', title: 'Disassembly and ultrasonic cleaning', date: 'Jan 19, 2025' },
+        {
+          id: 'p4',
+          title: 'Initial assessment — worn cannon pinion',
+          date: 'Jan 12, 2025',
+        },
+        {
+          id: 'p5',
+          title: 'Disassembly and ultrasonic cleaning',
+          date: 'Jan 19, 2025',
+        },
       ],
     },
     {
@@ -309,7 +328,10 @@ const MOCK_PROFILE = {
 };
 
 function ProfilePagePreview() {
-  const totalPosts = MOCK_PROFILE.watches.reduce((n, w) => n + w.posts.length, 0);
+  const totalPosts = MOCK_PROFILE.watches.reduce(
+    (n, w) => n + w.posts.length,
+    0,
+  );
   return (
     <div className='max-w-2xl mx-auto rounded-xl border border-border overflow-hidden shadow-2xl shadow-black/40'>
       {/* Browser chrome */}
@@ -321,7 +343,15 @@ function ProfilePagePreview() {
         </div>
         <div className='flex-1 mx-2'>
           <div className='bg-zinc-800 rounded-md px-3 py-1 flex items-center gap-2'>
-            <svg className='w-2.5 h-2.5 text-zinc-500 shrink-0' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5'><path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' /></svg>
+            <svg
+              className='w-2.5 h-2.5 text-zinc-500 shrink-0'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2.5'
+            >
+              <path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' />
+            </svg>
             <span className='font-mono text-[10px] text-zinc-400 truncate'>
               thomas.hairspring.app
             </span>
@@ -336,7 +366,9 @@ function ProfilePagePreview() {
       <div className='bg-background overflow-y-auto max-h-[500px] pointer-events-none select-none'>
         {/* Mini nav */}
         <div className='h-12 flex items-center gap-3 px-5 border-b border-border bg-background/90'>
-          <span className='font-serif font-bold text-foreground text-sm'>Hairspring</span>
+          <span className='font-serif font-bold text-foreground text-sm'>
+            Hairspring
+          </span>
           <span className='text-border'>·</span>
           <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
             {MOCK_PROFILE.name}
@@ -347,11 +379,17 @@ function ProfilePagePreview() {
           {/* Profile header */}
           <div className='flex items-center gap-4 mb-7 pb-6 border-b border-border'>
             <div className='w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0'>
-              <span className='font-mono text-xs font-bold text-primary'>TB</span>
+              <span className='font-mono text-xs font-bold text-primary'>
+                TB
+              </span>
             </div>
             <div>
-              <h1 className='font-serif text-lg font-bold text-foreground'>{MOCK_PROFILE.name}</h1>
-              <p className='text-xs text-muted-foreground mt-0.5'>{MOCK_PROFILE.bio}</p>
+              <h1 className='font-serif text-lg font-bold text-foreground'>
+                {MOCK_PROFILE.name}
+              </h1>
+              <p className='text-xs text-muted-foreground mt-0.5'>
+                {MOCK_PROFILE.bio}
+              </p>
               <div className='flex items-center gap-2 mt-1'>
                 <span className='font-mono text-[10px] text-muted-foreground'>
                   {MOCK_PROFILE.watches.length} projects
@@ -372,7 +410,10 @@ function ProfilePagePreview() {
             {MOCK_PROFILE.watches.map((w) => {
               const meta = [w.reference, w.year].filter(Boolean).join(' · ');
               return (
-                <div key={w.id} className='bg-card border border-border rounded overflow-hidden'>
+                <div
+                  key={w.id}
+                  className='bg-card border border-border rounded overflow-hidden'
+                >
                   <div className='flex items-start justify-between gap-3 px-3.5 py-3 border-b border-border bg-muted/40'>
                     <div>
                       <div className='flex flex-wrap items-center gap-2'>
@@ -400,7 +441,9 @@ function ProfilePagePreview() {
                         className='flex justify-between items-start gap-3 px-3.5 py-2.5 border-b border-border last:border-0 text-sm'
                       >
                         <span className='text-foreground'>{p.title}</span>
-                        <span className='font-mono text-xs text-muted-foreground shrink-0'>{p.date}</span>
+                        <span className='font-mono text-xs text-muted-foreground shrink-0'>
+                          {p.date}
+                        </span>
                       </div>
                     ))
                   ) : (
@@ -550,56 +593,64 @@ function LandingPage() {
         </div>
       </section>
 
-      {/* ── Stats strip ─────────────────────────────────────────────────── */}
+      {/* ── Stats / reassurance strip ───────────────────────────────────── */}
 
-      <div className='bg-card border-y border-border'>
-        <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-border'>
-          <div className='flex flex-col items-center justify-center sm:px-8'>
-            {!landingData || isPending ? (
-              <Skeleton className='size-10 rounded-full' />
-            ) : (
-              <span className='font-mono text-2xl font-bold text-primary'>
-                {landingData?.watch_count}+
-              </span>
-            )}
-            <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
-              Watches Tracked
-            </span>
-          </div>
-          <div className='flex flex-col items-center justify-center sm:px-8'>
-            {!landingData || isPending ? (
-              <Skeleton className='size-10 rounded-full' />
-            ) : (
-              <span className='font-mono text-2xl font-bold text-primary'>
-                {landingData?.equipment_count}+
-              </span>
-            )}
-            <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
-              Parts Catalogued
-            </span>
-          </div>
-          <div className='flex flex-col items-center justify-center sm:px-8'>
-            {!landingData || isPending ? (
-              <Skeleton className='size-10 rounded-full' />
-            ) : (
-              <span className='font-mono text-2xl font-bold text-primary'>
-                {landingData?.total_hours}+
-              </span>
-            )}
-            <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
-              Bench Hours Recorded
-            </span>
-          </div>
-          <div className='flex flex-col items-center justify-center sm:px-8'>
-            <span className='font-mono text-2xl font-bold text-primary'>
-              free
-            </span>
-            <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
-              To Start
-            </span>
+      {isPending || (landingData?.watch_count ?? 0) < 100 ? (
+        <div className='bg-card border-y border-border'>
+          <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-border'>
+            {[
+              { symbol: '◎', label: 'Free forever' },
+              { symbol: '◈', label: 'No credit card' },
+              { symbol: '⊞', label: 'Works in any browser' },
+              { symbol: '◷', label: 'Built for hobbyists' },
+            ].map((item) => (
+              <div key={item.label} className='flex flex-col items-center justify-center gap-1 sm:px-8'>
+                <span className='font-mono text-xl text-primary'>{item.symbol}</span>
+                <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground'>
+                  {item.label}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      ) : (
+        <div className='bg-card border-y border-border'>
+          <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-border'>
+            <div className='flex flex-col items-center justify-center sm:px-8'>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                {landingData!.watch_count}+
+              </span>
+              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                Watches Tracked
+              </span>
+            </div>
+            <div className='flex flex-col items-center justify-center sm:px-8'>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                {landingData!.equipment_count}+
+              </span>
+              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                Parts Catalogued
+              </span>
+            </div>
+            <div className='flex flex-col items-center justify-center sm:px-8'>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                {landingData!.total_hours}+
+              </span>
+              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                Bench Hours Recorded
+              </span>
+            </div>
+            <div className='flex flex-col items-center justify-center sm:px-8'>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                free
+              </span>
+              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                To Start
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Features ────────────────────────────────────────────────────── */}
       <section className='max-w-6xl mx-auto px-5 py-20'>
@@ -704,8 +755,10 @@ function LandingPage() {
           </h2>
           <p className='text-muted-foreground text-base max-w-xl mx-auto'>
             Every account gets a personal page at{' '}
-            <span className='font-mono text-foreground'>yourname.hairspring.app</span>. Share your
-            projects and repair logs with the community.
+            <span className='font-mono text-foreground'>
+              yourname.hairspring.app
+            </span>
+            . Share your projects and repair logs with the community.
           </p>
         </div>
         <ProfilePagePreview />
