@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -268,7 +269,7 @@ function PostPage() {
           {post.body ? (
             <div
               className='prose max-w-none'
-              dangerouslySetInnerHTML={{ __html: post.body }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.body) }}
             />
           ) : (
             <p className='text-sm text-muted-foreground italic'>

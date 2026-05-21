@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify';
 import { cn } from '@/lib/utils';
 import { FileHandler } from '@tiptap/extension-file-handler';
 import { TextStyleKit } from '@tiptap/extension-text-style';
@@ -575,7 +576,7 @@ export const TiptapDisplay = ({
 }) => (
   <div
     className={cn('prose prose-sm', className)}
-    dangerouslySetInnerHTML={{ __html: content }}
+    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
   />
 );
 
