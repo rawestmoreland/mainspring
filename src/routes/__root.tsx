@@ -105,7 +105,10 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     // Public subdomain routes are accessible without authentication.
     if (typeof window !== 'undefined' && tenant === null) {
       const pb = (await import('#/lib/pocketbase')).default;
-      if (!isPublicPath(location.pathname) && !pb.authStore.isValid) {
+      // PostHog toolbar opens the app with a #__posthog=... hash for its own auth.
+      // Skip the app-level redirect so the toolbar can initialize; it handles its own auth.
+      const isPostHogToolbar = location.hash?.includes('__posthog');
+      if (!isPublicPath(location.pathname) && !pb.authStore.isValid && !isPostHogToolbar) {
         throw redirect({ to: '/login', search: { from: location.pathname } });
       }
     }
