@@ -525,7 +525,10 @@ function LandingPageControl() {
   });
 
   const trackCta = () => {
-    posthog.capture('landing_page_cta_clicked', { variant: 'control', cta_text: 'Get started' });
+    posthog.capture('landing_page_cta_clicked', {
+      variant: 'control',
+      cta_text: 'Get started',
+    });
     window.rdt?.('track', 'Lead', { conversionId: crypto.randomUUID() });
   };
 
@@ -634,8 +637,13 @@ function LandingPageControl() {
               { symbol: '⊞', label: 'Works in any browser' },
               { symbol: '◷', label: 'Built for hobbyists' },
             ].map((item) => (
-              <div key={item.label} className='flex flex-col items-center justify-center gap-1 sm:px-8'>
-                <span className='font-mono text-xl text-primary'>{item.symbol}</span>
+              <div
+                key={item.label}
+                className='flex flex-col items-center justify-center gap-1 sm:px-8'
+              >
+                <span className='font-mono text-xl text-primary'>
+                  {item.symbol}
+                </span>
                 <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground'>
                   {item.label}
                 </span>
@@ -841,7 +849,10 @@ function LandingPageAngle1() {
   });
 
   const trackCta = () => {
-    posthog.capture('landing_page_cta_clicked', { variant: 'angle1', cta_text: 'Claim your page' });
+    posthog.capture('landing_page_cta_clicked', {
+      variant: 'angle1',
+      cta_text: 'Claim your page',
+    });
     window.rdt?.('track', 'Lead', { conversionId: crypto.randomUUID() });
   };
 
@@ -904,10 +915,13 @@ function LandingPageAngle1() {
               For the watchmaker who shares the craft
             </p>
             <h1 className='ms-fade-up-2 font-serif font-bold text-foreground leading-tight text-4xl sm:text-5xl lg:text-5xl xl:text-6xl mb-6'>
-              Share your work with people who actually know what they&apos;re looking at.
+              Share your work with people who actually know what they&apos;re
+              looking at.
             </h1>
             <p className='ms-fade-up-3 text-muted-foreground text-lg max-w-xl lg:max-w-none mx-auto mb-10 leading-relaxed'>
-              Every project you finish gets its own public page at yourname.hairspring.app — repair logs, photos, and the full story of every movement you&apos;ve touched. Free for every account.
+              Every project you finish gets its own public page at
+              yourname.hairspring.app — repair logs, photos, and the full story
+              of every movement you&apos;ve touched. Free for every account.
             </p>
             <div className='ms-fade-up-4 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3'>
               <Link
@@ -942,8 +956,13 @@ function LandingPageAngle1() {
               { symbol: '⊞', label: 'Works in any browser' },
               { symbol: '◷', label: 'Built for hobbyists' },
             ].map((item) => (
-              <div key={item.label} className='flex flex-col items-center justify-center gap-1 sm:px-8'>
-                <span className='font-mono text-xl text-primary'>{item.symbol}</span>
+              <div
+                key={item.label}
+                className='flex flex-col items-center justify-center gap-1 sm:px-8'
+              >
+                <span className='font-mono text-xl text-primary'>
+                  {item.symbol}
+                </span>
                 <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground'>
                   {item.label}
                 </span>
@@ -1150,7 +1169,10 @@ function LandingPageAngle4() {
   });
 
   const trackCta = () => {
-    posthog.capture('landing_page_cta_clicked', { variant: 'angle4', cta_text: 'Claim yourname.hairspring.app' });
+    posthog.capture('landing_page_cta_clicked', {
+      variant: 'angle4',
+      cta_text: 'Claim yourname.hairspring.app',
+    });
     window.rdt?.('track', 'Lead', { conversionId: crypto.randomUUID() });
   };
 
@@ -1207,17 +1229,20 @@ function LandingPageAngle4() {
         </div>
         <div className='pointer-events-none absolute inset-0 bg-radial-[ellipse_at_center] from-transparent via-background/60 to-background' />
 
-        <div className='relative z-10 max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center'>
-          <div className='text-center lg:text-left'>
+        <div className='relative z-10 max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-12 lg:gap-16 items-center'>
+          <div className='min-w-0 text-center lg:text-left'>
             <p className='ms-fade-up-1 font-mono text-xs uppercase tracking-[0.2em] text-primary mb-5'>
               Your name. Your craft. Your subdomain.
             </p>
             <h1 className='ms-fade-up-2 font-serif font-bold text-foreground leading-tight text-4xl sm:text-5xl lg:text-5xl xl:text-6xl mb-6'>
               Claim your spot at{' '}
-              <span className='text-primary'>yourname.hairspring.app.</span>
+              <span className='text-primary whitespace-nowrap'>
+                yourname.hairspring.app.
+              </span>
             </h1>
             <p className='ms-fade-up-3 text-muted-foreground text-lg max-w-xl lg:max-w-none mx-auto mb-10 leading-relaxed'>
-              Your own public profile for your watch projects and repair logs. Log every movement. Share every session. Free — and yours to keep.
+              Your own public profile for your watch projects and repair logs.
+              Log every movement. Share every session. Free — and yours to keep.
             </p>
             <div className='ms-fade-up-4 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3'>
               <Link
@@ -1258,8 +1283,13 @@ function LandingPageAngle4() {
               { symbol: '⊞', label: 'Works in any browser' },
               { symbol: '◷', label: 'Built for hobbyists' },
             ].map((item) => (
-              <div key={item.label} className='flex flex-col items-center justify-center gap-1 sm:px-8'>
-                <span className='font-mono text-xl text-primary'>{item.symbol}</span>
+              <div
+                key={item.label}
+                className='flex flex-col items-center justify-center gap-1 sm:px-8'
+              >
+                <span className='font-mono text-xl text-primary'>
+                  {item.symbol}
+                </span>
                 <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground'>
                   {item.label}
                 </span>
@@ -1634,7 +1664,7 @@ function LandingPageVariant() {
             {
               n: '03',
               title: 'Build your archive',
-              desc: "Watch your repair history grow. Refer back to old notes, share your best work publicly, and see how far your craft has come.",
+              desc: 'Watch your repair history grow. Refer back to old notes, share your best work publicly, and see how far your craft has come.',
             },
           ].map((step) => (
             <div key={step.n} className='flex flex-col gap-3'>
@@ -1663,8 +1693,13 @@ function LandingPageVariant() {
               { symbol: '⊞', label: 'Works in any browser' },
               { symbol: '◷', label: 'Built for hobbyists' },
             ].map((item) => (
-              <div key={item.label} className='flex flex-col items-center justify-center gap-1 sm:px-8'>
-                <span className='font-mono text-xl text-primary'>{item.symbol}</span>
+              <div
+                key={item.label}
+                className='flex flex-col items-center justify-center gap-1 sm:px-8'
+              >
+                <span className='font-mono text-xl text-primary'>
+                  {item.symbol}
+                </span>
                 <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground'>
                   {item.label}
                 </span>
@@ -1676,20 +1711,36 @@ function LandingPageVariant() {
         <div className='bg-card border-y border-border'>
           <div className='max-w-6xl mx-auto px-5 py-5 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-0 sm:divide-x sm:divide-border'>
             <div className='flex flex-col items-center justify-center sm:px-8'>
-              <span className='font-mono text-2xl font-bold text-primary'>{landingData!.watch_count}+</span>
-              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>Watches Tracked</span>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                {landingData!.watch_count}+
+              </span>
+              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                Watches Tracked
+              </span>
             </div>
             <div className='flex flex-col items-center justify-center sm:px-8'>
-              <span className='font-mono text-2xl font-bold text-primary'>{landingData!.equipment_count}+</span>
-              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>Parts Catalogued</span>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                {landingData!.equipment_count}+
+              </span>
+              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                Parts Catalogued
+              </span>
             </div>
             <div className='flex flex-col items-center justify-center sm:px-8'>
-              <span className='font-mono text-2xl font-bold text-primary'>{landingData!.total_hours}+</span>
-              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>Bench Hours Recorded</span>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                {landingData!.total_hours}+
+              </span>
+              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                Bench Hours Recorded
+              </span>
             </div>
             <div className='flex flex-col items-center justify-center sm:px-8'>
-              <span className='font-mono text-2xl font-bold text-primary'>free</span>
-              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>To Start</span>
+              <span className='font-mono text-2xl font-bold text-primary'>
+                free
+              </span>
+              <span className='text-center font-mono text-[11px] uppercase tracking-widest text-muted-foreground mt-1'>
+                To Start
+              </span>
             </div>
           </div>
         </div>
@@ -1719,7 +1770,9 @@ function LandingPageVariant() {
                   {f.title}
                 </span>
               </div>
-              <p className='text-muted-foreground text-sm leading-relaxed'>{f.desc}</p>
+              <p className='text-muted-foreground text-sm leading-relaxed'>
+                {f.desc}
+              </p>
             </div>
           ))}
         </div>
@@ -1739,9 +1792,9 @@ function LandingPageVariant() {
                 <span className='text-primary'>yourname.hairspring.app</span>
               </h2>
               <p className='text-muted-foreground text-sm leading-relaxed mb-8'>
-                Every Hairspring account comes with a public profile — your watch
-                portfolio and repair logs, shareable with anyone. Show your best
-                work to the community without any extra setup.
+                Every Hairspring account comes with a public profile — your
+                watch portfolio and repair logs, shareable with anyone. Show
+                your best work to the community without any extra setup.
               </p>
               <Link
                 to='/signup'
@@ -1768,7 +1821,8 @@ function LandingPageVariant() {
             Ready to build a real record of your craft?
           </h2>
           <p className='text-muted-foreground text-base mb-8'>
-            Free to use. No credit card required. Your logbook starts the moment you sign up.
+            Free to use. No credit card required. Your logbook starts the moment
+            you sign up.
           </p>
           <Link
             to='/signup'
@@ -1784,16 +1838,25 @@ function LandingPageVariant() {
       <footer className='max-w-6xl mx-auto px-5 py-10 mt-8 border-t border-border'>
         <div className='flex flex-col sm:flex-row items-center justify-between gap-3'>
           <div className='flex items-center gap-4'>
-            <span className='font-serif font-bold text-muted-foreground text-sm'>Hairspring</span>
+            <span className='font-serif font-bold text-muted-foreground text-sm'>
+              Hairspring
+            </span>
             <span className='font-mono text-xs text-muted-foreground'>
               &copy; {new Date().getFullYear()} · Built for bench hobbyists.
             </span>
           </div>
           <div className='flex items-center gap-5'>
-            <Link to='/login' className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors'>
+            <Link
+              to='/login'
+              className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors'
+            >
               Sign in
             </Link>
-            <Link to='/signup' className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors' onClick={trackCta}>
+            <Link
+              to='/signup'
+              className='font-mono text-xs text-muted-foreground hover:text-foreground transition-colors'
+              onClick={trackCta}
+            >
               Sign up
             </Link>
           </div>
