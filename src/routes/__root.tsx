@@ -18,6 +18,7 @@ import { NotFoundPage } from '#/components/NotFoundPage';
 import { TooltipProvider } from '#/components/ui/tooltip';
 import { GoogleAnalytics } from 'tanstack-router-ga4';
 import { resolveTenant } from '#/middleware/tenant';
+import { getPostHogClient } from '#/lib/posthog-server';
 import type { UserProfile } from '#/types';
 import '../styles.css';
 import { Toaster } from 'sonner';
@@ -113,7 +114,36 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       }
     }
 
-    return { tenant, subdomainNotFound: false };
+    let landingPageFlag: string | boolean | undefined;
+
+    if (location.pathname === '/' && typeof window === 'undefined') {
+      try {
+        const { getRequestHeader } = await import('@tanstack/react-start/server');
+        const cookieHeader = getRequestHeader('cookie') ?? '';
+        const phToken = process.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ?? import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ?? '';
+        const cookieName = `ph_${phToken}_posthog`;
+        const match = cookieHeader
+          .split(';')
+          .map((c) => c.trim())
+          .find((c) => c.startsWith(`${cookieName}=`));
+
+        let distinctId: string;
+        if (match) {
+          const raw = decodeURIComponent(match.slice(cookieName.length + 1));
+          distinctId = (JSON.parse(raw) as { distinct_id?: string }).distinct_id ?? crypto.randomUUID();
+        } else {
+          distinctId = crypto.randomUUID();
+        }
+
+        const ph = getPostHogClient();
+        const flagValue = await ph.getFeatureFlag('landing-page-copy-test', distinctId);
+        landingPageFlag = flagValue ?? undefined;
+      } catch {
+        // Non-fatal: fall back to client-side flag resolution
+      }
+    }
+
+    return { tenant, subdomainNotFound: false, landingPageFlag };
   },
   notFoundComponent: NotFoundPage,
   head: () => ({
@@ -150,11 +180,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootComponent() {
-  const { queryClient, tenant, subdomainNotFound } =
+  const { queryClient, tenant, subdomainNotFound, landingPageFlag } =
     Route.useRouteContext() as {
       queryClient: QueryClient;
       tenant: UserProfile | null;
       subdomainNotFound: boolean;
+      landingPageFlag?: string | boolean;
     };
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isPublicRoute = isPublicPath(pathname);
@@ -165,7 +196,7 @@ function RootComponent() {
 
   if (subdomainNotFound) {
     return (
-      <RootDocument>
+      <RootDocument landingPageFlag={landingPageFlag}>
         <NotFoundPage />
       </RootDocument>
     );
@@ -175,7 +206,7 @@ function RootComponent() {
     // Public subdomain: render without sidebar/auth shell.
     // PublicProfile owns its own layout entirely.
     return (
-      <RootDocument>
+      <RootDocument landingPageFlag={landingPageFlag}>
         <QueryClientProvider client={queryClient}>
           <Outlet />
         </QueryClientProvider>
@@ -185,7 +216,7 @@ function RootComponent() {
 
   if (isPublicRoute) {
     return (
-      <RootDocument>
+      <RootDocument landingPageFlag={landingPageFlag}>
         <QueryClientProvider client={queryClient}>
           <Outlet />
         </QueryClientProvider>
@@ -194,7 +225,7 @@ function RootComponent() {
   }
 
   return (
-    <RootDocument>
+    <RootDocument landingPageFlag={landingPageFlag}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AppShell>
@@ -215,7 +246,13 @@ function RootComponent() {
   );
 }
 
-function RootDocument({ children }: { children: ReactNode }) {
+function RootDocument({
+  children,
+  landingPageFlag,
+}: {
+  children: ReactNode;
+  landingPageFlag?: string | boolean;
+}) {
   const gaId = import.meta.env.VITE_PUBLIC_GA4_MEASUREMENT_ID;
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -238,6 +275,13 @@ function RootDocument({ children }: { children: ReactNode }) {
             defaults: '2026-01-30',
             capture_exceptions: true,
             debug: import.meta.env.DEV,
+            ...(landingPageFlag !== undefined && {
+              bootstrap: {
+                featureFlags: {
+                  'landing-page-copy-test': landingPageFlag,
+                },
+              },
+            }),
           }}
         >
           {children}
