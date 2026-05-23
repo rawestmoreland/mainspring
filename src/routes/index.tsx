@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { createFileRoute, redirect, Link } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
@@ -9,14 +9,6 @@ import { Avatar, AvatarImage } from '#/components/ui/avatar';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
 
 export const Route = createFileRoute('/')({
-  beforeLoad: async () => {
-    if (typeof window !== 'undefined') {
-      const pb = (await import('#/lib/pocketbase')).default;
-      if (pb.authStore.isValid) {
-        throw redirect({ to: '/dashboard' });
-      }
-    }
-  },
   component: IndexPage,
 });
 
