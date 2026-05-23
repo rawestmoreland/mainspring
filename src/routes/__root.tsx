@@ -79,6 +79,34 @@ const getHost = createIsomorphicFn()
     return getRequestHeader('host') ?? '';
   });
 
+const resolveLandingPageFlag = createIsomorphicFn()
+  .client(async () => undefined as string | boolean | undefined)
+  .server(async () => {
+    const { getRequestHeader } = await import('@tanstack/react-start/server');
+    const cookieHeader = getRequestHeader('cookie') ?? '';
+    const phToken =
+      process.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ??
+      import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ??
+      '';
+    const cookieName = `ph_${phToken}_posthog`;
+    const match = cookieHeader
+      .split(';')
+      .map((c) => c.trim())
+      .find((c) => c.startsWith(`${cookieName}=`));
+
+    let distinctId: string;
+    if (match) {
+      const raw = decodeURIComponent(match.slice(cookieName.length + 1));
+      distinctId = (JSON.parse(raw) as { distinct_id?: string }).distinct_id ?? crypto.randomUUID();
+    } else {
+      distinctId = crypto.randomUUID();
+    }
+
+    const ph = getPostHogClient();
+    const flagValue = await ph.getFeatureFlag('landing-page-copy-test', distinctId);
+    return (flagValue ?? undefined) as string | boolean | undefined;
+  });
+
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ location }) => {
     const host = await getHost();
@@ -116,28 +144,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
     let landingPageFlag: string | boolean | undefined;
 
-    if (location.pathname === '/' && typeof window === 'undefined') {
+    if (location.pathname === '/') {
       try {
-        const { getRequestHeader } = await import('@tanstack/react-start/server');
-        const cookieHeader = getRequestHeader('cookie') ?? '';
-        const phToken = process.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ?? import.meta.env.VITE_PUBLIC_POSTHOG_PROJECT_TOKEN ?? '';
-        const cookieName = `ph_${phToken}_posthog`;
-        const match = cookieHeader
-          .split(';')
-          .map((c) => c.trim())
-          .find((c) => c.startsWith(`${cookieName}=`));
-
-        let distinctId: string;
-        if (match) {
-          const raw = decodeURIComponent(match.slice(cookieName.length + 1));
-          distinctId = (JSON.parse(raw) as { distinct_id?: string }).distinct_id ?? crypto.randomUUID();
-        } else {
-          distinctId = crypto.randomUUID();
-        }
-
-        const ph = getPostHogClient();
-        const flagValue = await ph.getFeatureFlag('landing-page-copy-test', distinctId);
-        landingPageFlag = flagValue ?? undefined;
+        landingPageFlag = await resolveLandingPageFlag();
       } catch {
         // Non-fatal: fall back to client-side flag resolution
       }
