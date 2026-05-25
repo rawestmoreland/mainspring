@@ -1234,9 +1234,9 @@ function LandingPageAngle4() {
             <p className='ms-fade-up-1 font-mono text-xs uppercase tracking-[0.2em] text-primary mb-5'>
               Your name. Your craft. Your subdomain.
             </p>
-            <h1 className='ms-fade-up-2 font-serif font-bold text-foreground leading-tight text-4xl sm:text-5xl lg:text-5xl xl:text-6xl mb-6'>
+            <h1 className='ms-fade-up-2 font-serif font-bold text-foreground leading-tight text-4xl sm:text-5xl lg:text-5xl xl:text-6xl mb-6 break-words'>
               Claim your spot at{' '}
-              <span className='text-primary whitespace-nowrap'>
+              <span className='text-primary'>
                 yourname.hairspring.app.
               </span>
             </h1>
