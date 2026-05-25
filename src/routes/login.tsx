@@ -59,7 +59,7 @@ function LoginPage() {
     const result = await login(data);
     posthog.identify(result.record.id, { email: result.record.email });
     posthog.capture('user_signed_in', { method: 'email' });
-    navigate({ to: from ?? '/', replace: true });
+    navigate({ to: from ?? '/dashboard', replace: true });
   };
 
   const onOauthSubmit = async (provider: 'google' | 'apple' | 'discord') => {

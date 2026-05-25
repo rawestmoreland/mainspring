@@ -63,7 +63,7 @@ function SignupPage() {
     posthog.identify(result.record.id, { email: result.record.email });
     posthog.capture('user_signed_up', { method: 'email' });
     window.rdt?.('track', 'SignUp', { conversionId: result.record.id });
-    navigate({ to: '/', replace: true });
+    navigate({ to: '/dashboard', replace: true });
   };
 
   const emailWatch = watch('email');
