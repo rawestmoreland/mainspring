@@ -160,6 +160,28 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { title: 'Hairspring' },
+      {
+        name: 'description',
+        content:
+          'The dedicated logbook for hobbyist watchmakers. Track watch projects, document repair sessions, manage parts inventory, and share your work at yourname.hairspring.app.',
+      },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:url', content: 'https://hairspring.app' },
+      { property: 'og:title', content: 'Hairspring — Logbook for Hobbyist Watchmakers' },
+      {
+        property: 'og:description',
+        content:
+          'Track every watch project, document each bench session, manage your parts inventory, and share your work with the community. Free to start.',
+      },
+      { property: 'og:image', content: 'https://hairspring.app/logo512.png' },
+      { name: 'twitter:card', content: 'summary' },
+      { name: 'twitter:title', content: 'Hairspring — Logbook for Hobbyist Watchmakers' },
+      {
+        name: 'twitter:description',
+        content:
+          'Track every watch project, document each bench session, manage your parts inventory, and share your work with the community. Free to start.',
+      },
+      { name: 'twitter:image', content: 'https://hairspring.app/logo512.png' },
     ],
     links: [
       {
