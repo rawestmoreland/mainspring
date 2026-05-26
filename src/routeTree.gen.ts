@@ -14,6 +14,7 @@ import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProRouteImport } from './routes/pro'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as LogoutRouteImport } from './routes/logout'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AboutRouteImport } from './routes/about'
@@ -61,6 +62,11 @@ const ProRoute = ProRouteImport.update({
 const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LogoutRoute = LogoutRouteImport.update({
+  id: '/logout',
+  path: '/logout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/logout': typeof LogoutRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/pro': typeof ProRoute
   '/signup': typeof SignupRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/logout': typeof LogoutRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/pro': typeof ProRoute
   '/signup': typeof SignupRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/logout': typeof LogoutRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/pro': typeof ProRoute
   '/signup': typeof SignupRoute
@@ -283,6 +292,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/dashboard'
     | '/login'
+    | '/logout'
     | '/privacy-policy'
     | '/pro'
     | '/signup'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/dashboard'
     | '/login'
+    | '/logout'
     | '/privacy-policy'
     | '/pro'
     | '/signup'
@@ -343,6 +354,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/dashboard'
     | '/login'
+    | '/logout'
     | '/privacy-policy'
     | '/pro'
     | '/signup'
@@ -374,6 +386,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
+  LogoutRoute: typeof LogoutRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProRoute: typeof ProRoute
   SignupRoute: typeof SignupRoute
@@ -435,6 +448,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/logout': {
+      id: '/logout'
+      path: '/logout'
+      fullPath: '/logout'
+      preLoaderRoute: typeof LogoutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -606,6 +626,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
+  LogoutRoute: LogoutRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProRoute: ProRoute,
   SignupRoute: SignupRoute,

@@ -39,7 +39,7 @@
   /* ── Ink ────────────────────────────────────────────────────────────── */
   --ink: #221a12;
   --ink-soft: #5a4a35;
-  --ink-faded: #9a8b73;
+  --ink-faded: #6d5e49;
   --ink-ghost: #c5b9a1;
 
   /* ── Brass accent ───────────────────────────────────────────────────── */
@@ -66,7 +66,7 @@
   --popover: var(--paper-bright);
   --popover-foreground: var(--ink);
   --primary: var(--brass);
-  --primary-foreground: var(--paper-bright);
+  --primary-foreground: var(--ink);
   --secondary: var(--paper-warm);
   --secondary-foreground: var(--ink-soft);
   --muted: var(--paper-deep);
@@ -106,7 +106,7 @@
   --popover: var(--paper-bright);
   --popover-foreground: var(--ink);
   --primary: var(--brass);
-  --primary-foreground: var(--paper-bright);
+  --primary-foreground: var(--ink);
   --secondary: var(--paper-warm);
   --secondary-foreground: var(--ink-soft);
   --muted: var(--paper-deep);

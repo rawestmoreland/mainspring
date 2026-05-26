@@ -33,7 +33,7 @@ export function AppSidebar() {
       <SidebarHeader className='px-4 py-5 border-b border-sidebar-border'>
         <div className='flex space-x-2'>
           <img alt='Hairspring' src={HSBrass} className='size-6' />
-          <h1 className='font-serif text-lg font-bold text-primary leading-tight'>
+          <h1 className='font-serif text-lg font-bold text-foreground leading-tight'>
             Hairspring
           </h1>
         </div>
@@ -59,7 +59,7 @@ export function AppSidebar() {
                     className={cn(
                       'gap-2.5 text-[13px]',
                       isActive
-                        ? 'text-primary font-medium'
+                        ? 'text-foreground font-medium'
                         : 'text-muted-foreground',
                     )}
                   >
@@ -83,7 +83,7 @@ export function AppSidebar() {
         {user ? (
           <>
             <div className='flex items-center gap-2.5 min-w-0'>
-              <div className='shrink-0 w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center font-mono text-[10px] font-semibold text-primary'>
+              <div className='shrink-0 w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center font-mono text-[10px] font-semibold text-ink'>
                 {initials}
               </div>
               <span className='font-mono text-xs text-muted-foreground truncate'>

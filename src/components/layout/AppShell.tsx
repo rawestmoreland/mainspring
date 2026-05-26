@@ -67,7 +67,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Breadcrumb>
           </div>
           {isPro && (
-            <span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-[10px] tracking-widest border border-amber-500/40 bg-amber-500/10 text-amber-400 uppercase shadow-[0_0_8px_rgba(245,158,11,0.15)]'>
+            <span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-[10px] tracking-widest border border-amber-500/40 bg-amber-500/10 text-[#6d4512] uppercase shadow-[0_0_8px_rgba(245,158,11,0.15)]'>
               <svg
                 width='8'
                 height='8'

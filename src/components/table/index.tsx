@@ -2,7 +2,7 @@ import { cn } from '#/lib/helpers';
 
 export function Th({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <th className={cn("bg-muted/40 px-3.5 py-2.5 text-left font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground font-normal border-b border-border", className)}>
+    <th scope="col" className={cn("bg-muted/40 px-3.5 py-2.5 text-left font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground font-normal border-b border-border", className)}>
       {children}
     </th>
   );

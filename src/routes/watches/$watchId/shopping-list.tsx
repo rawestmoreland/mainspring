@@ -65,9 +65,9 @@ const STATUS_LABELS: Record<PartsShoppingStatus, string> = {
 };
 
 function statusClass(status: PartsShoppingStatus): string {
-  if (status === 'needed') return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
-  if (status === 'ordered') return 'bg-blue-500/15 text-blue-400 border-blue-500/30';
-  return 'bg-green-500/15 text-green-400 border-green-500/30';
+  if (status === 'needed') return 'bg-amber-500/15 text-[#6d4512] border-amber-500/30';
+  if (status === 'ordered') return 'bg-blue-500/15 text-[#2c4a6b] border-blue-500/30';
+  return 'bg-green-500/15 text-[#3a5a3a] border-green-500/30';
 }
 
 const PARTS_STATUSES: PartsShoppingStatus[] = ['needed', 'ordered', 'in_hand'];
