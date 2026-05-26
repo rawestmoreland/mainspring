@@ -282,3 +282,18 @@ export const SubscriptionStatus = {
 
 export type SubscriptionStatus =
   (typeof SubscriptionStatus)[keyof typeof SubscriptionStatus];
+
+export type WorkSessionStatus = 'running' | 'paused' | 'completed';
+
+export type WorkSession = {
+  id: string;
+  user: string;
+  watch: string;
+  label: string;
+  started_at: string;
+  total_elapsed_seconds: number;
+  status: WorkSessionStatus;
+  ended_at: string | null;
+  final_duration_seconds: number | null;
+  created: string;
+};

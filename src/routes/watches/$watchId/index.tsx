@@ -26,6 +26,7 @@ import TipTapEditor from '#/components/TipTap';
 import { useDeletePartUsed } from '#/hooks/parts_used';
 import { useGetTimegrapherReadings } from '#/hooks/timegrapher';
 import { useGetPartsShoppingList } from '#/hooks/watch-parts-shopping-list';
+import { useCompletedWorkSessions } from '#/hooks/workSessions';
 import { useSubscription } from '#/hooks/subscription';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { FREE_PHOTO_LIMIT } from '#/lib/constants';
@@ -38,6 +39,7 @@ import {
   UploadCloudIcon,
   PencilIcon,
   CameraIcon,
+  TimerIcon,
 } from 'lucide-react';
 import { StatusPicker } from '#/components/watches/StatusPicker';
 
@@ -62,7 +64,20 @@ function RouteComponent() {
   const deletePartUsed = useDeletePartUsed(watchId);
   const { data: timegrapherReadings = [] } = useGetTimegrapherReadings(watchId);
   const { data: partsShoppingItems = [] } = useGetPartsShoppingList(watchId);
+  const { data: completedSessions = [] } = useCompletedWorkSessions(watchId);
   const { isPro } = useSubscription();
+
+  const totalSessionSeconds = completedSessions.reduce(
+    (sum, s) => sum + (s.final_duration_seconds ?? 0),
+    0,
+  );
+  const totalSessionHours = totalSessionSeconds > 0
+    ? (() => {
+        const h = Math.floor(totalSessionSeconds / 3600);
+        const m = Math.floor((totalSessionSeconds % 3600) / 60);
+        return h > 0 && m > 0 ? `${h}h ${m}m` : h > 0 ? `${h}h` : `${m}m`;
+      })()
+    : '—';
 
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [activeIdx, setActiveIdx] = useState(0);
@@ -564,7 +579,7 @@ function RouteComponent() {
               <div className='divide-y divide-border'>
                 {(
                   [
-                    ['Hours', `${watch.hours_spent ?? 0} hrs`],
+                    ['Hours', totalSessionHours],
                     [
                       'Acquired',
                       watch.bought_date
@@ -594,6 +609,54 @@ function RouteComponent() {
               </div>
             </div>
           </section>
+
+          {/* Time Tracker card */}
+          {isPro ? (
+            <Link
+              to='/watches/$watchId/time'
+              params={{ watchId }}
+              className='relative block rounded-xl border border-border bg-card overflow-hidden no-underline group hover:border-amber-500/40 transition-colors before:absolute before:left-3.5 before:right-3.5 before:top-0 before:h-0.5 before:bg-amber-500 before:rounded-b-sm'
+            >
+              <div className='flex items-center justify-between px-4 py-3.5'>
+                <div className='flex items-center gap-3'>
+                  <TimerIcon className='w-4 h-4 text-amber-500 shrink-0' />
+                  <div>
+                    <div className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+                      Time Tracker
+                    </div>
+                    <div className='font-mono text-sm font-semibold text-foreground mt-0.5'>
+                      {totalSessionHours}
+                    </div>
+                  </div>
+                </div>
+                <span className='font-mono text-[10px] text-muted-foreground group-hover:text-foreground transition-colors'>
+                  Track Time →
+                </span>
+              </div>
+            </Link>
+          ) : (
+            <div className='rounded-xl border border-dashed border-amber-500/30 bg-amber-500/5 overflow-hidden shadow-[0_0_16px_rgba(245,158,11,0.06)]'>
+              <div className='flex items-center justify-between px-4 py-3.5'>
+                <div className='flex items-center gap-3'>
+                  <LockIcon className='w-4 h-4 text-amber-400 shrink-0' />
+                  <div>
+                    <div className='flex items-center gap-2'>
+                      <span className='font-mono text-[10px] uppercase tracking-widest text-amber-500/80'>
+                        Time Tracker
+                      </span>
+                      <span className='inline-flex items-center px-1.5 py-0.5 rounded-full font-mono text-[8px] tracking-widest border border-amber-500/40 bg-amber-500/10 text-amber-500 uppercase'>
+                        Pro
+                      </span>
+                    </div>
+                    <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
+                      Track hours per session with pause &amp; resume
+                    </div>
+                  </div>
+                </div>
+                {user && <UpgradeButton pbUserId={user.id} />}
+              </div>
+            </div>
+          )}
 
           {/* Tabbed workflow sections */}
           <div className='rounded-xl border border-border bg-card overflow-hidden'>

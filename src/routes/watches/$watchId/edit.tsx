@@ -63,7 +63,6 @@ const formSchema = z.object({
     message: 'Bought price must be 0 or more',
   }),
   parts_cost: numberField({ min: 0, message: 'Parts cost must be 0 or more' }),
-  hours_spent: numberField({ min: 0, message: 'Hours must be 0 or more' }),
   bought_date: z.string().trim().min(1, 'Bought date is required'),
   sold_price: z.preprocess((v) => {
     if (v === '' || v === null || typeof v === 'undefined') return null;
@@ -99,7 +98,6 @@ function EditWatchRoute() {
         condition_bought: 'good',
         bought_price: 0,
         parts_cost: 0,
-        hours_spent: 0,
         bought_date: '',
         sold_price: null,
         sold_date: null,
@@ -115,7 +113,6 @@ function EditWatchRoute() {
       condition_bought: watch.condition_bought,
       bought_price: watch.bought_price,
       parts_cost: watch.parts_cost,
-      hours_spent: watch.hours_spent,
       bought_date: watch.bought_date?.slice(0, 10) ?? '',
       sold_price: watch.sold_price,
       sold_date: watch.sold_date?.slice(0, 10) ?? null,
@@ -389,7 +386,7 @@ function EditWatchRoute() {
           />
         </section>
 
-        <section className='grid grid-cols-3 gap-4'>
+        <section className='grid grid-cols-2 gap-4'>
           <Controller
             name='bought_price'
             control={control}
@@ -425,29 +422,6 @@ function EditWatchRoute() {
                   type='number'
                   inputMode='decimal'
                   step='any'
-                  aria-invalid={fieldState.invalid}
-                  autoComplete='off'
-                  onChange={(e) => onChange(e.target.valueAsNumber)}
-                />
-                {fieldState.invalid && (
-                  <FieldError errors={[fieldState.error]} />
-                )}
-              </Field>
-            )}
-          />
-
-          <Controller
-            name='hours_spent'
-            control={control}
-            render={({ field: { onChange, ...field }, fieldState }) => (
-              <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='hours_spent'>Hours spent</FieldLabel>
-                <Input
-                  {...field}
-                  id='hours_spent'
-                  type='number'
-                  inputMode='decimal'
-                  step='0.25'
                   aria-invalid={fieldState.invalid}
                   autoComplete='off'
                   onChange={(e) => onChange(e.target.valueAsNumber)}

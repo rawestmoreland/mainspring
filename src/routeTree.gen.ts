@@ -30,6 +30,7 @@ import { Route as InventoryNewRouteImport } from './routes/inventory/new'
 import { Route as EquipmentNewRouteImport } from './routes/equipment/new'
 import { Route as WatchesWatchIdIndexRouteImport } from './routes/watches/$watchId/index'
 import { Route as WatchesWatchIdTimegrapherRouteImport } from './routes/watches/$watchId/timegrapher'
+import { Route as WatchesWatchIdTimeRouteImport } from './routes/watches/$watchId/time'
 import { Route as WatchesWatchIdShoppingListRouteImport } from './routes/watches/$watchId/shopping-list'
 import { Route as WatchesWatchIdGalleryRouteImport } from './routes/watches/$watchId/gallery'
 import { Route as WatchesWatchIdEditRouteImport } from './routes/watches/$watchId/edit'
@@ -145,6 +146,11 @@ const WatchesWatchIdTimegrapherRoute =
     path: '/watches/$watchId/timegrapher',
     getParentRoute: () => rootRouteImport,
   } as any)
+const WatchesWatchIdTimeRoute = WatchesWatchIdTimeRouteImport.update({
+  id: '/watches/$watchId/time',
+  path: '/watches/$watchId/time',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WatchesWatchIdShoppingListRoute =
   WatchesWatchIdShoppingListRouteImport.update({
     id: '/watches/$watchId/shopping-list',
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/watches/$watchId/edit': typeof WatchesWatchIdEditRoute
   '/watches/$watchId/gallery': typeof WatchesWatchIdGalleryRoute
   '/watches/$watchId/shopping-list': typeof WatchesWatchIdShoppingListRoute
+  '/watches/$watchId/time': typeof WatchesWatchIdTimeRoute
   '/watches/$watchId/timegrapher': typeof WatchesWatchIdTimegrapherRoute
   '/watches/$watchId/': typeof WatchesWatchIdIndexRoute
   '/watches/$watchId/posts/$postId': typeof WatchesWatchIdPostsPostIdRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/watches/$watchId/edit': typeof WatchesWatchIdEditRoute
   '/watches/$watchId/gallery': typeof WatchesWatchIdGalleryRoute
   '/watches/$watchId/shopping-list': typeof WatchesWatchIdShoppingListRoute
+  '/watches/$watchId/time': typeof WatchesWatchIdTimeRoute
   '/watches/$watchId/timegrapher': typeof WatchesWatchIdTimegrapherRoute
   '/watches/$watchId': typeof WatchesWatchIdIndexRoute
   '/watches/$watchId/posts/$postId': typeof WatchesWatchIdPostsPostIdRoute
@@ -279,6 +287,7 @@ export interface FileRoutesById {
   '/watches/$watchId/edit': typeof WatchesWatchIdEditRoute
   '/watches/$watchId/gallery': typeof WatchesWatchIdGalleryRoute
   '/watches/$watchId/shopping-list': typeof WatchesWatchIdShoppingListRoute
+  '/watches/$watchId/time': typeof WatchesWatchIdTimeRoute
   '/watches/$watchId/timegrapher': typeof WatchesWatchIdTimegrapherRoute
   '/watches/$watchId/': typeof WatchesWatchIdIndexRoute
   '/watches/$watchId/posts/$postId': typeof WatchesWatchIdPostsPostIdRoute
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
     | '/watches/$watchId/edit'
     | '/watches/$watchId/gallery'
     | '/watches/$watchId/shopping-list'
+    | '/watches/$watchId/time'
     | '/watches/$watchId/timegrapher'
     | '/watches/$watchId/'
     | '/watches/$watchId/posts/$postId'
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/watches/$watchId/edit'
     | '/watches/$watchId/gallery'
     | '/watches/$watchId/shopping-list'
+    | '/watches/$watchId/time'
     | '/watches/$watchId/timegrapher'
     | '/watches/$watchId'
     | '/watches/$watchId/posts/$postId'
@@ -374,6 +385,7 @@ export interface FileRouteTypes {
     | '/watches/$watchId/edit'
     | '/watches/$watchId/gallery'
     | '/watches/$watchId/shopping-list'
+    | '/watches/$watchId/time'
     | '/watches/$watchId/timegrapher'
     | '/watches/$watchId/'
     | '/watches/$watchId/posts/$postId'
@@ -406,6 +418,7 @@ export interface RootRouteChildren {
   WatchesWatchIdEditRoute: typeof WatchesWatchIdEditRoute
   WatchesWatchIdGalleryRoute: typeof WatchesWatchIdGalleryRoute
   WatchesWatchIdShoppingListRoute: typeof WatchesWatchIdShoppingListRoute
+  WatchesWatchIdTimeRoute: typeof WatchesWatchIdTimeRoute
   WatchesWatchIdTimegrapherRoute: typeof WatchesWatchIdTimegrapherRoute
   WatchesWatchIdIndexRoute: typeof WatchesWatchIdIndexRoute
   WatchesWatchIdPostsPostIdRoute: typeof WatchesWatchIdPostsPostIdRoute
@@ -562,6 +575,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WatchesWatchIdTimegrapherRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/watches/$watchId/time': {
+      id: '/watches/$watchId/time'
+      path: '/watches/$watchId/time'
+      fullPath: '/watches/$watchId/time'
+      preLoaderRoute: typeof WatchesWatchIdTimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/watches/$watchId/shopping-list': {
       id: '/watches/$watchId/shopping-list'
       path: '/watches/$watchId/shopping-list'
@@ -646,6 +666,7 @@ const rootRouteChildren: RootRouteChildren = {
   WatchesWatchIdEditRoute: WatchesWatchIdEditRoute,
   WatchesWatchIdGalleryRoute: WatchesWatchIdGalleryRoute,
   WatchesWatchIdShoppingListRoute: WatchesWatchIdShoppingListRoute,
+  WatchesWatchIdTimeRoute: WatchesWatchIdTimeRoute,
   WatchesWatchIdTimegrapherRoute: WatchesWatchIdTimegrapherRoute,
   WatchesWatchIdIndexRoute: WatchesWatchIdIndexRoute,
   WatchesWatchIdPostsPostIdRoute: WatchesWatchIdPostsPostIdRoute,

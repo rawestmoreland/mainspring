@@ -36,7 +36,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       ? 'TIMEGRAPHER LOG'
       : pathname.endsWith('/shopping-list')
         ? 'PARTS SHOPPING LIST'
-        : '');
+        : pathname.endsWith('/time')
+          ? 'TIME TRACKER'
+          : '');
 
   return (
     <SidebarProvider>
