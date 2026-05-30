@@ -155,6 +155,7 @@ export type UserProfile = {
   display_name: string;
   bio: string;
   is_public: boolean;
+  is_admin: boolean;
   created: string;
   updated: string;
 };
