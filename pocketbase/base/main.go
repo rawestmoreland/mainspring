@@ -450,9 +450,13 @@ func main() {
 		return se.Next()
 	})
 
-	validateSubdomain := func(sub string) error {
+	validateSubdomain := func(sub string, e *core.RecordEvent) error {
 		if sub == "" {
 			return nil
+		}
+		_, err := e.App.FindFirstRecordByData("user_profiles", "subdomain", sub)
+		if err == nil {
+			return apis.NewApiError(http.StatusBadRequest, "subdomain already in use", nil)
 		}
 		if !subdomainRe.MatchString(sub) {
 			return apis.NewApiError(http.StatusBadRequest, "subdomain must match ^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$", nil)
@@ -464,14 +468,14 @@ func main() {
 	}
 
 	app.OnRecordCreate("user_profiles").BindFunc(func(e *core.RecordEvent) error {
-		if err := validateSubdomain(e.Record.GetString("subdomain")); err != nil {
+		if err := validateSubdomain(e.Record.GetString("subdomain"), e); err != nil {
 			return err
 		}
 		return e.Next()
 	})
 
 	app.OnRecordUpdate("user_profiles").BindFunc(func(e *core.RecordEvent) error {
-		if err := validateSubdomain(e.Record.GetString("subdomain")); err != nil {
+		if err := validateSubdomain(e.Record.GetString("subdomain"), e); err != nil {
 			return err
 		}
 		return e.Next()
