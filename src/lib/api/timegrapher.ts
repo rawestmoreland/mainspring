@@ -19,4 +19,8 @@ export const TimegrapherApi = {
   deleteReading: async (id: string): Promise<void> => {
     await pb.collection(COLLECTION).delete(id);
   },
+
+  patchAnalysis: async (id: string, ai_analysis: string): Promise<TimegrapherReading> => {
+    return pb.collection(COLLECTION).update<TimegrapherReading>(id, { ai_analysis });
+  },
 };

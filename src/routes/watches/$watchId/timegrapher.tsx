@@ -10,7 +10,15 @@ import {
   useGetTimegrapherReadings,
   useCreateTimegrapherReading,
   useDeleteTimegrapherReading,
+  useAnalyzeTimegrapherReading,
 } from '#/hooks/timegrapher';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '#/components/ui/dialog';
 import { useSubscription } from '#/hooks/subscription';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { KpiCard } from '#/components/primitives/KpiCard';
@@ -728,9 +736,11 @@ function TimegrapherPage() {
   const { data: user } = useUser();
   const { isPro } = useSubscription();
   const deleteReading = useDeleteTimegrapherReading(watchId);
+  const analyzeReading = useAnalyzeTimegrapherReading(watchId);
 
   const [showForm, setShowForm] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [analysisReading, setAnalysisReading] = useState<typeof readings[number] | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(
     () => typeof window !== 'undefined' && localStorage.getItem(BANNER_DISMISSED_KEY) === 'true',
   );
@@ -992,19 +1002,31 @@ function TimegrapherPage() {
                       </Td>
                       {user && (
                         <Td>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm('Delete this session?')) {
-                                deleteReading.mutate(r.id);
-                                if (selectedId === r.id) setSelectedId(null);
-                              }
-                            }}
-                            className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                            aria-label='Delete session'
-                          >
-                            ×
-                          </button>
+                          <div className='flex items-center gap-2'>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAnalysisReading(r);
+                              }}
+                              className='font-mono text-[9px] tracking-widest uppercase px-1.5 py-0.5 rounded border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 transition-colors bg-transparent cursor-pointer'
+                              aria-label='AI analysis'
+                            >
+                              AI
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm('Delete this session?')) {
+                                  deleteReading.mutate(r.id);
+                                  if (selectedId === r.id) setSelectedId(null);
+                                }
+                              }}
+                              className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
+                              aria-label='Delete session'
+                            >
+                              ×
+                            </button>
+                          </div>
                         </Td>
                       )}
                     </TableRow>
@@ -1069,6 +1091,61 @@ function TimegrapherPage() {
           )}
         </div>
       </div>
+
+      {/* AI Analysis modal */}
+      <Dialog
+        open={analysisReading !== null}
+        onOpenChange={(open) => { if (!open) setAnalysisReading(null); }}
+      >
+        <DialogContent className='sm:max-w-lg'>
+          <DialogHeader>
+            <DialogTitle className='font-serif text-base'>
+              AI Analysis
+              {analysisReading && (
+                <span className='ml-2 font-mono text-[10px] font-normal text-muted-foreground'>
+                  {STATUS_LABELS[analysisReading.status]} · {format(new Date(analysisReading.created), 'MMM d, yyyy')}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          {analysisReading && (
+            <div className='space-y-4'>
+              {analysisReading.ai_analysis ? (
+                <p className='font-mono text-[11px] leading-relaxed text-foreground whitespace-pre-wrap'>
+                  {analysisReading.ai_analysis}
+                </p>
+              ) : (
+                <p className='font-mono text-xs text-muted-foreground'>
+                  No analysis yet. Generate one below.
+                </p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter showCloseButton>
+            {analysisReading && (
+              <button
+                onClick={() => {
+                  analyzeReading.mutate(analysisReading, {
+                    onSuccess: (analysis) => {
+                      setAnalysisReading((r) => r ? { ...r, ai_analysis: analysis } : r);
+                    },
+                  });
+                }}
+                disabled={analyzeReading.isPending}
+                className='inline-flex items-center gap-1.5 rounded-md bg-amber-500/20 border border-amber-500/40 px-3 py-1.5 text-[11px] font-mono text-amber-200 hover:bg-amber-500/30 transition-colors disabled:opacity-50'
+              >
+                {analyzeReading.isPending
+                  ? 'Analyzing…'
+                  : analysisReading.ai_analysis
+                    ? '↻ Re-analyze'
+                    : '✦ Generate Analysis'}
+              </button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

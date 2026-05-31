@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { TimegrapherApi } from '#/lib/api/timegrapher';
-import type { CreateTimegrapherReading } from '#/types';
+import { analyzeTimegrapherReading } from '#/server/timegrapher-analysis';
+import type { CreateTimegrapherReading, TimegrapherReading } from '#/types';
 
 export const useGetTimegrapherReadings = (watchId: string) => {
   return useQuery({
@@ -15,6 +16,20 @@ export const useCreateTimegrapherReading = (watchId: string) => {
   return useMutation({
     mutationFn: (data: CreateTimegrapherReading) =>
       TimegrapherApi.createReading(data),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['timegrapher', watchId] });
+    },
+  });
+};
+
+export const useAnalyzeTimegrapherReading = (watchId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (reading: TimegrapherReading) => {
+      const { analysis } = await analyzeTimegrapherReading({ data: reading });
+      await TimegrapherApi.patchAnalysis(reading.id, analysis);
+      return analysis;
+    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['timegrapher', watchId] });
     },
