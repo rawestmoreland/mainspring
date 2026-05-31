@@ -454,8 +454,8 @@ func main() {
 		if sub == "" {
 			return nil
 		}
-		_, err := e.App.FindFirstRecordByData("user_profiles", "subdomain", sub)
-		if err == nil {
+		found, err := e.App.FindFirstRecordByData("user_profiles", "subdomain", sub)
+		if err == nil && found.Id != e.Record.Id {
 			return apis.NewApiError(http.StatusBadRequest, "subdomain already in use", nil)
 		}
 		if !subdomainRe.MatchString(sub) {
