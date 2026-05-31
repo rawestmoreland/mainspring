@@ -20,7 +20,11 @@ export const TimegrapherApi = {
     await pb.collection(COLLECTION).delete(id);
   },
 
-  patchAnalysis: async (id: string, ai_analysis: string): Promise<TimegrapherReading> => {
-    return pb.collection(COLLECTION).update<TimegrapherReading>(id, { ai_analysis });
+  analyzeReading: async (id: string): Promise<string> => {
+    const result = await pb.send<{ analysis: string }>('/api/timegrapher/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ reading_id: id }),
+    });
+    return result.analysis;
   },
 };
