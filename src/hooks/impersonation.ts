@@ -15,7 +15,7 @@ export function markImpersonating() {
 
 export function useImpersonation() {
   const [isImpersonating, setIsImpersonating] = useState(
-    () => localStorage.getItem(IMPERSONATE_KEY) !== null,
+    () => typeof window !== 'undefined' && localStorage.getItem(IMPERSONATE_KEY) !== null,
   );
   const navigate = useNavigate();
   const queryClient = useQueryClient();

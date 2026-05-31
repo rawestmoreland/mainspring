@@ -233,7 +233,8 @@ function PremiumChartBanner({ onDismiss }: { onDismiss: () => void }) {
             6-Position Rate Tracking
           </h3>
           <p className='mt-0.5 font-mono text-[11px] text-muted-foreground max-w-lg'>
-            Track rate, amplitude, and beat error in every orientation — dial up, dial down, crown up, crown down, crown left, and crown right.
+            Track rate, amplitude, and beat error in every orientation — dial
+            up, dial down, crown up, crown down, crown left, and crown right.
           </p>
         </div>
 
@@ -273,7 +274,12 @@ function PremiumChartBanner({ onDismiss }: { onDismiss: () => void }) {
                       )}
                     </div>
                   </div>
-                  <span className={cn('font-mono text-[10px] font-medium', rateClass(rate))}>
+                  <span
+                    className={cn(
+                      'font-mono text-[10px] font-medium',
+                      rateClass(rate),
+                    )}
+                  >
                     {fmtRate(rate)}
                   </span>
                 </div>
@@ -372,7 +378,9 @@ function FreeAddSessionForm({
                     <SelectItem value='incoming'>Incoming</SelectItem>
                   </SelectContent>
                 </Select>
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -384,8 +392,16 @@ function FreeAddSessionForm({
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor='free-lift'>Lift Angle (°)</FieldLabel>
-                <Input {...field} type='number' step='1' id='free-lift' className={inputCls} />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                <Input
+                  {...field}
+                  type='number'
+                  step='1'
+                  id='free-lift'
+                  className={inputCls}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -408,7 +424,9 @@ function FreeAddSessionForm({
                   placeholder='e.g. +2.1'
                   className={inputCls}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -419,7 +437,9 @@ function FreeAddSessionForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='free-amp'>Average Amplitude (°)</FieldLabel>
+                <FieldLabel htmlFor='free-amp'>
+                  Average Amplitude (°)
+                </FieldLabel>
                 <Input
                   {...field}
                   type='number'
@@ -428,7 +448,9 @@ function FreeAddSessionForm({
                   placeholder='e.g. 298'
                   className={inputCls}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -448,7 +470,9 @@ function FreeAddSessionForm({
                   placeholder='e.g. 0.3'
                   className={inputCls}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -740,9 +764,13 @@ function TimegrapherPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [analysisReading, setAnalysisReading] = useState<typeof readings[number] | null>(null);
+  const [analysisReading, setAnalysisReading] = useState<
+    (typeof readings)[number] | null
+  >(null);
   const [bannerDismissed, setBannerDismissed] = useState(
-    () => typeof window !== 'undefined' && localStorage.getItem(BANNER_DISMISSED_KEY) === 'true',
+    () =>
+      typeof window !== 'undefined' &&
+      localStorage.getItem(BANNER_DISMISSED_KEY) === 'true',
   );
 
   if (watchLoading || readingsLoading) {
@@ -858,7 +886,11 @@ function TimegrapherPage() {
           />
           <KpiCard
             label='Avg Amplitude'
-            value={latest?.du_amp !== undefined && latest?.du_amp !== null ? `${fmtNum(latest.du_amp)}°` : '—'}
+            value={
+              latest?.du_amp !== undefined && latest?.du_amp !== null
+                ? `${fmtNum(latest.du_amp)}°`
+                : '—'
+            }
             sub='target ≥ 270°'
           />
           <KpiCard
@@ -886,7 +918,8 @@ function TimegrapherPage() {
       {!isPro && bannerDismissed && (
         <div className='flex items-center gap-3 rounded-lg border border-amber-500/40 bg-amber-950/80 px-4 py-3'>
           <span className='font-mono text-[11px] text-amber-200'>
-            Upgrade to Pro for 6-position logging (DU · DD · CU · CD · CL · CR) and delta tracking.
+            Upgrade to Pro for 6-position logging (DU · DD · CU · CD · CL · CR)
+            and delta tracking.
           </span>
           <Link
             to='/pro'
@@ -980,7 +1013,12 @@ function TimegrapherPage() {
                         setSelectedId((cur) => (cur === r.id ? null : r.id))
                       }
                     >
-                      <Td className={cn('font-mono text-[11px]', isSelected && 'text-primary')}>
+                      <Td
+                        className={cn(
+                          'font-mono text-[11px]',
+                          isSelected && 'text-primary',
+                        )}
+                      >
                         {format(new Date(r.created), 'MMM d, yyyy')}
                       </Td>
                       <Td className='font-mono text-[11px] text-muted-foreground'>
@@ -990,11 +1028,22 @@ function TimegrapherPage() {
                         {r.lift_angle}°
                       </Td>
                       {rates.map((rate, i) => (
-                        <Td key={i} className={cn('font-mono text-[11px] font-medium', rateClass(rate))}>
+                        <Td
+                          key={i}
+                          className={cn(
+                            'font-mono text-[11px] font-medium',
+                            rateClass(rate),
+                          )}
+                        >
                           {fmtRate(rate)}
                         </Td>
                       ))}
-                      <Td className={cn('font-mono text-[11px] font-medium', rateClass(mean ?? undefined))}>
+                      <Td
+                        className={cn(
+                          'font-mono text-[11px] font-medium',
+                          rateClass(mean ?? undefined),
+                        )}
+                      >
                         {fmtRate(mean)}
                       </Td>
                       <Td className='font-mono text-[11px] text-muted-foreground max-w-40 truncate'>
@@ -1059,14 +1108,23 @@ function TimegrapherPage() {
                     <Td className='font-mono text-[11px] text-muted-foreground'>
                       {r.lift_angle}°
                     </Td>
-                    <Td className={cn('font-mono text-[11px] font-medium', rateClass(r.du_rate))}>
+                    <Td
+                      className={cn(
+                        'font-mono text-[11px] font-medium',
+                        rateClass(r.du_rate),
+                      )}
+                    >
                       {fmtRate(r.du_rate)}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
-                      {r.du_amp !== undefined && r.du_amp !== null ? `${fmtNum(r.du_amp)}°` : '—'}
+                      {r.du_amp !== undefined && r.du_amp !== null
+                        ? `${fmtNum(r.du_amp)}°`
+                        : '—'}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
-                      {r.du_be !== undefined && r.du_be !== null ? `${fmtNum(r.du_be, 1)} ms` : '—'}
+                      {r.du_be !== undefined && r.du_be !== null
+                        ? `${fmtNum(r.du_be, 1)} ms`
+                        : '—'}
                     </Td>
                     {user && (
                       <Td>
@@ -1095,7 +1153,9 @@ function TimegrapherPage() {
       {/* AI Analysis modal */}
       <Dialog
         open={analysisReading !== null}
-        onOpenChange={(open) => { if (!open) setAnalysisReading(null); }}
+        onOpenChange={(open) => {
+          if (!open) setAnalysisReading(null);
+        }}
       >
         <DialogContent className='sm:max-w-lg flex flex-col max-h-[80vh]'>
           <DialogHeader>
@@ -1103,7 +1163,8 @@ function TimegrapherPage() {
               AI Analysis
               {analysisReading && (
                 <span className='ml-2 font-mono text-[10px] font-normal text-muted-foreground'>
-                  {STATUS_LABELS[analysisReading.status]} · {format(new Date(analysisReading.created), 'MMM d, yyyy')}
+                  {STATUS_LABELS[analysisReading.status]} ·{' '}
+                  {format(new Date(analysisReading.created), 'MMM d, yyyy')}
                 </span>
               )}
             </DialogTitle>
@@ -1124,12 +1185,14 @@ function TimegrapherPage() {
           )}
 
           <DialogFooter showCloseButton>
-            {analysisReading && (
+            {analysisReading && !analysisReading.ai_analysis && (
               <button
                 onClick={() => {
                   analyzeReading.mutate(analysisReading, {
                     onSuccess: (analysis) => {
-                      setAnalysisReading((r) => r ? { ...r, ai_analysis: analysis } : r);
+                      setAnalysisReading((r) =>
+                        r ? { ...r, ai_analysis: analysis } : r,
+                      );
                     },
                   });
                 }}
@@ -1138,9 +1201,7 @@ function TimegrapherPage() {
               >
                 {analyzeReading.isPending
                   ? 'Analyzing…'
-                  : analysisReading.ai_analysis
-                    ? '↻ Re-analyze'
-                    : '✦ Generate Analysis'}
+                  : '✦ Generate Analysis'}
               </button>
             )}
           </DialogFooter>
