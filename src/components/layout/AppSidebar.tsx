@@ -1,4 +1,7 @@
 import { Link, useRouterState, useNavigate } from '@tanstack/react-router';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { cn } from '#/lib/helpers';
 import { NAV_PAGES } from '#/lib/constants';
 import { useUser, useLogout } from '#/hooks/user';
@@ -16,14 +19,69 @@ import {
   useSidebar,
 } from '#/components/ui/sidebar';
 import HSBrass from '#/lib/assets/hairspring-mark-brass.svg';
+import { useAuth } from '#/hooks/auth';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../ui/dialog';
+import { useState } from 'react';
+import { Input } from '../ui/input';
+import { Field, FieldLabel } from '../ui/field';
+import pb from '#/lib/pocketbase';
+import { impersonateUser } from '#/server/impersonate';
+import { markImpersonating } from '#/hooks/impersonation';
+import { useQueryClient } from '@tanstack/react-query';
+
+const impersonateSchema = z.object({
+  targetUserId: z.string().min(1, 'User ID is required'),
+});
+type ImpersonateFormData = z.infer<typeof impersonateSchema>;
 
 export function AppSidebar() {
+  const queryClient = useQueryClient();
+  const [impersonateOpen, setImpersonateOpen] = useState(false);
+  const [impersonateError, setImpersonateError] = useState<string | null>(null);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isMobile, setOpenMobile } = useSidebar();
 
   const navigate = useNavigate();
   const { data: user } = useUser();
+  const { profile } = useAuth();
   const { mutateAsync: logoutMutation } = useLogout();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<ImpersonateFormData>({
+    resolver: zodResolver(impersonateSchema),
+  });
+
+  const onImpersonate = handleSubmit(async ({ targetUserId }) => {
+    setImpersonateError(null);
+    try {
+      const result = await impersonateUser({
+        data: { token: pb.authStore.token, targetUserId },
+      });
+      pb.authStore.save(result.token, result.record);
+      markImpersonating();
+      setImpersonateOpen(false);
+      reset();
+      navigate({ to: '/dashboard' });
+      queryClient.refetchQueries();
+    } catch (e) {
+      setImpersonateError(
+        e instanceof Error ? e.message : 'Impersonation failed',
+      );
+    }
+  });
 
   const initials = user?.email ? user.email.slice(0, 2).toUpperCase() : '??';
 
@@ -74,6 +132,66 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               );
             })}
+            {profile?.is_admin && (
+              <SidebarMenuItem>
+                <Dialog
+                  open={impersonateOpen}
+                  onOpenChange={setImpersonateOpen}
+                >
+                  <DialogTrigger asChild>
+                    <SidebarMenuButton
+                      className={cn(
+                        'gap-2.5 text-[13px] text-muted-foreground',
+                      )}
+                    >
+                      Impersonate
+                    </SidebarMenuButton>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <form onSubmit={onImpersonate}>
+                      <DialogHeader>
+                        <DialogTitle>Impersonate User</DialogTitle>
+                        <DialogDescription>
+                          Enter a user ID to auth as that user.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <Field className='my-4'>
+                        <FieldLabel>User ID</FieldLabel>
+                        <Input
+                          id='targetUserId'
+                          placeholder='User ID'
+                          {...register('targetUserId')}
+                        />
+                        {errors.targetUserId && (
+                          <p className='text-xs text-red-400 mt-1'>
+                            {errors.targetUserId.message}
+                          </p>
+                        )}
+                      </Field>
+                      {impersonateError && (
+                        <p className='text-xs text-red-400 mb-2'>
+                          {impersonateError}
+                        </p>
+                      )}
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button
+                            variant='outline'
+                            type='button'
+                            onClick={() => reset()}
+                          >
+                            Cancel
+                          </Button>
+                        </DialogClose>
+                        <Button type='submit' disabled={isSubmitting}>
+                          {isSubmitting ? 'Impersonating…' : 'Impersonate'}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>

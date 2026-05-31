@@ -15,6 +15,7 @@ import {
   SidebarTrigger,
 } from '#/components/ui/sidebar';
 import { useSubscription } from '#/hooks/subscription';
+import { ImpersonationBanner } from './ImpersonationBanner';
 
 const PAGE_SUBTITLES: Record<string, string> = {
   '/dashboard': 'PROFIT & LOSS OVERVIEW',
@@ -44,6 +45,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
+        <ImpersonationBanner />
         <header className='flex justify-between border-border px-4 border-b items-center'>
           <div className='flex h-14 shrink-0 items-center gap-2'>
             <SidebarTrigger className='-ml-1' />
