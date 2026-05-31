@@ -377,7 +377,7 @@ Keep the response concise and technical but readable. Use plain text, no markdow
 
 			reqBody, _ := json.Marshal(map[string]any{
 				"model":      "claude-haiku-4-5-20251001",
-				"max_tokens": 600,
+				"max_tokens": 1024,
 				"messages": []map[string]string{
 					{"role": "user", "content": prompt},
 				},
