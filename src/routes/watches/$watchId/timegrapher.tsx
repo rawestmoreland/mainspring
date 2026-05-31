@@ -1097,7 +1097,7 @@ function TimegrapherPage() {
         open={analysisReading !== null}
         onOpenChange={(open) => { if (!open) setAnalysisReading(null); }}
       >
-        <DialogContent className='sm:max-w-lg'>
+        <DialogContent className='sm:max-w-lg flex flex-col max-h-[80vh]'>
           <DialogHeader>
             <DialogTitle className='font-serif text-base'>
               AI Analysis
@@ -1110,7 +1110,7 @@ function TimegrapherPage() {
           </DialogHeader>
 
           {analysisReading && (
-            <div className='space-y-4'>
+            <div className='overflow-y-auto flex-1 min-h-0'>
               {analysisReading.ai_analysis ? (
                 <p className='font-mono text-[11px] leading-relaxed text-foreground whitespace-pre-wrap'>
                   {analysisReading.ai_analysis}
@@ -1134,7 +1134,7 @@ function TimegrapherPage() {
                   });
                 }}
                 disabled={analyzeReading.isPending}
-                className='inline-flex items-center gap-1.5 rounded-md bg-amber-500/20 border border-amber-500/40 px-3 py-1.5 text-[11px] font-mono text-amber-200 hover:bg-amber-500/30 transition-colors disabled:opacity-50'
+                className='inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-[11px] font-mono text-zinc-950 font-medium hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {analyzeReading.isPending
                   ? 'Analyzing…'
