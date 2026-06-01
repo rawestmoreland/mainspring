@@ -11,7 +11,7 @@ Findings from a full CRUD audit of the Hairspring codebase. Issue #1 (XSS via `d
 - [ ] **#3 — Silent failure on notes save** *(MEDIUM)*
 - [ ] **#4 — Object URL memory leak in UploadZone** *(MEDIUM)*
 - [ ] **#5 — Featured image upload after failed watch create** *(MEDIUM)*
-- [ ] **#6 — Parts qty not capped to available inventory** *(MEDIUM)*
+- [x] **#6 — Parts qty not capped to available inventory** *(MEDIUM)*
 - [ ] **#7 — Stale data overwrite on concurrent watch edit** *(MEDIUM)*
 - [ ] **#8 — `activeIdx` not reset on stage filter change** *(LOW)*
 - [ ] **#9 — Photo limit bypassable via WatchModal** *(LOW)*
