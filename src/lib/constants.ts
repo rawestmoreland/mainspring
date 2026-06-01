@@ -32,3 +32,8 @@ export const NAV_PAGES = [
 ] as const;
 
 export type PageId = (typeof NAV_PAGES)[number]['id'];
+
+export enum LocalStorageKeys {
+  InventoryFilterKey = 'hairspring-inventoryFilterQty',
+  InventoryViewModeKey = 'hairspring-viewMode',
+}

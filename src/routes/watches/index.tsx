@@ -20,7 +20,7 @@ import { WatchesListSkeleton } from '#/components/skeletons';
 import { useWatches } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
 import { useSubscription } from '#/hooks/subscription';
-import { FREE_PROJECT_LIMIT } from '#/lib/constants';
+import { FREE_PROJECT_LIMIT, LocalStorageKeys } from '#/lib/constants';
 import type { WatchStatus } from '#/types';
 
 export const Route = createFileRoute('/watches/')({
@@ -48,7 +48,9 @@ function WatchesPage() {
 
   useEffect(() => {
     const getSavedViewMode = async () => {
-      const localMode = localStorage.getItem('hairspring-viewmode') as ViewMode;
+      const localMode = localStorage.getItem(
+        LocalStorageKeys.InventoryViewModeKey,
+      ) as ViewMode;
       if (localMode) setViewMode(localMode);
     };
     getSavedViewMode();
@@ -75,7 +77,7 @@ function WatchesPage() {
   };
 
   const handleChangeViewMode = async (mode: ViewMode) => {
-    localStorage.setItem('hairspring-viewmode', mode);
+    localStorage.setItem(LocalStorageKeys.InventoryViewModeKey, mode);
     setViewMode(mode);
   };
 
@@ -147,8 +149,12 @@ function WatchesPage() {
                   {atProjectLimit && (
                     <TooltipContent>
                       <p className='font-mono text-xs'>
-                        Free accounts are limited to {FREE_PROJECT_LIMIT} active projects.{' '}
-                        <Link to='/pro' className='text-amber-400 hover:underline'>
+                        Free accounts are limited to {FREE_PROJECT_LIMIT} active
+                        projects.{' '}
+                        <Link
+                          to='/pro'
+                          className='text-amber-400 hover:underline'
+                        >
                           Upgrade to Pro
                         </Link>
                       </p>
