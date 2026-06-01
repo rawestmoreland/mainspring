@@ -767,6 +767,7 @@ function TimegrapherPage() {
   const [analysisReading, setAnalysisReading] = useState<
     (typeof readings)[number] | null
   >(null);
+  const [showAiUpsell, setShowAiUpsell] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(
     () =>
       typeof window !== 'undefined' &&
@@ -1057,7 +1058,7 @@ function TimegrapherPage() {
                                 e.stopPropagation();
                                 setAnalysisReading(r);
                               }}
-                              className='font-mono text-[9px] tracking-widest uppercase px-1.5 py-0.5 rounded border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 transition-colors bg-transparent cursor-pointer'
+                              className='font-mono text-[9px] tracking-widest uppercase px-2 py-1 rounded bg-amber-500 text-zinc-950 font-semibold hover:bg-amber-400 transition-colors cursor-pointer'
                               aria-label='AI analysis'
                             >
                               AI
@@ -1128,18 +1129,30 @@ function TimegrapherPage() {
                     </Td>
                     {user && (
                       <Td>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm('Delete this session?')) {
-                              deleteReading.mutate(r.id);
-                            }
-                          }}
-                          className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                          aria-label='Delete session'
-                        >
-                          ×
-                        </button>
+                        <div className='flex items-center gap-2'>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowAiUpsell(true);
+                            }}
+                            className='font-mono text-[9px] tracking-widest uppercase px-2 py-1 rounded bg-amber-500/15 text-amber-400/70 border border-amber-500/30 hover:bg-amber-500/25 hover:text-amber-400 transition-colors cursor-pointer'
+                            aria-label='AI analysis (Pro)'
+                          >
+                            ✦ AI
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm('Delete this session?')) {
+                                deleteReading.mutate(r.id);
+                              }
+                            }}
+                            className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
+                            aria-label='Delete session'
+                          >
+                            ×
+                          </button>
+                        </div>
                       </Td>
                     )}
                   </TableRow>
@@ -1149,6 +1162,47 @@ function TimegrapherPage() {
           )}
         </div>
       </div>
+
+      {/* AI upsell dialog — free users */}
+      <Dialog open={showAiUpsell} onOpenChange={setShowAiUpsell}>
+        <DialogContent className='sm:max-w-sm'>
+          <DialogHeader>
+            <DialogTitle className='font-serif text-base flex items-center gap-2'>
+              <span className='text-amber-400'>✦</span> AI Timegrapher Analysis
+            </DialogTitle>
+          </DialogHeader>
+          <div className='space-y-3 py-1'>
+            <p className='font-mono text-[11px] leading-relaxed text-muted-foreground'>
+              Pro members get an instant AI-generated interpretation of each
+              session — explaining what the numbers mean, flagging issues, and
+              suggesting next steps.
+            </p>
+            <ul className='space-y-1.5'>
+              {[
+                'Rate deviation diagnosis across all 6 positions',
+                'Amplitude & beat error interpretation',
+                'Service recommendations based on the data',
+              ].map((item) => (
+                <li
+                  key={item}
+                  className='flex items-start gap-2 font-mono text-[11px] text-foreground'
+                >
+                  <span className='mt-px text-amber-400 shrink-0'>✦</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <DialogFooter showCloseButton>
+            <Link
+              to='/pro'
+              className='inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-[11px] font-mono text-zinc-950 font-semibold hover:bg-amber-400 transition-colors'
+            >
+              Upgrade to Pro →
+            </Link>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* AI Analysis modal */}
       <Dialog
