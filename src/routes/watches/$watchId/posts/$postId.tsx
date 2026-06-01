@@ -269,7 +269,9 @@ function PostPage() {
           {post.body ? (
             <div
               className='prose max-w-none'
-              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.body) }}
+              dangerouslySetInnerHTML={{
+                __html: DOMPurify.sanitize(post.body),
+              }}
             />
           ) : (
             <p className='text-sm text-muted-foreground italic'>

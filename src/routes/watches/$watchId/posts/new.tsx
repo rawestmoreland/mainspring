@@ -43,7 +43,11 @@ function NewPostPage() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { title: '', session_date: '', body: '' },
+    defaultValues: {
+      title: '',
+      session_date: new Date().toISOString().split('T')[0],
+      body: '',
+    },
   });
 
   const handleImageUpload = async (file: File): Promise<string> => {
@@ -112,14 +116,24 @@ function NewPostPage() {
           ← Back to Repair Log
         </Link>
         <div className='rounded-lg border border-amber-500/30 bg-amber-500/5 px-5 py-5 flex items-start gap-3 max-w-lg'>
-          <svg className='w-4 h-4 text-amber-400 mt-0.5 shrink-0' viewBox='0 0 16 16' fill='currentColor' aria-hidden='true'>
-            <path d='M11.5 8h-1V5.5a2.5 2.5 0 0 0-5 0V8h-1A1.5 1.5 0 0 0 3 9.5v4A1.5 1.5 0 0 0 4.5 15h7A1.5 1.5 0 0 0 13 13.5v-4A1.5 1.5 0 0 0 11.5 8zM6 5.5a2 2 0 1 1 4 0V8H6V5.5z'/>
+          <svg
+            className='w-4 h-4 text-amber-400 mt-0.5 shrink-0'
+            viewBox='0 0 16 16'
+            fill='currentColor'
+            aria-hidden='true'
+          >
+            <path d='M11.5 8h-1V5.5a2.5 2.5 0 0 0-5 0V8h-1A1.5 1.5 0 0 0 3 9.5v4A1.5 1.5 0 0 0 4.5 15h7A1.5 1.5 0 0 0 13 13.5v-4A1.5 1.5 0 0 0 11.5 8zM6 5.5a2 2 0 1 1 4 0V8H6V5.5z' />
           </svg>
           <div>
-            <p className='font-mono text-sm font-medium text-foreground'>This project is frozen</p>
+            <p className='font-mono text-sm font-medium text-foreground'>
+              This project is frozen
+            </p>
             <p className='font-mono text-xs text-muted-foreground mt-1 leading-relaxed'>
-              You&apos;ve reached the 2-project limit on the free plan. Repair sessions cannot be added to frozen projects.{' '}
-              <Link to='/pro' className='text-amber-400 hover:text-amber-300'>Upgrade to Pro</Link>{' '}
+              You&apos;ve reached the 2-project limit on the free plan. Repair
+              sessions cannot be added to frozen projects.{' '}
+              <Link to='/pro' className='text-amber-400 hover:text-amber-300'>
+                Upgrade to Pro
+              </Link>{' '}
               or archive another watch to continue.
             </p>
           </div>
