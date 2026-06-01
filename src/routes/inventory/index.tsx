@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { cn, fmt } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
@@ -11,12 +11,20 @@ import { Button } from '#/components/ui/button';
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { InventorySkeleton } from '#/components/skeletons';
 import { DonorDetailPanel } from '#/components/inventory/DonorDetailPanel';
+import { LocalStorageKeys } from '#/lib/constants';
+
+const getInitialFilter = () => {
+  if (typeof window === 'undefined') return false;
+  const stored = localStorage.getItem(LocalStorageKeys.InventoryFilterKey);
+  return stored ? JSON.parse(stored) : false;
+};
 
 export const Route = createFileRoute('/inventory/')({
   component: InventoryPage,
 });
 
 function InventoryPage() {
+  const [filterZeroQty, setFilterZeroQty] = useState(false);
   const { data: inventory, isPending: isInventoryPending } = useInventory();
   const deleteInventoryItem = useDeleteInventory();
   const { data: donorMovements = [], isPending: isDonorsPending } =
@@ -25,6 +33,17 @@ function InventoryPage() {
 
   const [view, setView] = useState<'parts' | 'donors'>('parts');
   const [selectedDonorId, setSelectedDonorId] = useState<string | null>(null);
+
+  const filteredInventory = useMemo(() => {
+    if (!inventory) return [];
+    if (!filterZeroQty) return inventory;
+    return inventory.filter((i) => i.qty > 0);
+  }, [filterZeroQty, inventory]);
+
+  useEffect(() => {
+    const storedFilter = getInitialFilter();
+    setFilterZeroQty(storedFilter);
+  }, [inventory]);
 
   if (isInventoryPending || isDonorsPending || isUserPending)
     return <InventorySkeleton />;
@@ -77,7 +96,23 @@ function InventoryPage() {
       {view === 'parts' ? (
         <>
           <div className='flex items-center justify-between mb-3.5'>
-            <SectionLabel>Spare Parts</SectionLabel>
+            <div className='flex items-center gap-4'>
+              <SectionLabel>Spare Parts</SectionLabel>
+              <Button
+                onClick={() => {
+                  setFilterZeroQty((f) => {
+                    localStorage.setItem(
+                      LocalStorageKeys.InventoryFilterKey,
+                      JSON.stringify(!f),
+                    );
+                    return !f;
+                  });
+                }}
+                size='sm'
+              >
+                {filterZeroQty ? 'Show All' : 'Hide Zero Qty'}
+              </Button>
+            </div>
             {user && (
               <Button asChild>
                 <Link to='/inventory/new'>
@@ -101,7 +136,7 @@ function InventoryPage() {
               </tr>
             </thead>
             <tbody>
-              {inventory.map((i) => (
+              {filteredInventory.map((i) => (
                 <TableRow key={i.id}>
                   <Td className='font-medium text-sm'>{i.name}</Td>
                   <Td>
@@ -181,7 +216,6 @@ function InventoryPage() {
               <tr>
                 <Th>Caliber</Th>
                 <Th>Manufacturer</Th>
-                <Th>Jewels</Th>
                 <Th>Missing Parts</Th>
               </tr>
             </thead>
@@ -191,9 +225,6 @@ function InventoryPage() {
                   <Td className='font-medium text-sm'>{d.caliber}</Td>
                   <Td className='font-mono text-xs text-muted-foreground'>
                     {d.manufacturer}
-                  </Td>
-                  <Td className='font-mono text-xs text-muted-foreground'>
-                    {d.jewels != null ? d.jewels : '—'}
                   </Td>
                   <Td>
                     {d.missing_parts?.length ? (
