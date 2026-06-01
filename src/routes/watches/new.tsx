@@ -14,7 +14,13 @@ import { useUser } from '#/hooks/user';
 import { useSubscription } from '#/hooks/subscription';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { WatchesApi } from '#/lib/api/watches';
-import { ImagePlusIcon, LockIcon } from 'lucide-react';
+import {
+  AlertCircleIcon,
+  CheckCircle2Icon,
+  ImagePlusIcon,
+  InfoIcon,
+  LockIcon,
+} from 'lucide-react';
 import {
   Field,
   FieldContent,
@@ -32,6 +38,7 @@ import {
 import { Button } from '#/components/ui/button';
 import TiptapEditor, { TiptapEditorRef } from '#/components/TipTap';
 import { FormSkeleton } from '#/components/skeletons';
+import { Alert, AlertDescription, AlertTitle } from '#/components/ui/alert';
 
 export const Route = createFileRoute('/watches/new')({
   component: NewWatchRoute,
@@ -99,7 +106,7 @@ function NewWatchRoute() {
       bought_price: 0,
       parts_cost: 0,
       hours_spent: 0,
-      bought_date: '',
+      bought_date: new Date().toISOString().split('T')[0],
       sold_price: null,
       sold_date: null,
       notes: '',
@@ -212,11 +219,12 @@ function NewWatchRoute() {
       </div>
 
       {submitError && (
-        <div
-          role='alert'
-          className='mb-4 rounded-md border border-red-900/60 bg-red-950/30 px-3 py-2 text-sm text-red-300'
-        >
-          {submitError}
+        <div className='grid w-full max-w-md items-start gap-4 mb-6'>
+          <Alert className='bg-destructive/10'>
+            <AlertCircleIcon />
+            <AlertTitle>Uh Oh!</AlertTitle>
+            <AlertDescription>{submitError}</AlertDescription>
+          </Alert>
         </div>
       )}
 
