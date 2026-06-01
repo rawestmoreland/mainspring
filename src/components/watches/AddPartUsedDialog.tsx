@@ -48,9 +48,6 @@ export function AddPartUsedDialog({ watchId }: Props) {
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
-  const selectedInventoryId = watch('inventory_item');
-  const selectedItem = inventory.find((i) => i.id === selectedInventoryId);
-
   const {
     control,
     handleSubmit,
@@ -67,6 +64,8 @@ export function AddPartUsedDialog({ watchId }: Props) {
       notes: '',
     },
   });
+  const selectedInventoryId = watch('inventory_item');
+  const selectedItem = inventory.find((i) => i.id === selectedInventoryId);
 
   const onSubmit = async (data: FormData) => {
     if (selectedItem && data.qty_used > selectedItem.qty) {
