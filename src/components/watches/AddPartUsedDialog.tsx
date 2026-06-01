@@ -48,10 +48,15 @@ export function AddPartUsedDialog({ watchId }: Props) {
 
   const today = format(new Date(), 'yyyy-MM-dd');
 
+  const selectedInventoryId = watch('inventory_item');
+  const selectedItem = inventory.find((i) => i.id === selectedInventoryId);
+
   const {
     control,
     handleSubmit,
     reset,
+    watch,
+    setError,
     formState: { isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -64,6 +69,10 @@ export function AddPartUsedDialog({ watchId }: Props) {
   });
 
   const onSubmit = async (data: FormData) => {
+    if (selectedItem && data.qty_used > selectedItem.qty) {
+      setError('qty_used', { message: `Only ${selectedItem.qty} in stock` });
+      return;
+    }
     await createPartUsed.mutateAsync({
       inventory_item: data.inventory_item,
       qty_used: data.qty_used,
@@ -143,6 +152,7 @@ export function AddPartUsedDialog({ watchId }: Props) {
                     type='number'
                     step='1'
                     min={1}
+                    max={selectedItem?.qty}
                     aria-invalid={fieldState.invalid}
                     autoComplete='off'
                     onChange={(e) => onChange(e.target.valueAsNumber)}
