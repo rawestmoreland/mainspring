@@ -76,6 +76,8 @@ type RawPhoto = {
   collectionId: string;
   stage: WatchStage;
   caption: string;
+  sort_order?: number;
+  created?: string;
   image: string;
 };
 type RawPartUsed = {
@@ -118,6 +120,8 @@ function PublicWatchDetailPage() {
           collectionId: p.collectionId,
           stage: p.stage,
           caption: p.caption,
+          sort_order: p.sort_order,
+          created: p.created ?? new Date().toISOString(),
           image: `${assetUrl}/${p.collectionId}/${p.id}/${p.image}`,
         }),
       );
@@ -321,24 +325,34 @@ function PublicWatchDetailPage() {
                 {/* Thumbnail strip */}
                 {displayedPhotos.length > 1 && (
                   <div className='flex gap-1.5 px-4 py-3 border-t border-border overflow-x-auto'>
-                    {displayedPhotos.map((ph, i) => (
-                      <button
-                        key={ph.id}
-                        onClick={() => setActiveIdx(i)}
-                        className={cn(
-                          'shrink-0 w-14 h-14 rounded-md overflow-hidden border-2 transition-all cursor-pointer bg-transparent p-0',
-                          i === activeIdx
-                            ? 'border-amber-500 opacity-100'
-                            : 'border-border opacity-50 hover:opacity-100',
-                        )}
-                      >
-                        <img
-                          src={ph.image}
-                          alt={ph.caption}
-                          className='w-full h-full object-cover'
-                        />
-                      </button>
-                    ))}
+                    {displayedPhotos
+                      .sort((a, b) => {
+                        const aOrder =
+                          a.sort_order ??
+                          new Date(a.created ?? new Date()).getTime();
+                        const bOrder =
+                          b.sort_order ??
+                          new Date(b.created ?? new Date()).getTime();
+                        return bOrder - aOrder;
+                      })
+                      .map((ph, i) => (
+                        <button
+                          key={ph.id}
+                          onClick={() => setActiveIdx(i)}
+                          className={cn(
+                            'shrink-0 w-14 h-14 rounded-md overflow-hidden border-2 transition-all cursor-pointer bg-transparent p-0',
+                            i === activeIdx
+                              ? 'border-amber-500 opacity-100'
+                              : 'border-border opacity-50 hover:opacity-100',
+                          )}
+                        >
+                          <img
+                            src={ph.image}
+                            alt={ph.caption}
+                            className='w-full h-full object-cover'
+                          />
+                        </button>
+                      ))}
                   </div>
                 )}
               </div>

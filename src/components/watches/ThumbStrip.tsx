@@ -21,14 +21,23 @@ export function ThumbStrip({ photos, onClick }: ThumbStripProps) {
         onClick?.();
       }}
     >
-      {visible.map((ph) => (
-        <img
-          key={ph.id}
-          src={ph.image}
-          alt=''
-          className='w-9 h-9 rounded object-cover border border-border shrink-0'
-        />
-      ))}
+      {visible
+        .sort((a, b) => {
+          // Sort by sort_order if it's not 0, otherwise by created date
+          const aOrder =
+            a.sort_order ?? new Date(a.created ?? new Date()).getTime();
+          const bOrder =
+            b.sort_order ?? new Date(b.created ?? new Date()).getTime();
+          return bOrder - aOrder;
+        })
+        .map((ph) => (
+          <img
+            key={ph.id}
+            src={ph.image}
+            alt=''
+            className='w-9 h-9 rounded object-cover border border-border shrink-0'
+          />
+        ))}
       {extra > 0 && (
         <div className='w-9 h-9 rounded bg-muted border border-border flex items-center justify-center font-mono text-[9px] text-muted-foreground shrink-0'>
           +{extra}

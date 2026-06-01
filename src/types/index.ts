@@ -41,6 +41,8 @@ export type WatchPhoto = {
   stage: WatchStage;
   caption: string;
   image: string;
+  created?: string;
+  sort_order?: number;
 };
 
 export type PartUsed = {

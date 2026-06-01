@@ -71,13 +71,14 @@ function RouteComponent() {
     (sum, s) => sum + (s.final_duration_seconds ?? 0),
     0,
   );
-  const totalSessionHours = totalSessionSeconds > 0
-    ? (() => {
-        const h = Math.floor(totalSessionSeconds / 3600);
-        const m = Math.floor((totalSessionSeconds % 3600) / 60);
-        return h > 0 && m > 0 ? `${h}h ${m}m` : h > 0 ? `${h}h` : `${m}m`;
-      })()
-    : '—';
+  const totalSessionHours =
+    totalSessionSeconds > 0
+      ? (() => {
+          const h = Math.floor(totalSessionSeconds / 3600);
+          const m = Math.floor((totalSessionSeconds % 3600) / 60);
+          return h > 0 && m > 0 ? `${h}h ${m}m` : h > 0 ? `${h}h` : `${m}m`;
+        })()
+      : '—';
 
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [activeIdx, setActiveIdx] = useState(0);
@@ -292,12 +293,12 @@ function RouteComponent() {
             <div>
               <div className='flex flex-col items-center px-6 pt-8 pb-1 text-center'>
                 <div className='w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-3'>
-                  <CameraIcon className='w-[18px] h-[18px] text-zinc-200' />
+                  <CameraIcon className='w-4.5 h-4.5 text-zinc-200' />
                 </div>
                 <p className='font-mono text-sm text-foreground/80 mb-1'>
                   No photos yet
                 </p>
-                <p className='font-mono text-xs text-muted-foreground max-w-[240px] leading-relaxed'>
+                <p className='font-mono text-xs text-muted-foreground max-w-60 leading-relaxed'>
                   Document each stage — before, during, after, and listing
                   shots.
                 </p>
@@ -414,7 +415,14 @@ function RouteComponent() {
               )}
 
               {/* Thumbnail strip */}
-              {displayedPhotos.length > 1 && (
+              {displayedPhotos.sort((a, b) => {
+                // If photos have a sort_order, use it. Otherwise, fall back to created date.
+                const aOrder =
+                  a.sort_order ?? new Date(a.created ?? new Date()).getTime();
+                const bOrder =
+                  b.sort_order ?? new Date(b.created ?? new Date()).getTime();
+                return bOrder - aOrder;
+              }).length > 1 && (
                 <div className='flex gap-1.5 px-4 py-3 border-t border-border overflow-x-auto'>
                   {displayedPhotos.map((ph, i) => (
                     <button
@@ -1096,7 +1104,9 @@ function RouteComponent() {
                     {!!watch.notes ? (
                       <div
                         className='prose text-sm max-w-none'
-                        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(watch.notes ?? '') }}
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(watch.notes ?? ''),
+                        }}
                       />
                     ) : (
                       <p className='font-mono text-xs italic text-muted-foreground/50'>

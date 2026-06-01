@@ -23,6 +23,8 @@ export const WatchesApi = {
           collectionId: p.collectionId,
           stage: p.stage,
           caption: p.caption,
+          sort_order: p.sort_order,
+          created: p.created,
           image: `${import.meta.env.VITE_PUBLIC_POCKETBASE_URL}/api/files/${p.collectionId}/${p.id}/${p.image}?thumb=100x100`,
         })) ?? [],
       parts_cost:
@@ -114,6 +116,8 @@ export const WatchesApi = {
           collectionId: p.collectionId,
           stage: p.stage,
           caption: p.caption,
+          sort_order: p.sort_order,
+          created: p.created,
           image: `${import.meta.env.VITE_PUBLIC_ASSET_URL}/${p.collectionId}/${p.id}/${p.image}`,
         })) ?? [],
       parts_cost:
