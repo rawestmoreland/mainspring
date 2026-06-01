@@ -19,4 +19,12 @@ export const TimegrapherApi = {
   deleteReading: async (id: string): Promise<void> => {
     await pb.collection(COLLECTION).delete(id);
   },
+
+  analyzeReading: async (id: string): Promise<string> => {
+    const result = await pb.send<{ analysis: string }>('/api/timegrapher/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ reading_id: id }),
+    });
+    return result.analysis;
+  },
 };

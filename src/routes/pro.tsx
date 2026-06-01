@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router';
-import { Camera, FolderOpen, ListChecks, Timer } from 'lucide-react';
+import { Camera, FolderOpen, ListChecks, Sparkles, Timer } from 'lucide-react';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { useAuth } from '#/hooks/auth';
 import { useSubscription } from '#/hooks/subscription';
@@ -31,6 +31,14 @@ const FEATURES = [
     title: 'Full positional logging',
     description:
       'Free users log a single rate and amplitude reading. Pro exposes the full 6-position grid (DU, DD, CU, CD, CL, CR) with automated delta tracking across sessions.',
+    badge: null,
+  },
+  {
+    icon: Sparkles,
+    label: 'AI Analysis',
+    title: 'Instant movement intelligence',
+    description:
+      'Get an AI-generated interpretation of every timegrapher session — rate deviation diagnosis across all 6 positions, amplitude and beat error analysis, and actionable service recommendations based on your data.',
     badge: null,
   },
   {

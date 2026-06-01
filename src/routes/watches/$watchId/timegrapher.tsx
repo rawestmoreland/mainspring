@@ -10,7 +10,15 @@ import {
   useGetTimegrapherReadings,
   useCreateTimegrapherReading,
   useDeleteTimegrapherReading,
+  useAnalyzeTimegrapherReading,
 } from '#/hooks/timegrapher';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '#/components/ui/dialog';
 import { useSubscription } from '#/hooks/subscription';
 import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { KpiCard } from '#/components/primitives/KpiCard';
@@ -225,7 +233,8 @@ function PremiumChartBanner({ onDismiss }: { onDismiss: () => void }) {
             6-Position Rate Tracking
           </h3>
           <p className='mt-0.5 font-mono text-[11px] text-muted-foreground max-w-lg'>
-            Track rate, amplitude, and beat error in every orientation — dial up, dial down, crown up, crown down, crown left, and crown right.
+            Track rate, amplitude, and beat error in every orientation — dial
+            up, dial down, crown up, crown down, crown left, and crown right.
           </p>
         </div>
 
@@ -265,7 +274,12 @@ function PremiumChartBanner({ onDismiss }: { onDismiss: () => void }) {
                       )}
                     </div>
                   </div>
-                  <span className={cn('font-mono text-[10px] font-medium', rateClass(rate))}>
+                  <span
+                    className={cn(
+                      'font-mono text-[10px] font-medium',
+                      rateClass(rate),
+                    )}
+                  >
                     {fmtRate(rate)}
                   </span>
                 </div>
@@ -364,7 +378,9 @@ function FreeAddSessionForm({
                     <SelectItem value='incoming'>Incoming</SelectItem>
                   </SelectContent>
                 </Select>
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -376,8 +392,16 @@ function FreeAddSessionForm({
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor='free-lift'>Lift Angle (°)</FieldLabel>
-                <Input {...field} type='number' step='1' id='free-lift' className={inputCls} />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                <Input
+                  {...field}
+                  type='number'
+                  step='1'
+                  id='free-lift'
+                  className={inputCls}
+                />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -400,7 +424,9 @@ function FreeAddSessionForm({
                   placeholder='e.g. +2.1'
                   className={inputCls}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -411,7 +437,9 @@ function FreeAddSessionForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='free-amp'>Average Amplitude (°)</FieldLabel>
+                <FieldLabel htmlFor='free-amp'>
+                  Average Amplitude (°)
+                </FieldLabel>
                 <Input
                   {...field}
                   type='number'
@@ -420,7 +448,9 @@ function FreeAddSessionForm({
                   placeholder='e.g. 298'
                   className={inputCls}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -440,7 +470,9 @@ function FreeAddSessionForm({
                   placeholder='e.g. 0.3'
                   className={inputCls}
                 />
-                {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
               </Field>
             )}
           />
@@ -728,11 +760,18 @@ function TimegrapherPage() {
   const { data: user } = useUser();
   const { isPro } = useSubscription();
   const deleteReading = useDeleteTimegrapherReading(watchId);
+  const analyzeReading = useAnalyzeTimegrapherReading(watchId);
 
   const [showForm, setShowForm] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [analysisReading, setAnalysisReading] = useState<
+    (typeof readings)[number] | null
+  >(null);
+  const [showAiUpsell, setShowAiUpsell] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(
-    () => typeof window !== 'undefined' && localStorage.getItem(BANNER_DISMISSED_KEY) === 'true',
+    () =>
+      typeof window !== 'undefined' &&
+      localStorage.getItem(BANNER_DISMISSED_KEY) === 'true',
   );
 
   if (watchLoading || readingsLoading) {
@@ -848,7 +887,11 @@ function TimegrapherPage() {
           />
           <KpiCard
             label='Avg Amplitude'
-            value={latest?.du_amp !== undefined && latest?.du_amp !== null ? `${fmtNum(latest.du_amp)}°` : '—'}
+            value={
+              latest?.du_amp !== undefined && latest?.du_amp !== null
+                ? `${fmtNum(latest.du_amp)}°`
+                : '—'
+            }
             sub='target ≥ 270°'
           />
           <KpiCard
@@ -876,7 +919,8 @@ function TimegrapherPage() {
       {!isPro && bannerDismissed && (
         <div className='flex items-center gap-3 rounded-lg border border-amber-500/40 bg-amber-950/80 px-4 py-3'>
           <span className='font-mono text-[11px] text-amber-200'>
-            Upgrade to Pro for 6-position logging (DU · DD · CU · CD · CL · CR) and delta tracking.
+            Upgrade to Pro for 6-position logging (DU · DD · CU · CD · CL · CR)
+            and delta tracking.
           </span>
           <Link
             to='/pro'
@@ -970,7 +1014,12 @@ function TimegrapherPage() {
                         setSelectedId((cur) => (cur === r.id ? null : r.id))
                       }
                     >
-                      <Td className={cn('font-mono text-[11px]', isSelected && 'text-primary')}>
+                      <Td
+                        className={cn(
+                          'font-mono text-[11px]',
+                          isSelected && 'text-primary',
+                        )}
+                      >
                         {format(new Date(r.created), 'MMM d, yyyy')}
                       </Td>
                       <Td className='font-mono text-[11px] text-muted-foreground'>
@@ -980,11 +1029,22 @@ function TimegrapherPage() {
                         {r.lift_angle}°
                       </Td>
                       {rates.map((rate, i) => (
-                        <Td key={i} className={cn('font-mono text-[11px] font-medium', rateClass(rate))}>
+                        <Td
+                          key={i}
+                          className={cn(
+                            'font-mono text-[11px] font-medium',
+                            rateClass(rate),
+                          )}
+                        >
                           {fmtRate(rate)}
                         </Td>
                       ))}
-                      <Td className={cn('font-mono text-[11px] font-medium', rateClass(mean ?? undefined))}>
+                      <Td
+                        className={cn(
+                          'font-mono text-[11px] font-medium',
+                          rateClass(mean ?? undefined),
+                        )}
+                      >
                         {fmtRate(mean)}
                       </Td>
                       <Td className='font-mono text-[11px] text-muted-foreground max-w-40 truncate'>
@@ -992,19 +1052,31 @@ function TimegrapherPage() {
                       </Td>
                       {user && (
                         <Td>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm('Delete this session?')) {
-                                deleteReading.mutate(r.id);
-                                if (selectedId === r.id) setSelectedId(null);
-                              }
-                            }}
-                            className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                            aria-label='Delete session'
-                          >
-                            ×
-                          </button>
+                          <div className='flex items-center gap-2'>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAnalysisReading(r);
+                              }}
+                              className='font-mono text-[9px] tracking-widest uppercase px-2 py-1 rounded bg-amber-500 text-zinc-950 font-semibold hover:bg-amber-400 transition-colors cursor-pointer'
+                              aria-label='AI analysis'
+                            >
+                              AI
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (confirm('Delete this session?')) {
+                                  deleteReading.mutate(r.id);
+                                  if (selectedId === r.id) setSelectedId(null);
+                                }
+                              }}
+                              className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
+                              aria-label='Delete session'
+                            >
+                              ×
+                            </button>
+                          </div>
                         </Td>
                       )}
                     </TableRow>
@@ -1037,29 +1109,50 @@ function TimegrapherPage() {
                     <Td className='font-mono text-[11px] text-muted-foreground'>
                       {r.lift_angle}°
                     </Td>
-                    <Td className={cn('font-mono text-[11px] font-medium', rateClass(r.du_rate))}>
+                    <Td
+                      className={cn(
+                        'font-mono text-[11px] font-medium',
+                        rateClass(r.du_rate),
+                      )}
+                    >
                       {fmtRate(r.du_rate)}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
-                      {r.du_amp !== undefined && r.du_amp !== null ? `${fmtNum(r.du_amp)}°` : '—'}
+                      {r.du_amp !== undefined && r.du_amp !== null
+                        ? `${fmtNum(r.du_amp)}°`
+                        : '—'}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
-                      {r.du_be !== undefined && r.du_be !== null ? `${fmtNum(r.du_be, 1)} ms` : '—'}
+                      {r.du_be !== undefined && r.du_be !== null
+                        ? `${fmtNum(r.du_be, 1)} ms`
+                        : '—'}
                     </Td>
                     {user && (
                       <Td>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (confirm('Delete this session?')) {
-                              deleteReading.mutate(r.id);
-                            }
-                          }}
-                          className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                          aria-label='Delete session'
-                        >
-                          ×
-                        </button>
+                        <div className='flex items-center gap-2'>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowAiUpsell(true);
+                            }}
+                            className='font-mono text-[9px] tracking-widest uppercase px-2 py-1 rounded bg-amber-500/15 text-amber-400/70 border border-amber-500/30 hover:bg-amber-500/25 hover:text-amber-400 transition-colors cursor-pointer'
+                            aria-label='AI analysis (Pro)'
+                          >
+                            ✦ AI
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm('Delete this session?')) {
+                                deleteReading.mutate(r.id);
+                              }
+                            }}
+                            className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
+                            aria-label='Delete session'
+                          >
+                            ×
+                          </button>
+                        </div>
                       </Td>
                     )}
                   </TableRow>
@@ -1069,6 +1162,105 @@ function TimegrapherPage() {
           )}
         </div>
       </div>
+
+      {/* AI upsell dialog — free users */}
+      <Dialog open={showAiUpsell} onOpenChange={setShowAiUpsell}>
+        <DialogContent className='sm:max-w-sm'>
+          <DialogHeader>
+            <DialogTitle className='font-serif text-base flex items-center gap-2'>
+              <span className='text-amber-400'>✦</span> AI Timegrapher Analysis
+            </DialogTitle>
+          </DialogHeader>
+          <div className='space-y-3 py-1'>
+            <p className='font-mono text-[11px] leading-relaxed text-muted-foreground'>
+              Pro members get an instant AI-generated interpretation of each
+              session — explaining what the numbers mean, flagging issues, and
+              suggesting next steps.
+            </p>
+            <ul className='space-y-1.5'>
+              {[
+                'Rate deviation diagnosis across all 6 positions',
+                'Amplitude & beat error interpretation',
+                'Service recommendations based on the data',
+              ].map((item) => (
+                <li
+                  key={item}
+                  className='flex items-start gap-2 font-mono text-[11px] text-foreground'
+                >
+                  <span className='mt-px text-amber-400 shrink-0'>✦</span>
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <DialogFooter showCloseButton>
+            <Link
+              to='/pro'
+              className='inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-[11px] font-mono text-zinc-950 font-semibold hover:bg-amber-400 transition-colors'
+            >
+              Upgrade to Pro →
+            </Link>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Analysis modal */}
+      <Dialog
+        open={analysisReading !== null}
+        onOpenChange={(open) => {
+          if (!open) setAnalysisReading(null);
+        }}
+      >
+        <DialogContent className='sm:max-w-lg flex flex-col max-h-[80vh]'>
+          <DialogHeader>
+            <DialogTitle className='font-serif text-base'>
+              AI Analysis
+              {analysisReading && (
+                <span className='ml-2 font-mono text-[10px] font-normal text-muted-foreground'>
+                  {STATUS_LABELS[analysisReading.status]} ·{' '}
+                  {format(new Date(analysisReading.created), 'MMM d, yyyy')}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+
+          {analysisReading && (
+            <div className='overflow-y-auto flex-1 min-h-0'>
+              {analysisReading.ai_analysis ? (
+                <p className='font-mono text-[11px] leading-relaxed text-foreground whitespace-pre-wrap'>
+                  {analysisReading.ai_analysis}
+                </p>
+              ) : (
+                <p className='font-mono text-xs text-muted-foreground'>
+                  No analysis yet. Generate one below.
+                </p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter showCloseButton>
+            {analysisReading && !analysisReading.ai_analysis && (
+              <button
+                onClick={() => {
+                  analyzeReading.mutate(analysisReading, {
+                    onSuccess: (analysis) => {
+                      setAnalysisReading((r) =>
+                        r ? { ...r, ai_analysis: analysis } : r,
+                      );
+                    },
+                  });
+                }}
+                disabled={analyzeReading.isPending}
+                className='inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-[11px] font-mono text-zinc-950 font-medium hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+              >
+                {analyzeReading.isPending
+                  ? 'Analyzing…'
+                  : '✦ Generate Analysis'}
+              </button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

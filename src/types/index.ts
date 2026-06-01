@@ -208,13 +208,14 @@ export type TimegrapherReading = {
   cr_rate?: number;
   cr_amp?: number;
   cr_be?: number;
+  ai_analysis?: string;
   created: string;
   updated: string;
 };
 
 export type CreateTimegrapherReading = Omit<
   TimegrapherReading,
-  'id' | 'created' | 'updated'
+  'id' | 'created' | 'updated' | 'ai_analysis'
 >;
 
 export type PartsShoppingStatus = 'needed' | 'ordered' | 'in_hand';

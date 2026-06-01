@@ -273,6 +273,158 @@ func main() {
 	})
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
+		se.Router.POST("/api/timegrapher/analyze", func(e *core.RequestEvent) error {
+			// Require authentication
+			info, err := e.RequestInfo()
+			if err != nil || info.Auth == nil {
+				return e.JSON(http.StatusUnauthorized, map[string]string{"error": "unauthorized"})
+			}
+			userID := info.Auth.Id
+
+			// Require Pro subscription
+			subscription, err := app.FindFirstRecordByData("subscriptions", "user", userID)
+			if err != nil || !hasPro(subscription) {
+				return e.JSON(http.StatusForbidden, map[string]string{"error": "Pro subscription required"})
+			}
+
+			// Parse request body
+			var body struct {
+				ReadingID string `json:"reading_id"`
+			}
+			if err := json.NewDecoder(e.Request.Body).Decode(&body); err != nil || body.ReadingID == "" {
+				return e.JSON(http.StatusBadRequest, map[string]string{"error": "reading_id required"})
+			}
+
+			// Fetch and authorize the reading
+			reading, err := app.FindRecordById("timegrapher_readings", body.ReadingID)
+			if err != nil {
+				return e.JSON(http.StatusNotFound, map[string]string{"error": "reading not found"})
+			}
+			watch, err := app.FindRecordById("watches", reading.GetString("watch"))
+			if err != nil || watch.GetString("user") != userID {
+				return e.JSON(http.StatusForbidden, map[string]string{"error": "forbidden"})
+			}
+
+			// Build the prompt context from the reading data
+			positions := []struct {
+				key   string
+				label string
+			}{
+				{"du", "Dial Up"},
+				{"dd", "Dial Down"},
+				{"cu", "Crown Up"},
+				{"cd", "Crown Down"},
+				{"cl", "Crown Left"},
+				{"cr", "Crown Right"},
+			}
+
+			statusLabels := map[string]string{
+				"post_service": "Post-Service",
+				"pre_service":  "Pre-Service",
+				"incoming":     "Incoming",
+				"routine":      "Routine",
+			}
+
+			var sb strings.Builder
+			status := reading.GetString("status")
+			if label, ok := statusLabels[status]; ok {
+				status = label
+			}
+			fmt.Fprintf(&sb, "Session type: %s\n", status)
+			fmt.Fprintf(&sb, "Lift angle: %g°\n", reading.GetFloat("lift_angle"))
+			if notes := reading.GetString("notes"); notes != "" {
+				fmt.Fprintf(&sb, "Notes: %s\n", notes)
+			}
+			sb.WriteString("\nPosition data:\n")
+			for _, pos := range positions {
+				rate := reading.GetFloat(pos.key + "_rate")
+				amp := reading.GetFloat(pos.key + "_amp")
+				be := reading.GetFloat(pos.key + "_be")
+				if reading.Get(pos.key+"_rate") == nil && reading.Get(pos.key+"_amp") == nil && reading.Get(pos.key+"_be") == nil {
+					continue
+				}
+				sign := "+"
+				if rate < 0 {
+					sign = ""
+				}
+				fmt.Fprintf(&sb, "  %s:  rate %s%.1f s/d  amplitude %.0f°  beat error %.1f ms\n",
+					pos.label, sign, rate, amp, be)
+			}
+
+			prompt := `You are an expert watchmaker and horologist analyzing timegrapher data for a mechanical watch. Timegrapher readings measure a movement's accuracy and health using three key metrics per position: rate (seconds gained/lost per day), amplitude (balance wheel arc in degrees), and beat error (asymmetry between tick and tock in milliseconds).
+
+Reference benchmarks:
+- Rate: ±3 s/d or better is excellent; ±6 is acceptable; beyond ±10 needs adjustment
+- Amplitude: ≥280° is healthy; 250–280° is marginal; <250° suggests lubrication issues or weak mainspring
+- Beat error: ≤0.5 ms is ideal; 0.5–1.0 ms is acceptable; >1.0 ms needs adjustment
+- Positional variance in rate (DU vs DD, crown positions): should ideally be within ±15 s/d
+
+Here is the timegrapher session data:
+
+` + sb.String() + `
+Please provide:
+1. A brief overall assessment (2–3 sentences) on the movement's condition
+2. Any specific issues detected, with likely causes
+3. Actionable troubleshooting steps or recommendations, ordered by priority
+
+Keep the response concise and technical but readable. Use plain text, no markdown formatting.`
+
+			// Call Anthropic API
+			apiKey := os.Getenv("ANTHROPIC_API_KEY")
+			if apiKey == "" {
+				return e.JSON(http.StatusInternalServerError, map[string]string{"error": "Anthropic API key not configured"})
+			}
+
+			reqBody, _ := json.Marshal(map[string]any{
+				"model":      "claude-haiku-4-5-20251001",
+				"max_tokens": 1024,
+				"messages": []map[string]string{
+					{"role": "user", "content": prompt},
+				},
+			})
+
+			req, _ := http.NewRequestWithContext(e.Request.Context(), http.MethodPost,
+				"https://api.anthropic.com/v1/messages", strings.NewReader(string(reqBody)))
+			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("x-api-key", apiKey)
+			req.Header.Set("anthropic-version", "2023-06-01")
+
+			client := &http.Client{Timeout: 60 * time.Second}
+			resp, err := client.Do(req)
+			if err != nil {
+				return e.JSON(http.StatusBadGateway, map[string]string{"error": "Anthropic request failed"})
+			}
+			defer resp.Body.Close()
+
+			var anthropicResp struct {
+				Content []struct {
+					Type string `json:"type"`
+					Text string `json:"text"`
+				} `json:"content"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&anthropicResp); err != nil {
+				return e.JSON(http.StatusBadGateway, map[string]string{"error": "failed to parse Anthropic response"})
+			}
+
+			var analysis string
+			for _, block := range anthropicResp.Content {
+				if block.Type == "text" {
+					analysis += block.Text
+				}
+			}
+
+			// Persist analysis on the reading record
+			reading.Set("ai_analysis", analysis)
+			if err := app.Save(reading); err != nil {
+				return e.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to save analysis"})
+			}
+
+			return e.JSON(http.StatusOK, map[string]string{"analysis": analysis})
+		})
+		return se.Next()
+	})
+
+	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		se.Router.POST("/api/lemonsqueezy/webhook", func(e *core.RequestEvent) error {
 			secret := os.Getenv("LEMONSQUEEZY_WEBHOOK_SECRET")
 
