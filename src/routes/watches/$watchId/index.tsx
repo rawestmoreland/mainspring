@@ -42,6 +42,7 @@ import {
   TimerIcon,
 } from 'lucide-react';
 import { StatusPicker } from '#/components/watches/StatusPicker';
+import { Skeleton } from '#/components/ui/skeleton';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
@@ -93,11 +94,7 @@ function RouteComponent() {
   const featuredInputRef = useRef<HTMLInputElement>(null);
 
   if (isLoading) {
-    return (
-      <div className='text-sm text-muted-foreground font-mono'>
-        Loading watch…
-      </div>
-    );
+    return <SkeletonLoader />;
   }
 
   if (!watch) {
@@ -495,7 +492,7 @@ function RouteComponent() {
         </div>
 
         {/* RIGHT: Details + Tabs panel */}
-        <div className='flex-1 space-y-4 min-w-0'>
+        <div className='w-full space-y-4 min-w-0'>
           {/* Financial KPI grid */}
           <div className='grid grid-cols-2 gap-2'>
             {(
@@ -1165,3 +1162,34 @@ function RouteComponent() {
     </div>
   );
 }
+
+const SkeletonLoader = () => {
+  return (
+    <div className='flex flex-col gap-4'>
+      <div className='flex justify-between'>
+        <div className='flex gap-2'>
+          <Skeleton className='size-14' />
+          <div className='flex flex-col justify-between'>
+            <Skeleton className='w-24 h-5' />
+            <Skeleton className='w-32 h-4' />
+          </div>
+        </div>
+        <Skeleton className='w-20 h-4' />
+      </div>
+      <div className='flex flex-col md:flex-row gap-6 items-start'>
+        <Skeleton className='w-full md:w-1/2 shrink-0 rounded-xl h-128' />
+        <div className='flex flex-col gap-4 w-full'>
+          <div className='grid grid-cols-2 gap-2'>
+            <Skeleton className='rounded-xl h-12'></Skeleton>
+            <Skeleton className='rounded-xl h-12'></Skeleton>
+            <Skeleton className='rounded-xl h-12'></Skeleton>
+            <Skeleton className='rounded-xl h-12'></Skeleton>
+          </div>
+          <Skeleton className='w-full h-54 rounded-xl' />
+          <Skeleton className='w-full h-18 rounded-xl' />
+          <Skeleton className='w-full h-24 rounded-xl' />
+        </div>
+      </div>
+    </div>
+  );
+};
