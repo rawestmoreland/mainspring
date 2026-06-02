@@ -759,6 +759,7 @@ function TimegrapherPage() {
   const aiFeatureFlag = useFeatureFlagEnabled(
     FeatureFlags.TimegrapherAIAnalysis,
   );
+  console.log('AI feature flag enabled:', aiFeatureFlag);
   const { data: watch, isLoading: watchLoading } = useGetWatchById(watchId);
   const { data: readings = [], isLoading: readingsLoading } =
     useGetTimegrapherReadings(watchId);
