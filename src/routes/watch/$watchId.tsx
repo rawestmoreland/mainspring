@@ -18,6 +18,7 @@ import type {
   TimegrapherReading,
 } from '#/types';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
+import { Skeleton } from '#/components/ui/skeleton';
 
 export const Route = createFileRoute('/watch/$watchId')({
   component: PublicWatchDetailPage,
@@ -230,11 +231,7 @@ function PublicWatchDetailPage() {
           ← Back to profile
         </Link>
 
-        {isLoading && (
-          <div className='text-sm text-muted-foreground font-mono'>
-            Loading…
-          </div>
-        )}
+        {isLoading && <SkeletonLoader />}
 
         {!isLoading && !watch && (
           <div className='text-sm text-red-400 font-mono'>Watch not found.</div>
@@ -358,7 +355,7 @@ function PublicWatchDetailPage() {
               </div>
 
               {/* RIGHT: Details panel */}
-              <div className='flex-1 space-y-5 min-w-0'>
+              <div className='flex flex-col w-full gap-5 min-w-0'>
                 {/* Details */}
                 <section className='rounded-xl border border-border bg-card overflow-hidden'>
                   <div className='px-4 py-2.5 border-b border-border'>
@@ -558,3 +555,22 @@ function PublicWatchDetailPage() {
     </div>
   );
 }
+
+const SkeletonLoader = () => {
+  return (
+    <div className='flex flex-col gap-6'>
+      <div className='flex flex-col gap-2'>
+        <Skeleton className='w-1/8 h-8' />
+        <Skeleton className='w-1/4 h-4' />
+      </div>
+      <div className='flex flex-col md:flex-row gap-6 items-start'>
+        <Skeleton className='w-full md:w-1/2 shrink-0 rounded-xl h-84' />
+        <div className='flex flex-col gap-4 w-full md:w-1/2'>
+          <Skeleton className='w-full h-84' />
+          <Skeleton className='w-full h-54' />
+          <Skeleton className='w-full h-54' />
+        </div>
+      </div>
+    </div>
+  );
+};
