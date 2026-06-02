@@ -35,6 +35,8 @@ import {
   SelectValue,
 } from '#/components/ui/select';
 import { Input } from '#/components/ui/input';
+import { useFeatureFlagEnabled } from '@posthog/react';
+import { FeatureFlags } from '#/lib/constants';
 
 export const Route = createFileRoute('/watches/$watchId/timegrapher')({
   component: TimegrapherPage,
@@ -754,6 +756,9 @@ function AddSessionForm({
 
 function TimegrapherPage() {
   const { watchId } = Route.useParams();
+  const aiFeatureFlag = useFeatureFlagEnabled(
+    FeatureFlags.TimegrapherAIAnalysis,
+  );
   const { data: watch, isLoading: watchLoading } = useGetWatchById(watchId);
   const { data: readings = [], isLoading: readingsLoading } =
     useGetTimegrapherReadings(watchId);
@@ -990,6 +995,7 @@ function TimegrapherPage() {
                   <Th>CR</Th>
                   <Th>Mean</Th>
                   <Th>Notes</Th>
+                  {user && aiFeatureFlag && <Th>{''}</Th>}
                   {user && <Th>{''}</Th>}
                 </tr>
               </thead>
@@ -1050,7 +1056,7 @@ function TimegrapherPage() {
                       <Td className='font-mono text-[11px] text-muted-foreground max-w-40 truncate'>
                         {r.notes ?? ''}
                       </Td>
-                      {user && (
+                      {user && aiFeatureFlag && (
                         <Td>
                           <div className='flex items-center gap-2'>
                             <button
@@ -1063,20 +1069,24 @@ function TimegrapherPage() {
                             >
                               AI
                             </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (confirm('Delete this session?')) {
-                                  deleteReading.mutate(r.id);
-                                  if (selectedId === r.id) setSelectedId(null);
-                                }
-                              }}
-                              className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                              aria-label='Delete session'
-                            >
-                              ×
-                            </button>
                           </div>
+                        </Td>
+                      )}
+                      {user && (
+                        <Td>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (confirm('Delete this session?')) {
+                                deleteReading.mutate(r.id);
+                                if (selectedId === r.id) setSelectedId(null);
+                              }
+                            }}
+                            className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
+                            aria-label='Delete session'
+                          >
+                            ×
+                          </button>
                         </Td>
                       )}
                     </TableRow>
@@ -1094,6 +1104,7 @@ function TimegrapherPage() {
                   <Th>Avg Rate</Th>
                   <Th>Avg Amplitude</Th>
                   <Th>Beat Error</Th>
+                  {user && aiFeatureFlag && <Th>{''}</Th>}
                   {user && <Th>{''}</Th>}
                 </tr>
               </thead>
@@ -1127,7 +1138,7 @@ function TimegrapherPage() {
                         ? `${fmtNum(r.du_be, 1)} ms`
                         : '—'}
                     </Td>
-                    {user && (
+                    {user && aiFeatureFlag && (
                       <Td>
                         <div className='flex items-center gap-2'>
                           <button
@@ -1140,19 +1151,23 @@ function TimegrapherPage() {
                           >
                             ✦ AI
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm('Delete this session?')) {
-                                deleteReading.mutate(r.id);
-                              }
-                            }}
-                            className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                            aria-label='Delete session'
-                          >
-                            ×
-                          </button>
                         </div>
+                      </Td>
+                    )}
+                    {user && (
+                      <Td>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm('Delete this session?')) {
+                              deleteReading.mutate(r.id);
+                            }
+                          }}
+                          className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
+                          aria-label='Delete session'
+                        >
+                          ×
+                        </button>
                       </Td>
                     )}
                   </TableRow>

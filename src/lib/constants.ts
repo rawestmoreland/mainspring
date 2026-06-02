@@ -37,3 +37,7 @@ export enum LocalStorageKeys {
   InventoryFilterKey = 'hairspring-inventoryFilterQty',
   InventoryViewModeKey = 'hairspring-viewMode',
 }
+
+export enum FeatureFlags {
+  TimegrapherAIAnalysis = 'timegrapher-ai-analysis',
+}

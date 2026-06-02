@@ -3,6 +3,8 @@ import { Camera, FolderOpen, ListChecks, Sparkles, Timer } from 'lucide-react';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { useAuth } from '#/hooks/auth';
 import { useSubscription } from '#/hooks/subscription';
+import { FeatureFlags } from '#/lib/constants';
+import { useFeatureFlagEnabled } from '@posthog/react';
 
 export const Route = createFileRoute('/pro')({
   component: ProPage,
@@ -16,6 +18,7 @@ const FEATURES = [
     description:
       'Free accounts are limited to 2 active projects. Upgrade to Pro and manage your entire inventory without limits.',
     badge: null,
+    flag: null,
   },
   {
     icon: Camera,
@@ -24,6 +27,7 @@ const FEATURES = [
     description:
       'Free accounts get 3 photos per project. Pro unlocks unlimited photo documentation — before, during, after, and listing shots.',
     badge: null,
+    flag: null,
   },
   {
     icon: Timer,
@@ -32,6 +36,7 @@ const FEATURES = [
     description:
       'Free users log a single rate and amplitude reading. Pro exposes the full 6-position grid (DU, DD, CU, CD, CL, CR) with automated delta tracking across sessions.',
     badge: null,
+    flag: null,
   },
   {
     icon: Sparkles,
@@ -40,6 +45,7 @@ const FEATURES = [
     description:
       'Get an AI-generated interpretation of every timegrapher session — rate deviation diagnosis across all 6 positions, amplitude and beat error analysis, and actionable service recommendations based on your data.',
     badge: null,
+    flag: FeatureFlags.TimegrapherAIAnalysis,
   },
   {
     icon: ListChecks,
@@ -48,12 +54,17 @@ const FEATURES = [
     description:
       'Build a wishlist of watches and parts to track. Set price targets, add notes, and keep your acquisition pipeline organized in one place.',
     badge: null,
+    flag: null,
   },
 ] as const;
 
 function ProPage() {
   const { user } = useAuth();
   const { isPro } = useSubscription();
+
+  const aiFeatureFlag = useFeatureFlagEnabled(
+    FeatureFlags.TimegrapherAIAnalysis,
+  );
 
   if (isPro) {
     return (
@@ -123,7 +134,12 @@ function ProPage() {
 
       {/* Feature grid */}
       <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-        {FEATURES.map(({ icon: Icon, label, title, description, badge }) => (
+        {FEATURES.filter((f) => {
+          if (f.flag === FeatureFlags.TimegrapherAIAnalysis) {
+            return aiFeatureFlag;
+          }
+          return true;
+        }).map(({ icon: Icon, label, title, description, badge }) => (
           <div
             key={label}
             className='rounded-xl border border-border bg-card px-6 py-7 flex flex-col gap-3'
