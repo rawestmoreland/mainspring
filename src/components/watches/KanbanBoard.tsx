@@ -19,11 +19,12 @@ import { KanbanCard } from '#/components/watches/KanbanCard';
 // Light "400" Tailwind variants fail on this light theme — use design-system
 // ink/status colors instead.
 const COLUMNS: { status: WatchStatus; label: string; color: string }[] = [
-  { status: 'acquired', label: 'Acquired', color: 'text-plum' },          // #5a3a5a — 9.5:1
+  { status: 'acquired', label: 'Acquired', color: 'text-plum' }, // #5a3a5a — 9.5:1
   { status: 'in_progress', label: 'In Progress', color: 'text-[#6d4512]' }, // 8.0:1
-  { status: 'paused', label: 'Paused', color: 'text-[#6b5a45]' },          // 5.7:1
-  { status: 'listed', label: 'Listed', color: 'text-[#2c4a6b]' },          // #indigo — 9.0:1
-  { status: 'sold', label: 'Sold', color: 'text-forest' },                  // #3a5a3a — 6.8:1
+  { status: 'paused', label: 'Paused', color: 'text-[#6b5a45]' }, // 5.7:1
+  { status: 'listed', label: 'Listed', color: 'text-[#2c4a6b]' }, // #indigo — 9.0:1
+  { status: 'sold', label: 'Sold', color: 'text-forest' }, // #3a5a3a — 6.8:1
+  { status: 'kept', label: 'Kept', color: 'text-[#4a4a4a]' }, // #4a4a4a — 4.5:1
 ];
 
 type KanbanBoardProps = {
@@ -41,17 +42,26 @@ type DroppableColumnProps = {
   onSelectWatch: (id: string) => void;
 };
 
-function DroppableColumn({ status, label, color, cards, selectedWatchId, onSelectWatch }: DroppableColumnProps) {
+function DroppableColumn({
+  status,
+  label,
+  color,
+  cards,
+  selectedWatchId,
+  onSelectWatch,
+}: DroppableColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <div className="w-[230px] shrink-0 flex flex-col gap-2">
-      <div className="flex items-center justify-between px-1 mb-0.5">
-        <span className={`font-mono text-[10px] uppercase tracking-widest ${color}`}>
+    <div className='w-[230px] shrink-0 flex flex-col gap-2'>
+      <div className='flex items-center justify-between px-1 mb-0.5'>
+        <span
+          className={`font-mono text-[10px] uppercase tracking-widest ${color}`}
+        >
           {label}
         </span>
         {/* text-ink-soft on bg-muted/40 badge: 7.8:1 */}
-        <span className="font-mono text-[10px] text-ink-soft bg-muted/40 rounded px-1.5 py-0.5">
+        <span className='font-mono text-[10px] text-ink-soft bg-muted/40 rounded px-1.5 py-0.5'>
           {cards.length}
         </span>
       </div>
@@ -72,8 +82,8 @@ function DroppableColumn({ status, label, color, cards, selectedWatchId, onSelec
         ))}
         {cards.length === 0 && (
           // text-ink-soft on paper bg: 8.5:1
-          <div className="rounded-lg border border-dashed border-border py-8 flex items-center justify-center">
-            <span className="font-mono text-[10px] text-ink-soft uppercase tracking-widest">
+          <div className='rounded-lg border border-dashed border-border py-8 flex items-center justify-center'>
+            <span className='font-mono text-[10px] text-ink-soft uppercase tracking-widest'>
               Empty
             </span>
           </div>
@@ -83,7 +93,11 @@ function DroppableColumn({ status, label, color, cards, selectedWatchId, onSelec
   );
 }
 
-export function KanbanBoard({ watches, selectedWatchId, onSelectWatch }: KanbanBoardProps) {
+export function KanbanBoard({
+  watches,
+  selectedWatchId,
+  onSelectWatch,
+}: KanbanBoardProps) {
   const [activeWatchId, setActiveWatchId] = useState<string | null>(null);
   const { mutate: updateWatch } = useUpdateWatch();
   const sensors = useSensors(
@@ -92,7 +106,9 @@ export function KanbanBoard({ watches, selectedWatchId, onSelectWatch }: KanbanB
     }),
   );
 
-  const activeWatch = activeWatchId ? watches.find((w) => w.id === activeWatchId) ?? null : null;
+  const activeWatch = activeWatchId
+    ? (watches.find((w) => w.id === activeWatchId) ?? null)
+    : null;
 
   function handleDragStart({ active }: DragStartEvent) {
     setActiveWatchId(active.id as string);
@@ -107,8 +123,12 @@ export function KanbanBoard({ watches, selectedWatchId, onSelectWatch }: KanbanB
   }
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="flex gap-3 overflow-x-auto pb-3">
+    <DndContext
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className='flex gap-3 overflow-x-auto pb-3'>
         {COLUMNS.map(({ status, label, color }) => {
           const cards = watches.filter((w) => w.status === status);
           return (
@@ -126,7 +146,7 @@ export function KanbanBoard({ watches, selectedWatchId, onSelectWatch }: KanbanB
       </div>
       <DragOverlay>
         {activeWatch ? (
-          <div className="scale-[1.02] shadow-lg opacity-95">
+          <div className='scale-[1.02] shadow-lg opacity-95'>
             <KanbanCard
               watch={activeWatch}
               isSelected={false}
