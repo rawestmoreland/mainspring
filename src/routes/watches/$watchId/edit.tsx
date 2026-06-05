@@ -39,6 +39,7 @@ const WATCH_STATUSES: readonly WatchStatus[] = [
   'listed',
   'sold',
   'paused',
+  'kept',
 ] as const;
 
 const WATCH_CONDITIONS: readonly WatchCondition[] = [

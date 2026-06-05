@@ -5,6 +5,7 @@ export const WatchStatus = {
   LISTED: 'listed',
   ACQUIRED: 'acquired',
   PAUSED: 'paused',
+  KEPT: 'kept',
 } as const;
 export type WatchStatus = (typeof WatchStatus)[keyof typeof WatchStatus];
 export type WatchCondition = 'worn' | 'parts_only' | 'good' | 'fair' | 'poor';
