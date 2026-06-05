@@ -76,10 +76,16 @@ export const WorkSessionsApi = {
   updateSession: async (
     id: string,
     label: string,
-    finalDurationSeconds: number,
+    startedAt: Date,
+    endedAt: Date,
   ): Promise<WorkSession> => {
+    const finalDurationSeconds = Math.floor(
+      (endedAt.getTime() - startedAt.getTime()) / 1000,
+    );
     return pb.collection('work_sessions').update<WorkSession>(id, {
       label,
+      started_at: startedAt.toISOString(),
+      ended_at: endedAt.toISOString(),
       final_duration_seconds: finalDurationSeconds,
     });
   },

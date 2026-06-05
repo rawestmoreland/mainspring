@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { format } from 'date-fns/format';
-import { LockIcon, PlayIcon, PauseIcon, StopCircleIcon, PencilIcon, Trash2Icon, PlusIcon } from 'lucide-react';
+import {
+  LockIcon,
+  PlayIcon,
+  PauseIcon,
+  StopCircleIcon,
+  PencilIcon,
+  Trash2Icon,
+  PlusIcon,
+} from 'lucide-react';
 import { useGetWatchById } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
 import { useSubscription } from '#/hooks/subscription';
@@ -60,16 +68,29 @@ function groupByDate(sessions: WorkSession[]): [string, WorkSession[]][] {
   return Array.from(map.entries());
 }
 
-function computeManualDuration(startedAt: string, endedAt: string): number | null {
+function computeManualDuration(
+  startedAt: string,
+  endedAt: string,
+): number | null {
   if (!startedAt || !endedAt) return null;
-  const diff = Math.floor((new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 1000);
+  const diff = Math.floor(
+    (new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 1000,
+  );
   return diff > 0 ? diff : null;
+}
+
+function toDateTimeLocal(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 function computeElapsed(session: WorkSession): number {
   if (session.status === 'paused') return session.total_elapsed_seconds;
   const segStart = new Date(session.started_at).getTime();
-  return session.total_elapsed_seconds + Math.floor((Date.now() - segStart) / 1000);
+  return (
+    session.total_elapsed_seconds + Math.floor((Date.now() - segStart) / 1000)
+  );
 }
 
 function TimePage() {
@@ -77,7 +98,8 @@ function TimePage() {
   const { data: watch, isLoading: watchLoading } = useGetWatchById(watchId);
   const { data: user } = useUser();
   const { isPro } = useSubscription();
-  const { data: activeSession, isLoading: sessionLoading } = useActiveWorkSession(watchId);
+  const { data: activeSession, isLoading: sessionLoading } =
+    useActiveWorkSession(watchId);
   const { data: completedSessions = [] } = useCompletedWorkSessions(watchId);
 
   const createSession = useCreateWorkSession(watchId);
@@ -91,16 +113,23 @@ function TimePage() {
   const [elapsed, setElapsed] = useState(0);
   const [label, setLabel] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editDraft, setEditDraft] = useState({ label: '', hours: 0, minutes: 0 });
+  const [editDraft, setEditDraft] = useState({
+    label: '',
+    startedAt: '',
+    endedAt: '',
+  });
   const [showManualForm, setShowManualForm] = useState(false);
-  const [manualDraft, setManualDraft] = useState({ startedAt: '', endedAt: '', label: '' });
+  const [manualDraft, setManualDraft] = useState({
+    startedAt: '',
+    endedAt: '',
+    label: '',
+  });
 
   function startEdit(s: WorkSession) {
-    const totalSecs = s.final_duration_seconds ?? 0;
     setEditDraft({
       label: s.label ?? '',
-      hours: Math.floor(totalSecs / 3600),
-      minutes: Math.floor((totalSecs % 3600) / 60),
+      startedAt: toDateTimeLocal(s.started_at),
+      endedAt: s.ended_at ? toDateTimeLocal(s.ended_at) : '',
     });
     setEditingId(s.id);
   }
@@ -110,9 +139,15 @@ function TimePage() {
   }
 
   function saveEdit(id: string) {
-    const finalDurationSeconds = editDraft.hours * 3600 + editDraft.minutes * 60;
+    const dur = computeManualDuration(editDraft.startedAt, editDraft.endedAt);
+    if (!dur) return;
     updateSession.mutate(
-      { id, label: editDraft.label, finalDurationSeconds },
+      {
+        id,
+        label: editDraft.label,
+        startedAt: new Date(editDraft.startedAt),
+        endedAt: new Date(editDraft.endedAt),
+      },
       { onSuccess: () => setEditingId(null) },
     );
   }
@@ -124,7 +159,10 @@ function TimePage() {
   }
 
   function submitManualSession() {
-    const dur = computeManualDuration(manualDraft.startedAt, manualDraft.endedAt);
+    const dur = computeManualDuration(
+      manualDraft.startedAt,
+      manualDraft.endedAt,
+    );
     if (!dur) return;
     createManualSession.mutate(
       {
@@ -178,7 +216,9 @@ function TimePage() {
   const isPaused = activeSession?.status === 'paused';
 
   if (watchLoading || sessionLoading) {
-    return <div className='text-sm font-mono text-muted-foreground'>Loading…</div>;
+    return (
+      <div className='text-sm font-mono text-muted-foreground'>Loading…</div>
+    );
   }
 
   if (!watch) {
@@ -298,7 +338,10 @@ function TimePage() {
                   <>
                     <button
                       onClick={() =>
-                        pauseSession.mutate({ id: activeSession.id, totalElapsed: elapsed })
+                        pauseSession.mutate({
+                          id: activeSession.id,
+                          totalElapsed: elapsed,
+                        })
                       }
                       disabled={pauseSession.isPending}
                       className='inline-flex items-center gap-2 rounded-md border border-border bg-transparent px-5 py-2.5 text-sm font-mono text-foreground hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
@@ -308,7 +351,10 @@ function TimePage() {
                     </button>
                     <button
                       onClick={() =>
-                        stopSession.mutate({ id: activeSession.id, finalDuration: elapsed })
+                        stopSession.mutate({
+                          id: activeSession.id,
+                          finalDuration: elapsed,
+                        })
                       }
                       disabled={stopSession.isPending}
                       className='inline-flex items-center gap-2 rounded-md border border-border bg-transparent px-5 py-2.5 text-sm font-mono text-foreground hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
@@ -331,7 +377,10 @@ function TimePage() {
                     </button>
                     <button
                       onClick={() =>
-                        stopSession.mutate({ id: activeSession.id, finalDuration: elapsed })
+                        stopSession.mutate({
+                          id: activeSession.id,
+                          finalDuration: elapsed,
+                        })
                       }
                       disabled={stopSession.isPending}
                       className='inline-flex items-center gap-2 rounded-md border border-border bg-transparent px-5 py-2.5 text-sm font-mono text-foreground hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
@@ -373,7 +422,10 @@ function TimePage() {
                       type='datetime-local'
                       value={manualDraft.startedAt}
                       onChange={(e) =>
-                        setManualDraft((d) => ({ ...d, startedAt: e.target.value }))
+                        setManualDraft((d) => ({
+                          ...d,
+                          startedAt: e.target.value,
+                        }))
                       }
                       className='w-full bg-transparent border border-border rounded-md px-3 py-2 text-[11px] font-mono text-foreground focus:outline-none focus:border-ring'
                     />
@@ -386,7 +438,10 @@ function TimePage() {
                       type='datetime-local'
                       value={manualDraft.endedAt}
                       onChange={(e) =>
-                        setManualDraft((d) => ({ ...d, endedAt: e.target.value }))
+                        setManualDraft((d) => ({
+                          ...d,
+                          endedAt: e.target.value,
+                        }))
                       }
                       className='w-full bg-transparent border border-border rounded-md px-3 py-2 text-[11px] font-mono text-foreground focus:outline-none focus:border-ring'
                     />
@@ -396,20 +451,27 @@ function TimePage() {
                 <input
                   type='text'
                   value={manualDraft.label}
-                  onChange={(e) => setManualDraft((d) => ({ ...d, label: e.target.value }))}
+                  onChange={(e) =>
+                    setManualDraft((d) => ({ ...d, label: e.target.value }))
+                  }
                   placeholder='Label (optional)'
                   className='w-full bg-transparent border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring'
                 />
 
                 {(() => {
-                  const dur = computeManualDuration(manualDraft.startedAt, manualDraft.endedAt);
+                  const dur = computeManualDuration(
+                    manualDraft.startedAt,
+                    manualDraft.endedAt,
+                  );
                   if (dur !== null) {
                     return (
                       <div className='flex items-center gap-2'>
                         <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
                           Duration
                         </span>
-                        <span className='font-mono text-sm text-amber-400'>{fmtDuration(dur)}</span>
+                        <span className='font-mono text-sm text-amber-400'>
+                          {fmtDuration(dur)}
+                        </span>
                       </div>
                     );
                   }
@@ -434,7 +496,10 @@ function TimePage() {
                     onClick={submitManualSession}
                     disabled={
                       createManualSession.isPending ||
-                      computeManualDuration(manualDraft.startedAt, manualDraft.endedAt) === null
+                      computeManualDuration(
+                        manualDraft.startedAt,
+                        manualDraft.endedAt,
+                      ) === null
                     }
                     className='inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-mono font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed'
                   >
@@ -474,66 +539,101 @@ function TimePage() {
                               type='text'
                               value={editDraft.label}
                               onChange={(e) =>
-                                setEditDraft((d) => ({ ...d, label: e.target.value }))
+                                setEditDraft((d) => ({
+                                  ...d,
+                                  label: e.target.value,
+                                }))
                               }
                               placeholder='Session label (optional)'
                               className='w-full bg-transparent border border-border rounded-md px-3 py-1.5 text-[11px] font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring'
                             />
-                            <div className='flex items-center gap-2 flex-wrap'>
-                              <span className='font-mono text-[10px] text-muted-foreground uppercase tracking-widest'>
-                                Duration
-                              </span>
-                              <div className='flex items-center gap-1.5'>
+                            <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+                              <div className='space-y-1'>
+                                <label className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+                                  Start
+                                </label>
                                 <input
-                                  type='number'
-                                  min={0}
-                                  value={editDraft.hours}
+                                  type='datetime-local'
+                                  value={editDraft.startedAt}
                                   onChange={(e) =>
                                     setEditDraft((d) => ({
                                       ...d,
-                                      hours: Math.max(0, Number(e.target.value)),
+                                      startedAt: e.target.value,
                                     }))
                                   }
-                                  className='w-14 bg-transparent border border-border rounded-md px-2 py-1 text-[11px] font-mono text-foreground text-center focus:outline-none focus:border-ring'
+                                  className='w-full bg-transparent border border-border rounded-md px-3 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-ring'
                                 />
-                                <span className='font-mono text-[10px] text-muted-foreground'>h</span>
+                              </div>
+                              <div className='space-y-1'>
+                                <label className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+                                  End
+                                </label>
                                 <input
-                                  type='number'
-                                  min={0}
-                                  max={59}
-                                  value={editDraft.minutes}
+                                  type='datetime-local'
+                                  value={editDraft.endedAt}
                                   onChange={(e) =>
                                     setEditDraft((d) => ({
                                       ...d,
-                                      minutes: Math.min(59, Math.max(0, Number(e.target.value))),
+                                      endedAt: e.target.value,
                                     }))
                                   }
-                                  className='w-14 bg-transparent border border-border rounded-md px-2 py-1 text-[11px] font-mono text-foreground text-center focus:outline-none focus:border-ring'
+                                  className='w-full bg-transparent border border-border rounded-md px-3 py-1.5 text-[11px] font-mono text-foreground focus:outline-none focus:border-ring'
                                 />
-                                <span className='font-mono text-[10px] text-muted-foreground'>m</span>
                               </div>
-                              <div className='flex items-center gap-2 ml-auto'>
-                                <button
-                                  onClick={() => confirmDelete(s.id)}
-                                  disabled={deleteSession.isPending}
-                                  className='p-1 text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer disabled:opacity-50'
-                                >
-                                  <Trash2Icon className='w-3.5 h-3.5' />
-                                </button>
-                                <button
-                                  onClick={cancelEdit}
-                                  className='font-mono text-[10px] text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer'
-                                >
-                                  Cancel
-                                </button>
-                                <button
-                                  onClick={() => saveEdit(s.id)}
-                                  disabled={updateSession.isPending}
-                                  className='font-mono text-[10px] text-primary hover:opacity-80 bg-transparent border-none cursor-pointer disabled:opacity-50'
-                                >
-                                  Save
-                                </button>
-                              </div>
+                            </div>
+                            {(() => {
+                              const dur = computeManualDuration(
+                                editDraft.startedAt,
+                                editDraft.endedAt,
+                              );
+                              if (dur !== null) {
+                                return (
+                                  <div className='flex items-center gap-2'>
+                                    <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
+                                      Duration
+                                    </span>
+                                    <span className='font-mono text-sm text-amber-400'>
+                                      {fmtDuration(dur)}
+                                    </span>
+                                  </div>
+                                );
+                              }
+                              if (editDraft.startedAt && editDraft.endedAt) {
+                                return (
+                                  <p className='font-mono text-[10px] text-red-400'>
+                                    End time must be after start time.
+                                  </p>
+                                );
+                              }
+                              return null;
+                            })()}
+                            <div className='flex items-center justify-end gap-3 pt-1'>
+                              <button
+                                onClick={() => confirmDelete(s.id)}
+                                disabled={deleteSession.isPending}
+                                className='p-1 text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer disabled:opacity-50'
+                              >
+                                <Trash2Icon className='w-3.5 h-3.5' />
+                              </button>
+                              <button
+                                onClick={cancelEdit}
+                                className='font-mono text-[10px] text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer'
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => saveEdit(s.id)}
+                                disabled={
+                                  updateSession.isPending ||
+                                  computeManualDuration(
+                                    editDraft.startedAt,
+                                    editDraft.endedAt,
+                                  ) === null
+                                }
+                                className='font-mono text-[10px] text-primary hover:opacity-80 bg-transparent border-none cursor-pointer disabled:opacity-50'
+                              >
+                                Save
+                              </button>
                             </div>
                           </li>
                         ) : (

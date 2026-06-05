@@ -68,12 +68,14 @@ export const useUpdateWorkSession = (watchId: string) => {
     mutationFn: ({
       id,
       label,
-      finalDurationSeconds,
+      startedAt,
+      endedAt,
     }: {
       id: string;
       label: string;
-      finalDurationSeconds: number;
-    }) => WorkSessionsApi.updateSession(id, label, finalDurationSeconds),
+      startedAt: Date;
+      endedAt: Date;
+    }) => WorkSessionsApi.updateSession(id, label, startedAt, endedAt),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: completedKey(watchId) });
     },
