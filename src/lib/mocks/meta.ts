@@ -49,4 +49,9 @@ export const STATUS_META: Record<string, { label: string; className: string }> =
       className:
         'bg-[rgba(60,55,46,0.06)] text-[#6b5a45] border-[rgba(34,26,18,0.14)]',
     },
+    kept: {
+      label: 'Kept',
+      className:
+        'bg-[rgba(100,100,100,0.08)] text-[#4a4a4a] border-[rgba(100,100,100,0.14)]',
+    },
   };
