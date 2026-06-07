@@ -159,6 +159,7 @@ export type UserProfile = {
   bio: string;
   is_public: boolean;
   is_admin: boolean;
+  gallery_view?: boolean;
   created: string;
   updated: string;
 };

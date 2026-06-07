@@ -6,7 +6,6 @@ import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
 import { PublicProfileSkeleton } from '#/components/skeletons';
 import type { UserProfile, Watch, RepairPost } from '#/types';
-import { Avatar, AvatarImage } from '#/components/ui/avatar';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
 
 export const Route = createFileRoute('/')({
@@ -34,14 +33,12 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
       );
       if (!res.ok) return [];
       const data = ((await res.json()) as { items?: Watch[] }).items ?? [];
-      console.log(data);
-      const watches = data.map((w) => ({
+      return data.map((w) => ({
         ...w,
-        featured_image_url: !!w.featured_image
+        featured_image_url: w.featured_image
           ? `${pbUrl}/api/files/watches/${w.id}/${w.featured_image}`
           : undefined,
       }));
-      return watches;
     },
   });
 
@@ -65,6 +62,11 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     return map;
   }, [posts]);
 
+  const totalHours = useMemo(
+    () => (watches ?? []).reduce((sum, w) => sum + (w.hours_spent ?? 0), 0),
+    [watches],
+  );
+
   if (watchesLoading || postsLoading) return <PublicProfileSkeleton />;
 
   const initials = (tenant.display_name || tenant.subdomain || '?')
@@ -75,8 +77,8 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
     .toUpperCase();
 
   return (
-    <div className='min-h-screen'>
-      {/* Nav — mirrors the AppShell header */}
+    <div className='min-h-screen pb-20'>
+      {/* Nav */}
       <header className='fixed top-0 inset-x-0 z-50 h-14 flex items-center gap-3 px-5 border-b border-border bg-background/90 backdrop-blur-md'>
         <a
           href='https://hairspring.app'
@@ -98,7 +100,7 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
 
       <div className='max-w-3xl mx-auto px-5 pt-24 pb-16'>
         {/* Profile header */}
-        <div className='flex items-center gap-4 mb-8 pb-7 border-b border-border'>
+        <div className='flex items-center gap-4 mb-6'>
           <div className='w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center shrink-0'>
             <span className='font-mono text-sm font-bold text-primary'>
               {initials}
@@ -113,25 +115,33 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
                 {tenant.bio}
               </p>
             )}
-            <div className='flex items-center gap-2 mt-1.5'>
-              <span className='font-mono text-[10px] text-muted-foreground'>
-                {watches?.length ?? 0} project{watches?.length !== 1 ? 's' : ''}
-              </span>
-              <span className='text-border'>·</span>
-              <span className='font-mono text-[10px] text-muted-foreground'>
-                {posts?.length ?? 0} repair log{posts?.length !== 1 ? 's' : ''}
-              </span>
-            </div>
           </div>
         </div>
 
+        {/* Stats strip */}
+        <div className='flex flex-wrap gap-6 mb-8 pb-7 border-b border-border'>
+          <StatItem
+            value={watches?.length ?? 0}
+            label={watches?.length === 1 ? 'watch' : 'watches'}
+          />
+          <StatItem
+            value={posts?.length ?? 0}
+            label={posts?.length === 1 ? 'repair session' : 'repair sessions'}
+          />
+          {totalHours > 0 && (
+            <StatItem value={Math.round(totalHours)} label='hours logged' />
+          )}
+        </div>
+
         {/* Watch projects */}
-        <div className='mb-3.5'>
+        <div className='mb-4'>
           <SectionLabel>Watch Projects</SectionLabel>
         </div>
 
         {!watches?.length ? (
           <p className='text-sm text-muted-foreground'>No projects yet.</p>
+        ) : tenant.gallery_view ? (
+          <GalleryView watches={watches} postsByWatch={postsByWatch} />
         ) : (
           <div className='space-y-3'>
             {watches.map((w) => (
@@ -162,7 +172,7 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
       <footer className='border-t border-border py-6'>
         <div className='max-w-3xl mx-auto px-5'>
           <a
-            href={'https://hairspring.app'}
+            href='https://hairspring.app'
             target='_blank'
             rel='noopener noreferrer'
             onClick={() => {
@@ -178,6 +188,103 @@ function PublicProfile({ tenant }: { tenant: UserProfile }) {
           </a>
         </div>
       </footer>
+
+      {/* Sticky sign-up CTA */}
+      <div className='fixed bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur-md border-t border-border px-5 py-3 flex items-center justify-between gap-4'>
+        <div className='min-w-0'>
+          <p className='font-serif text-sm font-semibold text-foreground'>
+            Track your own watch projects
+          </p>
+          <p className='font-mono text-[10px] text-muted-foreground truncate'>
+            Repair logs · Timegrapher data · Collection management
+          </p>
+        </div>
+        <a
+          href='https://hairspring.app'
+          className='shrink-0 bg-primary text-primary-foreground font-mono text-xs font-semibold px-4 py-2 rounded hover:bg-primary/90 transition-colors whitespace-nowrap'
+          onClick={() => {
+            ga4.event('click_cta_sticky_banner', {
+              category: 'CTA',
+              label: 'Sticky CTA Banner',
+            });
+          }}
+        >
+          Get started →
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function StatItem({ value, label }: { value: number; label: string }) {
+  return (
+    <div className='flex flex-col gap-0.5'>
+      <span className='font-mono text-2xl font-bold text-foreground tabular-nums leading-none'>
+        {value}
+      </span>
+      <span className='font-mono text-[9px] uppercase tracking-widest text-muted-foreground'>
+        {label}
+      </span>
+    </div>
+  );
+}
+
+function GalleryView({
+  watches,
+  postsByWatch,
+}: {
+  watches: Watch[];
+  postsByWatch: Record<string, RepairPost[]>;
+}) {
+  return (
+    <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
+      {watches.map((w) => {
+        const postCount = (postsByWatch[w.id] ?? []).length;
+        const meta = [w.reference, w.year].filter(Boolean).join(' · ');
+        return (
+          <Link
+            key={w.id}
+            to='/watch/$watchId'
+            params={{ watchId: w.id }}
+            className='group block rounded overflow-hidden border border-border bg-card hover:border-primary/40 transition-colors no-underline'
+          >
+            <div className='aspect-[4/3] relative overflow-hidden bg-zinc-800'>
+              {w.featured_image_url ? (
+                <img
+                  src={w.featured_image_url}
+                  alt={`${w.make} ${w.model}`}
+                  className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
+                />
+              ) : (
+                <div className='w-full h-full flex items-center justify-center'>
+                  <span className='font-mono text-3xl font-bold text-zinc-600 select-none'>
+                    {w.make[0]?.toUpperCase()}
+                    {w.model[0]?.toUpperCase()}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className='p-3'>
+              <div className='flex items-start justify-between gap-2 mb-1'>
+                <p className='font-serif font-semibold text-sm text-foreground leading-tight'>
+                  {w.make} {w.model}
+                </p>
+                <StatusBadge status={w.status} />
+              </div>
+              {meta && (
+                <p className='font-mono text-[10px] text-muted-foreground'>
+                  {meta}
+                </p>
+              )}
+              {postCount > 0 && (
+                <p className='font-mono text-[10px] text-muted-foreground mt-1.5'>
+                  {postCount} repair log{postCount !== 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -190,32 +297,62 @@ function WatchProjectCard({
   posts: RepairPost[];
 }) {
   const meta = [w.reference, w.year].filter(Boolean).join(' · ');
+  const lastPost = posts[0];
+
   return (
     <div className='bg-card border border-border rounded overflow-hidden'>
       {/* Watch header row */}
       <Link
         to='/watch/$watchId'
         params={{ watchId: w.id }}
-        className='flex items-start justify-between gap-3 px-3.5 py-3 border-b border-border bg-muted/40 hover:bg-muted/60 transition-colors no-underline'
+        className='flex items-start gap-3 px-3.5 py-3 border-b border-border hover:bg-muted/40 transition-colors no-underline'
       >
-        <div>
+        {/* Thumbnail */}
+        <div className='w-12 h-12 rounded overflow-hidden bg-zinc-800 shrink-0 flex items-center justify-center'>
+          {w.featured_image_url ? (
+            <img
+              src={w.featured_image_url}
+              alt={`${w.make} ${w.model}`}
+              className='w-full h-full object-cover'
+            />
+          ) : (
+            <span className='font-mono text-sm font-bold text-zinc-600 select-none'>
+              {w.make[0]?.toUpperCase()}
+              {w.model[0]?.toUpperCase()}
+            </span>
+          )}
+        </div>
+
+        {/* Info */}
+        <div className='flex-1 min-w-0'>
           <div className='flex flex-wrap items-center gap-2'>
-            {!!w.featured_image && (
-              <Avatar className='size-8 bg-primary/10 flex items-center justify-center shrink-0'>
-                <AvatarImage src={w.featured_image_url} alt={w.make} />
-              </Avatar>
-            )}
             <span className='font-serif font-semibold text-foreground text-sm'>
               {w.make} {w.model}
             </span>
             <StatusBadge status={w.status} />
           </div>
-          {meta && (
-            <span className='font-mono text-[10px] text-muted-foreground mt-0.5 block'>
-              {meta}
-            </span>
-          )}
+          <div className='flex flex-wrap items-center gap-1.5 mt-0.5'>
+            {meta && (
+              <span className='font-mono text-[10px] text-muted-foreground'>
+                {meta}
+              </span>
+            )}
+            {meta && lastPost && (
+              <span className='text-border text-[10px]'>·</span>
+            )}
+            {lastPost && (
+              <span className='font-mono text-[10px] text-muted-foreground'>
+                Last activity{' '}
+                {new Date(lastPost.session_date).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </span>
+            )}
+          </div>
         </div>
+
         {posts.length > 0 && (
           <span className='font-mono text-[10px] text-muted-foreground shrink-0 pt-0.5'>
             {posts.length} log{posts.length !== 1 ? 's' : ''}
