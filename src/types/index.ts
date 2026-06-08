@@ -193,6 +193,12 @@ export type TimegrapherReading = {
   status: TimegrapherStatus;
   lift_angle: number;
   notes?: string;
+  du_snowstorm?: boolean;
+  dd_snowstorm?: boolean;
+  cu_snowstorm?: boolean;
+  cd_snowstorm?: boolean;
+  cl_snowstorm?: boolean;
+  cr_snowstorm?: boolean;
   du_rate?: number;
   du_amp?: number;
   du_be?: number;

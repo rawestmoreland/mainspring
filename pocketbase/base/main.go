@@ -337,6 +337,10 @@ func main() {
 			}
 			sb.WriteString("\nPosition data:\n")
 			for _, pos := range positions {
+				if reading.GetBool(pos.key + "_snowstorm") {
+					fmt.Fprintf(&sb, "  %s:  SNOWSTORM PATTERN (chaotic/noisy trace — no reliable rate, amplitude, or beat error readings obtainable for this position)\n", pos.label)
+					continue
+				}
 				rate := reading.GetFloat(pos.key + "_rate")
 				amp := reading.GetFloat(pos.key + "_amp")
 				be := reading.GetFloat(pos.key + "_be")
@@ -351,23 +355,24 @@ func main() {
 					pos.label, sign, rate, amp, be)
 			}
 
-			prompt := `You are an expert watchmaker and horologist analyzing timegrapher data for a mechanical watch. Timegrapher readings measure a movement's accuracy and health using three key metrics per position: rate (seconds gained/lost per day), amplitude (balance wheel arc in degrees), and beat error (asymmetry between tick and tock in milliseconds).
+			prompt := `You are a knowledgeable hobbyist watchmaker helping a fellow enthusiast interpret timegrapher data for a mechanical watch they're working on. Timegrapher readings measure a movement's accuracy and health using three key metrics per position: rate (seconds gained/lost per day), amplitude (balance wheel arc in degrees), and beat error (asymmetry between tick and tock in milliseconds).
 
 Reference benchmarks:
 - Rate: ±3 s/d or better is excellent; ±6 is acceptable; beyond ±10 needs adjustment
 - Amplitude: ≥280° is healthy; 250–280° is marginal; <250° suggests lubrication issues or weak mainspring
 - Beat error: ≤0.5 ms is ideal; 0.5–1.0 ms is acceptable; >1.0 ms needs adjustment
 - Positional variance in rate (DU vs DD, crown positions): should ideally be within ±15 s/d
+- Snowstorm pattern: a chaotic, scattered trace on the timegrapher display indicating the timing signal cannot be reliably resolved; commonly caused by magnetisation, severe pivot wear, a damaged escape wheel or pallet fork, a loose or broken part interfering with the escapement, or extreme oil degradation. Treat any position marked SNOWSTORM as unreadable and factor the likely cause into your diagnosis.
 
 Here is the timegrapher session data:
 
 ` + sb.String() + `
 Please provide:
-1. A brief overall assessment (2–3 sentences) on the movement's condition
-2. Any specific issues detected, with likely causes
-3. Actionable troubleshooting steps or recommendations, ordered by priority
+1. A brief overall assessment (2–3 sentences) on how the movement is running
+2. Any specific issues detected and what's likely causing them — explain the "why" behind the numbers
+3. Practical next steps or things to investigate, ordered by priority
 
-Keep the response concise and technical but readable. Use plain text, no markdown formatting.`
+Keep the tone conversational and the response concise. Use plain text, no markdown formatting.`
 
 			// Call Anthropic API
 			apiKey := os.Getenv("ANTHROPIC_API_KEY")
