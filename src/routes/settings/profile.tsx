@@ -37,6 +37,7 @@ const schema = z.object({
     )
     .optional(),
   is_public: z.boolean(),
+  gallery_view: z.boolean(),
 });
 type FormData = z.infer<typeof schema>;
 
@@ -68,6 +69,7 @@ function ProfileSettingsPage() {
         bio: data.bio ?? '',
         subdomain: data.subdomain ?? '',
         is_public: data.is_public,
+        gallery_view: data.gallery_view,
       });
     },
     onSuccess: () => {
@@ -82,6 +84,7 @@ function ProfileSettingsPage() {
       bio: profile?.bio ?? '',
       subdomain: profile?.subdomain ?? '',
       is_public: profile?.is_public ?? false,
+      gallery_view: profile?.gallery_view ?? false,
     },
   });
 
@@ -92,6 +95,7 @@ function ProfileSettingsPage() {
       setValue('bio', profile.bio ?? '');
       setValue('subdomain', profile.subdomain ?? '');
       setValue('is_public', profile.is_public);
+      setValue('gallery_view', profile.gallery_view ?? false);
     }
   }, [profile, setValue]);
 
@@ -256,6 +260,37 @@ function ProfileSettingsPage() {
                   {isPublic
                     ? `Your profile is visible at ${subdomainValue}.hairspring.app`
                     : 'Set a subdomain first to enable your public profile'}
+                </p>
+              </div>
+            </div>
+
+            <div className='flex items-center gap-3'>
+              <Controller
+                name='gallery_view'
+                control={control}
+                render={({ field }) => (
+                  <button
+                    type='button'
+                    role='switch'
+                    aria-checked={field.value}
+                    disabled={!isPublic}
+                    onClick={() => field.onChange(!field.value)}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                      field.value ? 'bg-primary' : 'bg-muted'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-background shadow-lg transition-transform ${
+                        field.value ? 'translate-x-4' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                )}
+              />
+              <div>
+                <Label className='cursor-pointer'>Gallery view</Label>
+                <p className='font-mono text-[10px] text-muted-foreground'>
+                  Show watches as a photo grid instead of a list
                 </p>
               </div>
             </div>
