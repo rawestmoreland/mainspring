@@ -37,6 +37,8 @@ import {
 import { Input } from '#/components/ui/input';
 import { useFeatureFlagEnabled } from '@posthog/react';
 import { FeatureFlags } from '#/lib/constants';
+import { Checkbox } from '#/components/ui/checkbox';
+import { Label } from '#/components/ui/label';
 
 export const Route = createFileRoute('/watches/$watchId/timegrapher')({
   component: TimegrapherPage,
@@ -73,6 +75,7 @@ function rateClass(rate: number | undefined): string {
 function getMeanRate(reading: TimegrapherReading): number | null {
   const rates: number[] = [];
   for (const pos of POSITIONS) {
+    if (reading[`${pos.key}_snowstorm` as keyof TimegrapherReading]) continue;
     const r = reading[`${pos.key}_rate` as keyof TimegrapherReading] as
       | number
       | undefined;
@@ -85,6 +88,7 @@ function getMeanRate(reading: TimegrapherReading): number | null {
 function getAvgAmp(reading: TimegrapherReading): number | null {
   const amps: number[] = [];
   for (const pos of POSITIONS) {
+    if (reading[`${pos.key}_snowstorm` as keyof TimegrapherReading]) continue;
     const a = reading[`${pos.key}_amp` as keyof TimegrapherReading] as
       | number
       | undefined;
@@ -97,6 +101,7 @@ function getAvgAmp(reading: TimegrapherReading): number | null {
 function getAvgBe(reading: TimegrapherReading): number | null {
   const bes: number[] = [];
   for (const pos of POSITIONS) {
+    if (reading[`${pos.key}_snowstorm` as keyof TimegrapherReading]) continue;
     const b = reading[`${pos.key}_be` as keyof TimegrapherReading] as
       | number
       | undefined;
@@ -119,12 +124,14 @@ function fmtNum(n: number | null | undefined, decimals = 0): string {
 // ── Position bar chart ──────────────────────────────────────────────────────
 
 function PositionChart({ reading }: { reading: TimegrapherReading }) {
-  const allRates = POSITIONS.map(
-    (p) =>
+  const allRates = POSITIONS.map((p) => {
+    if (reading[`${p.key}_snowstorm` as keyof TimegrapherReading]) return null;
+    return (
       (reading[`${p.key}_rate` as keyof TimegrapherReading] as
         | number
-        | undefined) ?? null,
-  );
+        | undefined) ?? null
+    );
+  });
 
   const definedRates = allRates.filter((r): r is number => r !== null);
   const maxAbs = definedRates.length
@@ -508,6 +515,12 @@ const schema = z.object({
   // All numeric fields kept as strings in the form and parsed on submit
   lift_angle: z.string().min(1, 'Required'),
   notes: z.string().max(800).optional(),
+  du_snowstorm: z.boolean().optional(),
+  dd_snowstorm: z.boolean().optional(),
+  cu_snowstorm: z.boolean().optional(),
+  cd_snowstorm: z.boolean().optional(),
+  cl_snowstorm: z.boolean().optional(),
+  cr_snowstorm: z.boolean().optional(),
   du_rate: z.string().optional(),
   du_amp: z.string().optional(),
   du_be: z.string().optional(),
@@ -548,7 +561,7 @@ function AddSessionForm({
   onCancel: () => void;
 }) {
   const createReading = useCreateTimegrapherReading(watchId);
-  const { control, register, handleSubmit } = useForm<FormData>({
+  const { control, register, handleSubmit, watch, setValue } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       status: 'routine',
@@ -556,12 +569,27 @@ function AddSessionForm({
     },
   });
 
+  const snowstorms = watch([
+    'du_snowstorm',
+    'dd_snowstorm',
+    'cu_snowstorm',
+    'cd_snowstorm',
+    'cl_snowstorm',
+    'cr_snowstorm',
+  ]);
+
   const onSubmit = async (data: FormData) => {
     await createReading.mutateAsync({
       watch: watchId,
       status: data.status,
       lift_angle: parseFloat(data.lift_angle),
       notes: data.notes || undefined,
+      du_snowstorm: data.du_snowstorm || false,
+      dd_snowstorm: data.dd_snowstorm || false,
+      cu_snowstorm: data.cu_snowstorm || false,
+      cd_snowstorm: data.cd_snowstorm || false,
+      cl_snowstorm: data.cl_snowstorm || false,
+      cr_snowstorm: data.cr_snowstorm || false,
       du_rate: parseOptNum(data.du_rate),
       du_amp: parseOptNum(data.du_amp),
       du_be: parseOptNum(data.du_be),
@@ -683,6 +711,9 @@ function AddSessionForm({
                 Position
               </th>
               <th className='px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-muted-foreground'>
+                Snowstorm?
+              </th>
+              <th className='px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-muted-foreground'>
                 Rate (s/d)
               </th>
               <th className='px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-muted-foreground'>
@@ -694,40 +725,72 @@ function AddSessionForm({
             </tr>
           </thead>
           <tbody className='divide-y divide-border'>
-            {POSITIONS.map((pos) => (
-              <tr key={pos.key} className='hover:bg-muted/20 transition-colors'>
-                <td className='px-3 py-2 font-mono text-[11px] text-muted-foreground'>
-                  {pos.label}
-                </td>
-                <td className='px-3 py-2'>
-                  <Input
-                    {...register(`${pos.key}_rate`)}
-                    type='number'
-                    step='0.1'
-                    placeholder='e.g. +2.1'
-                    className={cn(inputCls, 'w-full')}
-                  />
-                </td>
-                <td className='px-3 py-2'>
-                  <Input
-                    {...register(`${pos.key}_amp`)}
-                    type='number'
-                    step='1'
-                    placeholder='e.g. 298'
-                    className={cn(inputCls, 'w-full')}
-                  />
-                </td>
-                <td className='px-3 py-2'>
-                  <Input
-                    {...register(`${pos.key}_be`)}
-                    type='number'
-                    step='0.1'
-                    placeholder='e.g. 0.3'
-                    className={cn(inputCls, 'w-full')}
-                  />
-                </td>
-              </tr>
-            ))}
+            {POSITIONS.map((pos, i) => {
+              const isSnowstorm = snowstorms[i] === true;
+              return (
+                <tr
+                  key={pos.key}
+                  className='hover:bg-muted/20 transition-colors'
+                >
+                  <td className='px-3 py-2 font-mono text-[11px] text-muted-foreground'>
+                    {pos.label}
+                  </td>
+                  <td className='px-3 py-2 flex items-center gap-2'>
+                    <Controller
+                      name={`${pos.key}_snowstorm` as keyof FormData}
+                      control={control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id={`${pos.key}_snowstorm`}
+                          checked={field.value === true}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            if (checked) {
+                              setValue(`${pos.key}_rate` as keyof FormData, '');
+                              setValue(`${pos.key}_amp` as keyof FormData, '');
+                              setValue(`${pos.key}_be` as keyof FormData, '');
+                            }
+                          }}
+                        />
+                      )}
+                    />
+                    <Label htmlFor={`${pos.key}_snowstorm`} className='sr-only'>
+                      Snowstorm
+                    </Label>
+                  </td>
+                  <td className='px-3 py-2'>
+                    <Input
+                      {...register(`${pos.key}_rate`)}
+                      type='number'
+                      step='0.1'
+                      placeholder='e.g. +2.1'
+                      className={cn(inputCls, 'w-full')}
+                      disabled={isSnowstorm}
+                    />
+                  </td>
+                  <td className='px-3 py-2'>
+                    <Input
+                      {...register(`${pos.key}_amp`)}
+                      type='number'
+                      step='1'
+                      placeholder='e.g. 298'
+                      className={cn(inputCls, 'w-full')}
+                      disabled={isSnowstorm}
+                    />
+                  </td>
+                  <td className='px-3 py-2'>
+                    <Input
+                      {...register(`${pos.key}_be`)}
+                      type='number'
+                      step='0.1'
+                      placeholder='e.g. 0.3'
+                      className={cn(inputCls, 'w-full')}
+                      disabled={isSnowstorm}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -759,7 +822,8 @@ function TimegrapherPage() {
   const aiFeatureFlag = useFeatureFlagEnabled(
     FeatureFlags.TimegrapherAIAnalysis,
   );
-  console.log('AI feature flag enabled:', aiFeatureFlag);
+  const showAiAnalysis =
+    aiFeatureFlag || process.env.NODE_ENV === 'development';
   const { data: watch, isLoading: watchLoading } = useGetWatchById(watchId);
   const { data: readings = [], isLoading: readingsLoading } =
     useGetTimegrapherReadings(watchId);
@@ -1057,7 +1121,7 @@ function TimegrapherPage() {
                       <Td className='font-mono text-[11px] text-muted-foreground max-w-40 truncate'>
                         {r.notes ?? ''}
                       </Td>
-                      {user && aiFeatureFlag && (
+                      {user && showAiAnalysis && (
                         <Td>
                           <div className='flex items-center gap-2'>
                             <button
@@ -1139,7 +1203,7 @@ function TimegrapherPage() {
                         ? `${fmtNum(r.du_be, 1)} ms`
                         : '—'}
                     </Td>
-                    {user && aiFeatureFlag && (
+                    {user && showAiAnalysis && (
                       <Td>
                         <div className='flex items-center gap-2'>
                           <button
