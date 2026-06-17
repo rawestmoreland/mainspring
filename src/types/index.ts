@@ -1,3 +1,5 @@
+export * from './i18next';
+
 export type WatchStage = 'before' | 'during' | 'after' | 'listing';
 export const WatchStatus = {
   SOLD: 'sold',
