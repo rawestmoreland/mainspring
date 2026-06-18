@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -39,6 +40,7 @@ type Props = {
 };
 
 export function AddPartUsedDialog({ watchId }: Props) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const { data: rawInventory = [] } = useInventory();
   const inventory = rawInventory.filter(
@@ -86,12 +88,12 @@ export function AddPartUsedDialog({ watchId }: Props) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Btn sm ghost>
-          + Add Part
+          {t('addPartBtn')}
         </Btn>
       </DialogTrigger>
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle>Log Part Used</DialogTitle>
+          <DialogTitle>{t('addPartDialogTitle')}</DialogTitle>
         </DialogHeader>
         <form
           id='add-part-form'
@@ -210,7 +212,7 @@ export function AddPartUsedDialog({ watchId }: Props) {
             form='add-part-form'
             disabled={isSubmitting || createPartUsed.isPending}
           >
-            {createPartUsed.isPending ? 'Saving…' : 'Log part'}
+            {createPartUsed.isPending ? t('addPartSaving') : t('addPartLog')}
           </Button>
         </DialogFooter>
       </DialogContent>

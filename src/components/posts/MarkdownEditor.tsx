@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '#/lib/helpers';
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export function MarkdownEditor({ value, onChange, minHeight = 320 }: Props) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<'write' | 'preview'>('write');
 
   const html = marked.parse(value) as string;
@@ -17,19 +19,19 @@ export function MarkdownEditor({ value, onChange, minHeight = 320 }: Props) {
     <div className='space-y-2'>
       {/* Mobile tab bar */}
       <div className='flex gap-1 md:hidden'>
-        {(['write', 'preview'] as const).map((t) => (
+        {(['write', 'preview'] as const).map((tabKey) => (
           <button
-            key={t}
+            key={tabKey}
             type='button'
-            onClick={() => setTab(t)}
+            onClick={() => setTab(tabKey)}
             className={cn(
               'px-3 py-1 text-xs font-mono rounded-md border transition-colors',
-              tab === t
+              tab === tabKey
                 ? 'bg-card border-border text-foreground'
                 : 'border-transparent text-muted-foreground hover:text-foreground',
             )}
           >
-            {t.charAt(0).toUpperCase() + t.slice(1)}
+            {tabKey.charAt(0).toUpperCase() + tabKey.slice(1)}
           </button>
         ))}
       </div>
@@ -43,7 +45,7 @@ export function MarkdownEditor({ value, onChange, minHeight = 320 }: Props) {
             onChange={(e) => onChange(e.target.value)}
             style={{ minHeight }}
             className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground resize-y focus:outline-none focus:ring-1 focus:ring-ring'
-            placeholder='Write your repair notes here… Markdown supported.'
+            placeholder={t('markdownPlaceholder')}
           />
         </div>
 
@@ -62,14 +64,15 @@ export function MarkdownEditor({ value, onChange, minHeight = 320 }: Props) {
             />
           ) : (
             <p className='text-xs font-mono text-muted-foreground italic'>
-              Preview will appear here.
+              {t('markdownPreviewPlaceholder')}
             </p>
           )}
         </div>
       </div>
 
       <p className='text-[10px] font-mono text-muted-foreground'>
-        Markdown supported · embed images with{' '}
+        {t('markdownSupportedHint')}{' '}
+        {/* eslint-disable-next-line i18next/no-literal-string */}
         <code className='text-[10px]'>![alt](url)</code>
       </p>
     </div>

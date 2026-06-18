@@ -37,6 +37,8 @@ import pb from '#/lib/pocketbase';
 import { impersonateUser } from '#/server/impersonate';
 import { markImpersonating } from '#/hooks/impersonation';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import { ParseKeys } from 'i18next';
 
 const impersonateSchema = z.object({
   targetUserId: z.string().min(1, 'User ID is required'),
@@ -44,6 +46,7 @@ const impersonateSchema = z.object({
 type ImpersonateFormData = z.infer<typeof impersonateSchema>;
 
 export function AppSidebar() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [impersonateOpen, setImpersonateOpen] = useState(false);
   const [impersonateError, setImpersonateError] = useState<string | null>(null);
@@ -90,13 +93,13 @@ export function AppSidebar() {
       {/* Logo */}
       <SidebarHeader className='px-4 py-5 border-b border-sidebar-border'>
         <div className='flex space-x-2'>
+          {/* eslint-disable-next-line i18next/no-literal-string */}
           <img alt='Hairspring' src={HSBrass} className='size-6' />
-          <h1 className='font-serif text-lg font-bold text-foreground leading-tight'>
-            Hairspring
-          </h1>
+          {/* eslint-disable-next-line i18next/no-literal-string */}
+          <h1 className='font-serif text-lg font-bold text-foreground leading-tight'>Hairspring</h1>
         </div>
         <p className='font-mono text-[10px] text-muted-foreground tracking-widest uppercase mt-0.5'>
-          Watch Flip Tracker
+          {t('appSubtitle')}
         </p>
       </SidebarHeader>
 
@@ -104,7 +107,7 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className='font-mono text-[10px] tracking-widest uppercase'>
-            Navigation
+            {t('navigation')}
           </SidebarGroupLabel>
           <SidebarMenu>
             {NAV_PAGES.map((p) => {
@@ -126,7 +129,7 @@ export function AppSidebar() {
                       onClick={() => isMobile && setOpenMobile(false)}
                     >
                       <span className='text-[15px] opacity-80'>{p.icon}</span>
-                      {p.label}
+                      {t(p.label as ParseKeys)}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -144,22 +147,23 @@ export function AppSidebar() {
                         'gap-2.5 text-[13px] text-muted-foreground',
                       )}
                     >
-                      Impersonate
+                      {t('sidebarImpersonate')}
                     </SidebarMenuButton>
                   </DialogTrigger>
                   <DialogContent>
                     <form onSubmit={onImpersonate}>
                       <DialogHeader>
-                        <DialogTitle>Impersonate User</DialogTitle>
+                        <DialogTitle>{t('sidebarImpersonateUser')}</DialogTitle>
                         <DialogDescription>
-                          Enter a user ID to auth as that user.
+                          {t('sidebarImpersonateDesc')}
                         </DialogDescription>
                       </DialogHeader>
                       <Field className='my-4'>
-                        <FieldLabel>User ID</FieldLabel>
+                        <FieldLabel>{t('sidebarUserId')}</FieldLabel>
                         <Input
                           id='targetUserId'
-                          placeholder='User ID'
+                          placeholder={t('sidebarUserId')}
+                          // eslint-disable-next-line i18next/no-literal-string
                           {...register('targetUserId')}
                         />
                         {errors.targetUserId && (
@@ -180,11 +184,11 @@ export function AppSidebar() {
                             type='button'
                             onClick={() => reset()}
                           >
-                            Cancel
+                            {t('cancel')}
                           </Button>
                         </DialogClose>
                         <Button type='submit' disabled={isSubmitting}>
-                          {isSubmitting ? 'Impersonating…' : 'Impersonate'}
+                          {isSubmitting ? t('sidebarImpersonating') : t('sidebarImpersonate')}
                         </Button>
                       </DialogFooter>
                     </form>
@@ -215,7 +219,7 @@ export function AppSidebar() {
                 className='flex-1 text-xs'
                 asChild
               >
-                <Link to='/settings/profile'>Settings</Link>
+                <Link to='/settings/profile'>{t('settings')}</Link>
               </Button>
               <Button
                 variant='outline'
@@ -225,13 +229,13 @@ export function AppSidebar() {
                   logoutMutation().then(() => navigate({ to: '/login' }))
                 }
               >
-                Logout
+                {t('logout')}
               </Button>
             </div>
           </>
         ) : (
           <Button variant='outline' size='sm' className='w-full' asChild>
-            <Link to='/login'>Login</Link>
+            <Link to='/login'>{t('login')}</Link>
           </Button>
         )}
       </SidebarFooter>

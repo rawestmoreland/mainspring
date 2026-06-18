@@ -22,5 +22,5 @@ function RouteComponent() {
     }
   }, [logout, user, isLoading]);
 
-  return <div>Hello "/logout"!</div>;
+  return null;
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns/format';
@@ -93,6 +94,7 @@ type RawWatchRecord = {
 } & Record<string, unknown>;
 
 function PublicWatchDetailPage() {
+  const { t } = useTranslation();
   const ga4 = useGoogleAnalytics();
   const ctx = Route.useRouteContext() as { tenant?: UserProfile | null };
   const { watchId } = Route.useParams();
@@ -166,7 +168,7 @@ function PublicWatchDetailPage() {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
         <p className='font-mono text-sm text-muted-foreground'>
-          Page not found.
+          {t('pageNotFound')}
         </p>
       </div>
     );
@@ -215,6 +217,7 @@ function PublicWatchDetailPage() {
     <div className='min-h-screen'>
       {/* Nav */}
       <header className='fixed top-0 inset-x-0 z-50 h-14 flex items-center gap-3 px-5 border-b border-border bg-background/90 backdrop-blur-md'>
+        {/* eslint-disable-next-line i18next/no-literal-string */}
         <span className='font-serif font-bold text-foreground'>Hairspring</span>
         <span className='text-border'>·</span>
         <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
@@ -228,13 +231,13 @@ function PublicWatchDetailPage() {
           to='/'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground no-underline'
         >
-          ← Back to profile
+          {t('backToProfile')}
         </Link>
 
         {isLoading && <SkeletonLoader />}
 
         {!isLoading && !watch && (
-          <div className='text-sm text-red-400 font-mono'>Watch not found.</div>
+          <div className='text-sm text-red-400 font-mono'>{t('watchNotFound')}</div>
         )}
 
         {watch && (
@@ -315,7 +318,7 @@ function PublicWatchDetailPage() {
                   </div>
                 ) : (
                   <div className='w-full aspect-4/3 flex items-center justify-center text-muted-foreground font-mono text-xs bg-zinc-950'>
-                    No photos for this stage
+                    {t('watchNoPhotosStage')}
                   </div>
                 )}
 
@@ -360,25 +363,25 @@ function PublicWatchDetailPage() {
                 <section className='rounded-xl border border-border bg-card overflow-hidden'>
                   <div className='px-4 py-2.5 border-b border-border'>
                     <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                      Details
+                      {t('watchDetailsSection')}
                     </span>
                   </div>
                   {(
                     [
                       [
-                        'Condition',
+                        t('watchDetailsCondition'),
                         capitalize(watch.condition_bought?.replace('_', ' ')) ??
                           '—',
                       ],
-                      ['Purchase Price', fmt(watch.bought_price)],
-                      ['Parts Cost', fmt(watch.parts_cost)],
+                      [t('purchasePrice'), fmt(watch.bought_price)],
+                      [t('watchDetailsPartsCost'), fmt(watch.parts_cost)],
                       [
-                        'Total Invested',
+                        t('watchDetailsTotalInvested'),
                         fmt(watch.bought_price + (watch.parts_cost ?? 0)),
                       ],
-                      ['Sale Price', fmt(watch.sold_price)],
+                      [t('salePrice'), fmt(watch.sold_price)],
                       [
-                        'Profit',
+                        t('colProfit'),
                         p !== null ? (
                           <span
                             className={
@@ -392,7 +395,7 @@ function PublicWatchDetailPage() {
                         ),
                       ],
                       [
-                        'ROI',
+                        t('colRoi'),
                         r !== null ? (
                           <span
                             className={
@@ -407,15 +410,19 @@ function PublicWatchDetailPage() {
                           '—'
                         ),
                       ],
-                      ['Hours Spent', `${watch.hours_spent ?? 0} hrs`],
                       [
-                        'Acquired',
+                        t('hoursSpent'),
+                        // eslint-disable-next-line i18next/no-literal-string
+                        `${watch.hours_spent ?? 0} hrs`,
+                      ],
+                      [
+                        t('watchDetailsAcquired'),
                         watch.bought_date
                           ? format(watch.bought_date, 'MMM d, yyyy')
                           : '—',
                       ],
                       [
-                        'Sold',
+                        t('watchDetailsSold'),
                         watch.sold_date
                           ? format(watch.sold_date, 'MMM d, yyyy')
                           : '—',
@@ -440,12 +447,12 @@ function PublicWatchDetailPage() {
                 <section className='rounded-xl border border-border bg-card overflow-hidden'>
                   <div className='px-4 py-2.5 border-b border-border'>
                     <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                      Repair Log
+                      {t('repairLogTitle')}
                     </span>
                   </div>
                   {!posts?.length ? (
                     <div className='text-center py-6 text-xs font-mono text-muted-foreground'>
-                      No repair sessions yet.
+                      {t('publicNoRepairSessions')}
                     </div>
                   ) : (
                     <ul className='divide-y divide-border'>
@@ -479,30 +486,30 @@ function PublicWatchDetailPage() {
                   <section className='rounded-xl border border-border bg-card overflow-hidden'>
                     <div className='px-4 py-2.5 border-b border-border'>
                       <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                        Timegrapher
+                        {t('watchTabTimegrapher')}
                       </span>
                     </div>
                     {(
                       [
                         [
-                          'Avg Rate',
+                          t('timegrapherKpiAvgRate'),
                           <span className={tgRateClass(tgAvgRate)}>
-                            {fmtTgRate(tgAvgRate)} s/d
+                            {fmtTgRate(tgAvgRate)} {t('unitSpd')}
                           </span>,
                         ],
                         [
-                          'Avg Amplitude',
+                          t('timegrapherKpiAvgAmplitude'),
                           tgAvgAmplitude !== null
-                            ? `${fmtTgNum(tgAvgAmplitude)}°`
+                            ? `${fmtTgNum(tgAvgAmplitude)}${t('unitDeg')}`
                             : '—',
                         ],
                         [
-                          'Avg Beat Error',
+                          t('timegrapherKpiAvgBeatError'),
                           tgAvgBeatError !== null
-                            ? `${fmtTgNum(tgAvgBeatError, 1)} ms`
+                            ? `${fmtTgNum(tgAvgBeatError, 1)} ${t('unitMs')}`
                             : '—',
                         ],
-                        ['Sessions', tgReadings.length],
+                        [t('timegrapherKpiSessions'), tgReadings.length],
                       ] as [string, React.ReactNode][]
                     ).map(([k, v]) => (
                       <div
@@ -538,6 +545,7 @@ function PublicWatchDetailPage() {
               });
             }}
           >
+            {/* eslint-disable-next-line i18next/no-literal-string */}
             <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
               Powered by Hairspring
             </span>

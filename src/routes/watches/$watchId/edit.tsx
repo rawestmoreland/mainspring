@@ -6,6 +6,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { usePostHog } from '@posthog/react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { WatchCondition, WatchStatus } from '#/types';
 import { numberField } from '#/lib/helpers';
 import { useGetWatchById, useUpdateWatch } from '#/hooks/watches';
@@ -50,34 +52,55 @@ const WATCH_CONDITIONS: readonly WatchCondition[] = [
   'parts_only',
 ] as const;
 
-const formSchema = z.object({
-  make: z.string().trim().min(1, 'Make is required'),
-  model: z.string().trim().min(1, 'Model is required'),
-  reference: z.string().trim().optional(),
-  year: numberField({ min: 1, message: 'Year is required' }).pipe(
-    z.number().int(),
-  ),
-  status: z.enum(WATCH_STATUSES),
-  condition_bought: z.enum(WATCH_CONDITIONS),
-  bought_price: numberField({
-    min: 0,
-    message: 'Bought price must be 0 or more',
-  }),
-  parts_cost: numberField({ min: 0, message: 'Parts cost must be 0 or more' }),
-  bought_date: z.string().trim().min(1, 'Bought date is required'),
-  sold_price: z.preprocess((v) => {
-    if (v === '' || v === null || typeof v === 'undefined') return null;
-    const n = typeof v === 'number' ? v : Number(v);
-    return Number.isNaN(n) ? NaN : n;
-  }, z.number().min(0).nullable()),
-  sold_date: z.string().trim().nullable(),
-  notes: z.string(),
-});
+const STATUS_LABELS = {
+  acquired: 'statusAcquired',
+  in_progress: 'statusInProgress',
+  listed: 'statusListed',
+  sold: 'statusSold',
+  paused: 'statusPaused',
+  kept: 'statusKept',
+} as const satisfies Record<WatchStatus, string>;
 
-type FormValues = z.input<typeof formSchema>;
+const CONDITION_LABELS = {
+  good: 'conditionGood',
+  fair: 'conditionFair',
+  poor: 'conditionPoor',
+  worn: 'conditionWorn',
+  parts_only: 'conditionPartsOnly',
+} as const satisfies Record<WatchCondition, string>;
+
+function makeFormSchema(t: TFunction) {
+  return z.object({
+    make: z.string().trim().min(1, t('validationMakeRequired')),
+    model: z.string().trim().min(1, t('validationModelRequired')),
+    reference: z.string().trim().optional(),
+    year: numberField({ min: 1, message: t('validationYearRequired') }).pipe(
+      z.number().int(),
+    ),
+    status: z.enum(WATCH_STATUSES),
+    condition_bought: z.enum(WATCH_CONDITIONS),
+    bought_price: numberField({
+      min: 0,
+      message: t('validationBoughtPriceMin'),
+    }),
+    parts_cost: numberField({ min: 0, message: t('validationPartsCostMin') }),
+    bought_date: z.string().trim().min(1, t('validationBoughtDateRequired')),
+    sold_price: z.preprocess((v) => {
+      if (v === '' || v === null || typeof v === 'undefined') return null;
+      const n = typeof v === 'number' ? v : Number(v);
+      return Number.isNaN(n) ? NaN : n;
+    }, z.number().min(0).nullable()),
+    sold_date: z.string().trim().nullable(),
+    notes: z.string(),
+  });
+}
+
+type FormValues = z.input<ReturnType<typeof makeFormSchema>>;
 
 function EditWatchRoute() {
   const { watchId } = Route.useParams();
+  const { t } = useTranslation();
+  const formSchema = useMemo(() => makeFormSchema(t), [t]);
   const navigate = useNavigate();
   const posthog = usePostHog();
   const { data: watch, isLoading: isWatchLoading } = useGetWatchById(watchId);
@@ -140,7 +163,7 @@ function EditWatchRoute() {
 
   if (isWatchLoading || isUserLoading) {
     return (
-      <div className='text-sm text-muted-foreground font-mono'>Loading…</div>
+      <div className='text-sm text-muted-foreground font-mono'>{t('equipmentLoading')}</div>
     );
   }
 
@@ -151,15 +174,15 @@ function EditWatchRoute() {
           to='/watches'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Watches
+          {t('watchesBackToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>Watch not found.</div>
+        <div className='text-sm text-red-400 font-mono'>{t('equipmentItemNotFound')}</div>
       </div>
     );
   }
 
   if (!user) {
-    return <div className='text-sm text-red-400 font-mono'>Unauthorized</div>;
+    return <div className='text-sm text-red-400 font-mono'>{t('equipmentUnauthorized')}</div>;
   }
 
   const onSubmit = handleSubmit(async (raw) => {
@@ -207,10 +230,10 @@ function EditWatchRoute() {
           params={{ watchId }}
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to watch
+          {t('watchesBackToWatches')}
         </Link>
         <h1 className='mt-3 text-2xl font-serif font-semibold text-foreground'>
-          Edit Watch
+          {t('watchDetailsEdit')}
         </h1>
         <p className='mt-1 text-xs font-mono text-muted-foreground tracking-wide'>
           {watch.make} {watch.model}
@@ -233,13 +256,13 @@ function EditWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='make'>Make</FieldLabel>
+                <FieldLabel htmlFor='make'>{t('fieldMake')}</FieldLabel>
                 <Input
                   {...field}
                   id='make'
                   autoFocus
                   aria-invalid={fieldState.invalid}
-                  placeholder='Rolex'
+                  placeholder={t('placeholderMake')}
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -254,12 +277,12 @@ function EditWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='model'>Model</FieldLabel>
+                <FieldLabel htmlFor='model'>{t('fieldModel')}</FieldLabel>
                 <Input
                   {...field}
                   id='model'
                   aria-invalid={fieldState.invalid}
-                  placeholder='Submariner'
+                  placeholder={t('placeholderModel')}
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -274,13 +297,13 @@ function EditWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='reference'>Reference</FieldLabel>
+                <FieldLabel htmlFor='reference'>{t('fieldReference')}</FieldLabel>
                 <Input
                   {...field}
                   value={field.value ?? ''}
                   id='reference'
                   aria-invalid={fieldState.invalid}
-                  placeholder='16610'
+                  placeholder={t('placeholderReference')}
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -295,7 +318,7 @@ function EditWatchRoute() {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='year'>Year</FieldLabel>
+                <FieldLabel htmlFor='year'>{t('fieldYear')}</FieldLabel>
                 <Input
                   {...field}
                   id='year'
@@ -320,7 +343,7 @@ function EditWatchRoute() {
             render={({ fieldState, field }) => (
               <Field orientation='responsive' data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor='status'>Status</FieldLabel>
+                  <FieldLabel htmlFor='status'>{t('colStatus')}</FieldLabel>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
@@ -335,12 +358,12 @@ function EditWatchRoute() {
                     aria-invalid={fieldState.invalid}
                     className='min-w-30'
                   >
-                    <SelectValue placeholder='select' />
+                    <SelectValue placeholder={t('placeholderSelect')} />
                   </SelectTrigger>
                   <SelectContent position='item-aligned'>
                     {WATCH_STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>
-                        {s.replace('_', ' ').toUpperCase()}
+                        {t(STATUS_LABELS[s])}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -356,7 +379,7 @@ function EditWatchRoute() {
               <Field orientation='responsive' data-invalid={fieldState.invalid}>
                 <FieldContent>
                   <FieldLabel htmlFor='condition_bought'>
-                    Condition (bought)
+                    {t('fieldConditionBought')}
                   </FieldLabel>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -372,12 +395,12 @@ function EditWatchRoute() {
                     aria-invalid={fieldState.invalid}
                     className='min-w-30'
                   >
-                    <SelectValue placeholder='select' />
+                    <SelectValue placeholder={t('placeholderSelect')} />
                   </SelectTrigger>
                   <SelectContent position='item-aligned'>
                     {WATCH_CONDITIONS.map((c) => (
                       <SelectItem key={c} value={c}>
-                        {c.replace('_', ' ').toUpperCase()}
+                        {t(CONDITION_LABELS[c])}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -393,7 +416,7 @@ function EditWatchRoute() {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='bought_price'>Bought price</FieldLabel>
+                <FieldLabel htmlFor='bought_price'>{t('fieldBoughtPrice')}</FieldLabel>
                 <Input
                   {...field}
                   id='bought_price'
@@ -416,7 +439,7 @@ function EditWatchRoute() {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='parts_cost'>Parts cost</FieldLabel>
+                <FieldLabel htmlFor='parts_cost'>{t('partsCost')}</FieldLabel>
                 <Input
                   {...field}
                   id='parts_cost'
@@ -441,7 +464,7 @@ function EditWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='bought_date'>Bought date</FieldLabel>
+                <FieldLabel htmlFor='bought_date'>{t('fieldBoughtDate')}</FieldLabel>
                 <Input
                   {...field}
                   id='bought_date'
@@ -461,7 +484,7 @@ function EditWatchRoute() {
             render={({ field: { onChange, value, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor='sold_date'>
-                  Sold date (optional)
+                  {t('fieldSoldDateOptional')}
                 </FieldLabel>
                 <Input
                   {...field}
@@ -486,7 +509,7 @@ function EditWatchRoute() {
             render={({ field: { onChange, value, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor='sold_price'>
-                  Sold price (optional)
+                  {t('fieldSoldPriceOptional')}
                 </FieldLabel>
                 <Input
                   {...field}
@@ -513,7 +536,7 @@ function EditWatchRoute() {
 
         <section>
           <Field>
-            <FieldLabel htmlFor='featured_image'>Featured Image</FieldLabel>
+            <FieldLabel htmlFor='featured_image'>{t('fieldFeaturedImage')}</FieldLabel>
             <div className='flex items-center gap-4'>
               <input
                 ref={featuredInputRef}
@@ -535,7 +558,7 @@ function EditWatchRoute() {
                 {featuredPreviewUrl ? (
                   <img
                     src={featuredPreviewUrl}
-                    alt='Featured preview'
+                    alt={t('placeholderFeaturedImageAlt')}
                     className='w-full h-full object-cover'
                   />
                 ) : (
@@ -548,7 +571,7 @@ function EditWatchRoute() {
                   onClick={() => featuredInputRef.current?.click()}
                   className='text-xs font-mono text-amber-400 hover:text-amber-300 text-left'
                 >
-                  {featuredPreviewUrl ? 'Change image' : 'Upload image'}
+                  {featuredPreviewUrl ? t('featuredImageChange') : t('featuredImageUpload')}
                 </button>
                 {featuredImageFile ? (
                   <>
@@ -560,14 +583,12 @@ function EditWatchRoute() {
                       onClick={() => setFeaturedImageFile(null)}
                       className='text-xs font-mono text-muted-foreground hover:text-red-400 text-left'
                     >
-                      Remove
+                      {t('featuredImageRemove')}
                     </button>
                   </>
                 ) : (
                   <span className='text-xs font-mono text-muted-foreground'>
-                    {watch.featured_image_url
-                      ? 'Replace the current featured image.'
-                      : 'Optional. Used as the watch thumbnail.'}
+                    {t('featuredImageHint')}
                   </span>
                 )}
               </div>
@@ -581,7 +602,7 @@ function EditWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='notes'>Notes</FieldLabel>
+                <FieldLabel htmlFor='notes'>{t('fieldNotes')}</FieldLabel>
                 <TiptapEditor
                   ref={editorRef}
                   value={field.value}
@@ -610,11 +631,11 @@ function EditWatchRoute() {
             type='submit'
             disabled={isSubmitting || updateWatch.isPending}
           >
-            {updateWatch.isPending ? 'Saving…' : 'Save changes'}
+            {updateWatch.isPending ? t('equipmentSaving') : t('equipmentSaveChanges')}
           </Button>
           <Button asChild variant='outline'>
             <Link to='/watches/$watchId' params={{ watchId }}>
-              Cancel
+              {t('cancel')}
             </Link>
           </Button>
         </div>

@@ -1,5 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+import { useTranslation } from 'react-i18next';
 
 import { cn, fmt, profit } from '#/lib/helpers';
 import type { Watch } from '#/types';
@@ -12,6 +13,7 @@ type KanbanCardProps = {
 };
 
 export function KanbanCard({ watch, isSelected, onClick, dragDisabled }: KanbanCardProps) {
+  const { t } = useTranslation();
   const p = profit(watch);
   const cardImage = watch.featured_image_url ?? watch.photos?.[0]?.image;
   const frozen = !!watch.is_frozen;
@@ -42,7 +44,7 @@ export function KanbanCard({ watch, isSelected, onClick, dragDisabled }: KanbanC
             <svg width="8" height="8" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
               <path d="M11.5 8h-1V5.5a2.5 2.5 0 0 0-5 0V8h-1A1.5 1.5 0 0 0 3 9.5v4A1.5 1.5 0 0 0 4.5 15h7A1.5 1.5 0 0 0 13 13.5v-4A1.5 1.5 0 0 0 11.5 8zM6 5.5a2 2 0 1 1 4 0V8H6V5.5z"/>
             </svg>
-            Frozen
+            {t('frozen')}
           </span>
         </div>
       )}
@@ -56,7 +58,7 @@ export function KanbanCard({ watch, isSelected, onClick, dragDisabled }: KanbanC
         <div className="w-full aspect-video rounded-md bg-zinc-900 border border-dashed border-border mb-2.5 flex items-center justify-center">
           {/* text-muted-foreground at full opacity on zinc-900: 5.6:1 */}
           <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-            No photo
+            {t('noPhoto')}
           </span>
         </div>
       )}

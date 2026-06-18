@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { LockIcon } from 'lucide-react';
+import type { TFunction } from 'i18next';
 import { useGetWatchById } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
 import {
@@ -41,28 +43,33 @@ export const Route = createFileRoute('/watches/$watchId/shopping-list')({
   component: ShoppingListPage,
 });
 
-const CATEGORY_LABELS: Record<InventoryCategory, string> = {
-  movement: 'Movement',
-  mainspring: 'Mainspring',
-  crystal: 'Crystal',
-  strap: 'Strap',
-  bracelet: 'Bracelet',
-  crown: 'Crown',
-  gasket: 'Gasket',
-  hand: 'Hand',
-  dial: 'Dial',
-  bezel: 'Bezel',
-  case: 'Case',
-  tool: 'Tool',
-  oil: 'Oil',
-  other: 'Other',
-};
+function getCategoryLabels(t: TFunction): Record<InventoryCategory, string> {
+  return {
+    movement: t('categoryMovement'),
+    harvested_part: t('categoryHarvestedPart'),
+    mainspring: t('categoryMainspring'),
+    crystal: t('categoryCrystal'),
+    strap: t('categoryStrap'),
+    bracelet: t('categoryBracelet'),
+    crown: t('categoryCrown'),
+    gasket: t('categoryGasket'),
+    hand: t('categoryHand'),
+    dial: t('categoryDial'),
+    bezel: t('categoryBezel'),
+    case: t('categoryCase'),
+    tool: t('categoryTool'),
+    oil: t('categoryOil'),
+    other: t('categoryOther'),
+  };
+}
 
-const STATUS_LABELS: Record<PartsShoppingStatus, string> = {
-  needed: 'Needed',
-  ordered: 'Ordered',
-  in_hand: 'In Hand',
-};
+function getStatusLabels(t: TFunction): Record<PartsShoppingStatus, string> {
+  return {
+    needed: t('watchShoppingNeeded'),
+    ordered: t('watchShoppingOrdered'),
+    in_hand: t('watchShoppingInHand'),
+  };
+}
 
 function statusClass(status: PartsShoppingStatus): string {
   if (status === 'needed') return 'bg-amber-500/15 text-[#6d4512] border-amber-500/30';
@@ -79,6 +86,8 @@ function PartsStatusPicker({
   item: WatchPartsShoppingItem;
   watchId: string;
 }) {
+  const { t } = useTranslation();
+  const statusLabels = getStatusLabels(t);
   const [open, setOpen] = useState(false);
   const updateItem = useUpdatePartsShoppingItem(watchId);
   return (
@@ -90,13 +99,13 @@ function PartsStatusPicker({
             statusClass(item.status),
           )}
         >
-          {STATUS_LABELS[item.status]}
+          {statusLabels[item.status]}
         </button>
       </DialogTrigger>
       <DialogContent className='sm:max-w-xs'>
         <DialogHeader>
           <DialogTitle className='font-mono text-sm font-medium'>
-            Update Status
+            {t('wishlistUpdateStatus')}
           </DialogTitle>
         </DialogHeader>
         <div className='space-y-1.5 py-1'>
@@ -121,11 +130,11 @@ function PartsStatusPicker({
                   statusClass(s),
                 )}
               >
-                {STATUS_LABELS[s]}
+                {statusLabels[s]}
               </span>
               {item.status === s && (
                 <span className='font-mono text-[10px] text-muted-foreground'>
-                  current
+                  {t('wishlistCurrent')}
                 </span>
               )}
             </button>
@@ -156,8 +165,10 @@ function AddItemForm({
   onSuccess: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
+  const categoryLabels = getCategoryLabels(t);
   const createItem = useCreatePartsShoppingItem(watchId);
-  const { control, register, handleSubmit, reset } = useForm<FormData>({
+  const { control, handleSubmit, reset } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
@@ -187,11 +198,11 @@ function AddItemForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='name'>Part Name</FieldLabel>
+                <FieldLabel htmlFor='name'>{t('shoppingListPartName')}</FieldLabel>
                 <Input
                   {...field}
                   id='name'
-                  placeholder='e.g. ETA 2824 mainspring'
+                  placeholder={t('shoppingListPlaceholderPart')}
                   aria-invalid={fieldState.invalid}
                   className={inputCls}
                 />
@@ -208,20 +219,20 @@ function AddItemForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='category'>Category</FieldLabel>
+                <FieldLabel htmlFor='category'>{t('fieldCategory')}</FieldLabel>
                 <Select
                   name={field.name}
                   value={field.value ?? ''}
                   onValueChange={field.onChange}
                 >
                   <SelectTrigger id='category' className={inputCls}>
-                    <SelectValue placeholder='Optional' />
+                    <SelectValue placeholder={t('optional')} />
                   </SelectTrigger>
                   <SelectContent position='popper'>
-                    {(Object.keys(CATEGORY_LABELS) as InventoryCategory[]).map(
+                    {(Object.keys(categoryLabels) as InventoryCategory[]).map(
                       (cat) => (
                         <SelectItem key={cat} value={cat}>
-                          {CATEGORY_LABELS[cat]}
+                          {categoryLabels[cat]}
                         </SelectItem>
                       ),
                     )}
@@ -240,13 +251,13 @@ function AddItemForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='target_price'>Target Price</FieldLabel>
+                <FieldLabel htmlFor='target_price'>{t('shoppingListTargetPriceCol')}</FieldLabel>
                 <Input
                   {...field}
                   id='target_price'
                   type='number'
                   step='0.01'
-                  placeholder='Optional'
+                  placeholder={t('optional')}
                   aria-invalid={fieldState.invalid}
                   className={inputCls}
                 />
@@ -264,11 +275,11 @@ function AddItemForm({
           control={control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor='notes'>Notes</FieldLabel>
+              <FieldLabel htmlFor='notes'>{t('fieldNotes')}</FieldLabel>
               <Input
                 {...field}
                 id='notes'
-                placeholder='Optional — supplier, source URL, spec notes…'
+                placeholder={t('shoppingListPlaceholderNotes')}
                 aria-invalid={fieldState.invalid}
                 className={inputCls}
               />
@@ -285,14 +296,14 @@ function AddItemForm({
           disabled={createItem.isPending}
           className='inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-mono text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity'
         >
-          {createItem.isPending ? 'Adding…' : 'Add Item'}
+          {createItem.isPending ? t('shoppingListAddingItem') : t('shoppingListAddItem')}
         </button>
         <button
           type='button'
           onClick={onCancel}
           className='inline-flex items-center rounded-md border border-border px-4 py-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent cursor-pointer'
         >
-          Cancel
+          {t('cancel')}
         </button>
       </div>
     </form>
@@ -300,6 +311,8 @@ function AddItemForm({
 }
 
 function ShoppingListPage() {
+  const { t } = useTranslation();
+  const categoryLabels = getCategoryLabels(t);
   const { watchId } = Route.useParams();
   const { data: watch, isLoading: watchLoading } = useGetWatchById(watchId);
   const { data: items = [], isLoading: itemsLoading } =
@@ -312,7 +325,7 @@ function ShoppingListPage() {
 
   if (watchLoading || itemsLoading) {
     return (
-      <div className='text-sm font-mono text-muted-foreground'>Loading…</div>
+      <div className='text-sm font-mono text-muted-foreground'>{t('loading')}</div>
     );
   }
 
@@ -323,9 +336,9 @@ function ShoppingListPage() {
           to='/watches'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Watches
+          {t('backToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>Watch not found.</div>
+        <div className='text-sm text-red-400 font-mono'>{t('watchNotFound')}</div>
       </div>
     );
   }
@@ -338,7 +351,7 @@ function ShoppingListPage() {
           params={{ watchId }}
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Watch
+          {t('backToWatch')}
         </Link>
         <div className='flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-card px-8 py-16 text-center'>
           <div className='flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10'>
@@ -346,11 +359,10 @@ function ShoppingListPage() {
           </div>
           <div className='space-y-1'>
             <h2 className='font-serif font-semibold text-foreground'>
-              Parts Shopping List
+              {t('shoppingListTitle')}
             </h2>
             <p className='font-mono text-xs text-muted-foreground max-w-xs'>
-              Track parts you need to source for this restoration. Upgrade to
-              Pro to unlock the shopping list.
+              {t('shoppingListProDesc')}
             </p>
           </div>
           {user && <UpgradeButton pbUserId={user.id} />}
@@ -374,7 +386,7 @@ function ShoppingListPage() {
         params={{ watchId }}
         className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
       >
-        ← Back to Watch
+        {t('backToWatch')}
       </Link>
 
       <div className='flex flex-wrap items-start justify-between gap-3'>
@@ -393,25 +405,25 @@ function ShoppingListPage() {
             onClick={() => setShowForm((v) => !v)}
             className='inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-mono text-primary-foreground hover:opacity-90 transition-opacity'
           >
-            + Add Item
+            {t('shoppingListAddItemBtn')}
           </button>
         )}
       </div>
 
       <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-        <KpiCard highlight label='Needed' value={needed} sub='to source' />
-        <KpiCard label='Ordered' value={ordered} sub='in transit' />
-        <KpiCard label='In Hand' value={inHand} sub='received' />
+        <KpiCard highlight label={t('watchShoppingNeeded')} value={needed} sub={t('shoppingListToSource')} />
+        <KpiCard label={t('watchShoppingOrdered')} value={ordered} sub={t('shoppingListInTransit')} />
+        <KpiCard label={t('watchShoppingInHand')} value={inHand} sub={t('shoppingListReceived')} />
         <KpiCard
-          label='Target Value'
+          label={t('shoppingListTargetValue')}
           value={fmt(totalTargetValue)}
-          sub='estimated cost'
+          sub={t('shoppingListEstimatedCost')}
         />
       </div>
 
       {showForm && user && (
         <div className='rounded-xl border border-border bg-card p-5'>
-          <SectionLabel>New Item</SectionLabel>
+          <SectionLabel>{t('shoppingListNewItem')}</SectionLabel>
           <div className='mt-3'>
             <AddItemForm
               watchId={watchId}
@@ -425,20 +437,18 @@ function ShoppingListPage() {
 
       <div>
         <SectionLabel>
-          {'Parts List · '}
-          {items.length}
-          {items.length === 1 ? ' item' : ' items'}
+          {t('shoppingListPartsCount', { count: items.length })}
         </SectionLabel>
         <div className='mt-3'>
           {items.length === 0 ? (
             <div className='rounded-xl border border-border bg-card px-5 py-8 text-center font-mono text-xs text-muted-foreground'>
-              No parts added yet.{' '}
+              {t('shoppingListEmpty')}{' '}
               {user && (
                 <button
                   onClick={() => setShowForm(true)}
                   className='text-primary hover:text-primary/80 bg-transparent border-none cursor-pointer font-mono text-xs p-0'
                 >
-                  Add the first one →
+                  {t('watchAddFirstShoppingItem')}
                 </button>
               )}
             </div>
@@ -446,11 +456,11 @@ function ShoppingListPage() {
             <TableWrap>
               <thead>
                 <tr>
-                  <Th>Part</Th>
-                  <Th>Category</Th>
-                  <Th>Target Price</Th>
-                  <Th>Notes</Th>
-                  <Th>Status</Th>
+                  <Th>{t('shoppingListPartCol')}</Th>
+                  <Th>{t('fieldCategory')}</Th>
+                  <Th>{t('shoppingListTargetPriceCol')}</Th>
+                  <Th>{t('fieldNotes')}</Th>
+                  <Th>{t('colStatus')}</Th>
                   {user && <Th>{''}</Th>}
                 </tr>
               </thead>
@@ -462,7 +472,7 @@ function ShoppingListPage() {
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
                       {item.category
-                        ? CATEGORY_LABELS[item.category]
+                        ? categoryLabels[item.category]
                         : '—'}
                     </Td>
                     <Td className='font-mono text-[11px] text-foreground'>
@@ -478,12 +488,12 @@ function ShoppingListPage() {
                       <Td>
                         <button
                           onClick={() => {
-                            if (confirm('Remove this item?')) {
+                            if (confirm(t('shoppingListDeleteConfirm'))) {
                               deleteItem.mutate(item.id);
                             }
                           }}
                           className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                          aria-label='Delete item'
+                          aria-label={t('shoppingListDeleteAriaLabel')}
                         >
                           ×
                         </button>

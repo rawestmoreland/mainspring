@@ -398,6 +398,7 @@ function MenuBar({
               className={cn(
                 'rounded-md border border-gray-200 px-2 py-1 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50',
               )}
+              // eslint-disable-next-line i18next/no-literal-string
               title='Insert image'
             >
               <ImageIcon className='size-4' />

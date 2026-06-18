@@ -22,6 +22,7 @@ import { useUser } from '#/hooks/user';
 import { useSubscription } from '#/hooks/subscription';
 import { FREE_PROJECT_LIMIT, LocalStorageKeys } from '#/lib/constants';
 import type { WatchStatus } from '#/types';
+import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/watches/')({
   component: WatchesPage,
@@ -30,15 +31,15 @@ export const Route = createFileRoute('/watches/')({
 type FilterValue = 'all' | WatchStatus;
 type ViewMode = 'board' | 'table';
 
-const FILTERS: [FilterValue, string][] = [
-  ['all', 'All'],
-  ['in_progress', 'In Progress'],
-  ['paused', 'Paused'],
-  ['listed', 'Listed'],
-  ['sold', 'Sold'],
-];
-
 function WatchesPage() {
+  const { t } = useTranslation();
+  const FILTERS: [FilterValue, string][] = [
+    ['all', t('filterAll')],
+    ['in_progress', t('statusInProgress')],
+    ['paused', t('statusPaused')],
+    ['listed', t('statusListed')],
+    ['sold', t('statusSold')],
+  ];
   const { data: watches, isPending } = useWatches();
   const { data: user, isPending: isUserPending } = useUser();
   const { isPro } = useSubscription();
@@ -114,7 +115,7 @@ function WatchesPage() {
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground bg-transparent',
                 )}
-                title='Board view'
+                title={t('boardView')}
               >
                 <LayoutGrid className='size-3.5' />
               </button>
@@ -128,7 +129,7 @@ function WatchesPage() {
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground bg-transparent',
                 )}
-                title='Table view'
+                title={t('tableView')}
               >
                 <List className='size-3.5' />
               </button>
@@ -141,7 +142,7 @@ function WatchesPage() {
                       <Button asChild disabled={atProjectLimit}>
                         <Link to='/watches/new'>
                           <PlusIcon className='size-3' />
-                          Add Watch
+                          {t('addWatch')}
                         </Link>
                       </Button>
                     </span>
@@ -149,13 +150,12 @@ function WatchesPage() {
                   {atProjectLimit && (
                     <TooltipContent>
                       <p className='font-mono text-xs'>
-                        Free accounts are limited to {FREE_PROJECT_LIMIT} active
-                        projects.{' '}
+                        {t('freeAccountLimit', { limit: FREE_PROJECT_LIMIT })}
                         <Link
                           to='/pro'
                           className='text-amber-400 hover:underline'
                         >
-                          Upgrade to Pro
+                          {t('upgradeToPro')}
                         </Link>
                       </p>
                     </TooltipContent>
@@ -181,19 +181,19 @@ function WatchesPage() {
             <TableWrap>
               <thead>
                 <tr>
-                  <Th>Photos</Th>
-                  <Th>Watch</Th>
-                  <Th>Year</Th>
-                  <Th>Status</Th>
-                  <Th>Condition</Th>
-                  <Th>Paid</Th>
-                  <Th>Parts</Th>
-                  <Th>Sold For</Th>
+                  <Th>{t('colPhoto_other')}</Th>
+                  <Th>{t('colWatch')}</Th>
+                  <Th>{t('colYear')}</Th>
+                  <Th>{t('colStatus')}</Th>
+                  <Th>{t('colCondition')}</Th>
+                  <Th>{t('colPaid')}</Th>
+                  <Th>{t('colParts')}</Th>
+                  <Th>{t('colSoldFor')}</Th>
                   <Th>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger className='flex items-center gap-1 cursor-default'>
-                          Breakdown
+                          {t('breakdown')}
                           <Info className='size-3 text-muted-foreground' />
                         </TooltipTrigger>
                         <TooltipContent
@@ -203,27 +203,27 @@ function WatchesPage() {
                           <div className='flex flex-col gap-1.5 py-0.5'>
                             <div className='flex items-center gap-2'>
                               <span className='inline-block size-2.5 rounded-sm bg-amber-600 shrink-0' />
-                              Amount paid
+                              {t('amountPaid')}
                             </div>
                             <div className='flex items-center gap-2'>
                               <span className='inline-block size-2.5 rounded-sm bg-zinc-500 shrink-0' />
-                              Parts cost
+                              {t('partsCost')}
                             </div>
                             <div className='flex items-center gap-2'>
                               <span className='inline-block size-2.5 rounded-sm bg-green-400 shrink-0' />
-                              Profit
+                              {t('colProfit')}
                             </div>
                             <div className='flex items-center gap-2'>
                               <span className='inline-block size-2.5 rounded-sm bg-red-400 shrink-0' />
-                              Loss
+                              {t('loss')}
                             </div>
                           </div>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </Th>
-                  <Th>Profit</Th>
-                  <Th>Hours</Th>
+                  <Th>{t('colProfit')}</Th>
+                  <Th>{t('colHour_other')}</Th>
                 </tr>
               </thead>
               <tbody>
@@ -250,7 +250,7 @@ function WatchesPage() {
                             {frozen && (
                               <span className='inline-flex items-center gap-0.5 rounded bg-amber-500/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'>
                                 <LockIcon className='size-2' />
-                                Frozen
+                                {t('frozen')}
                               </span>
                             )}
                           </div>
@@ -291,6 +291,7 @@ function WatchesPage() {
                         {fmt(p)}
                       </Td>
                       <Td className='font-mono text-xs text-muted-foreground'>
+                        {/* eslint-disable-next-line i18next/no-literal-string */}
                         {w.hours_spent}h
                       </Td>
                     </TableRow>
@@ -301,12 +302,12 @@ function WatchesPage() {
 
             {allWatches.length === 0 && (
               <div className='text-center py-12 text-muted-foreground font-mono text-xs'>
-                No watches yet — add your first one.
+                {t('noWatches')} - {t('addFirstWatch')}
               </div>
             )}
             {allWatches.length > 0 && filtered.length === 0 && (
               <div className='text-center py-12 text-muted-foreground font-mono text-xs'>
-                No watches match this filter.
+                {t('noWatchesMatchFilter')}
               </div>
             )}
           </>

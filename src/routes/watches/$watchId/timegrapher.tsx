@@ -4,6 +4,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns/format';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useGetWatchById } from '#/hooks/watches';
 import { useUser } from '#/hooks/user';
 import {
@@ -44,21 +46,28 @@ export const Route = createFileRoute('/watches/$watchId/timegrapher')({
   component: TimegrapherPage,
 });
 
-const STATUS_LABELS: Record<TimegrapherStatus, string> = {
-  post_service: 'Post-Service',
-  pre_service: 'Pre-Service',
-  incoming: 'Incoming',
-  routine: 'Routine',
-};
+function getStatusLabels(t: TFunction): Record<TimegrapherStatus, string> {
+  return {
+    post_service: t('timegrapherStatusPostService'),
+    pre_service: t('timegrapherStatusPreService'),
+    incoming: t('timegrapherStatusIncoming'),
+    routine: t('timegrapherStatusRoutine'),
+  };
+}
 
-const POSITIONS = [
-  { key: 'du', label: 'Dial Up' },
-  { key: 'dd', label: 'Dial Down' },
-  { key: 'cu', label: 'Crown Up' },
-  { key: 'cd', label: 'Crown Down' },
-  { key: 'cl', label: 'Crown Left' },
-  { key: 'cr', label: 'Crown Right' },
-] as const;
+const POSITION_KEYS = ['du', 'dd', 'cu', 'cd', 'cl', 'cr'] as const;
+type PositionKey = (typeof POSITION_KEYS)[number];
+
+function getPositions(t: TFunction) {
+  return [
+    { key: 'du' as PositionKey, label: t('timegrapherPositionDU') },
+    { key: 'dd' as PositionKey, label: t('timegrapherPositionDD') },
+    { key: 'cu' as PositionKey, label: t('timegrapherPositionCU') },
+    { key: 'cd' as PositionKey, label: t('timegrapherPositionCD') },
+    { key: 'cl' as PositionKey, label: t('timegrapherPositionCL') },
+    { key: 'cr' as PositionKey, label: t('timegrapherPositionCR') },
+  ];
+}
 
 const BANNER_DISMISSED_KEY = 'timegrapher_chart_preview_dismissed';
 
@@ -74,9 +83,9 @@ function rateClass(rate: number | undefined): string {
 
 function getMeanRate(reading: TimegrapherReading): number | null {
   const rates: number[] = [];
-  for (const pos of POSITIONS) {
-    if (reading[`${pos.key}_snowstorm` as keyof TimegrapherReading]) continue;
-    const r = reading[`${pos.key}_rate` as keyof TimegrapherReading] as
+  for (const key of POSITION_KEYS) {
+    if (reading[`${key}_snowstorm` as keyof TimegrapherReading]) continue;
+    const r = reading[`${key}_rate` as keyof TimegrapherReading] as
       | number
       | undefined;
     if (r !== undefined && r !== null) rates.push(r);
@@ -87,9 +96,9 @@ function getMeanRate(reading: TimegrapherReading): number | null {
 
 function getAvgAmp(reading: TimegrapherReading): number | null {
   const amps: number[] = [];
-  for (const pos of POSITIONS) {
-    if (reading[`${pos.key}_snowstorm` as keyof TimegrapherReading]) continue;
-    const a = reading[`${pos.key}_amp` as keyof TimegrapherReading] as
+  for (const key of POSITION_KEYS) {
+    if (reading[`${key}_snowstorm` as keyof TimegrapherReading]) continue;
+    const a = reading[`${key}_amp` as keyof TimegrapherReading] as
       | number
       | undefined;
     if (a !== undefined && a !== null) amps.push(a);
@@ -100,9 +109,9 @@ function getAvgAmp(reading: TimegrapherReading): number | null {
 
 function getAvgBe(reading: TimegrapherReading): number | null {
   const bes: number[] = [];
-  for (const pos of POSITIONS) {
-    if (reading[`${pos.key}_snowstorm` as keyof TimegrapherReading]) continue;
-    const b = reading[`${pos.key}_be` as keyof TimegrapherReading] as
+  for (const key of POSITION_KEYS) {
+    if (reading[`${key}_snowstorm` as keyof TimegrapherReading]) continue;
+    const b = reading[`${key}_be` as keyof TimegrapherReading] as
       | number
       | undefined;
     if (b !== undefined && b !== null) bes.push(b);
@@ -124,7 +133,9 @@ function fmtNum(n: number | null | undefined, decimals = 0): string {
 // ── Position bar chart ──────────────────────────────────────────────────────
 
 function PositionChart({ reading }: { reading: TimegrapherReading }) {
-  const allRates = POSITIONS.map((p) => {
+  const { t } = useTranslation();
+  const positions = getPositions(t);
+  const allRates = positions.map((p) => {
     if (reading[`${p.key}_snowstorm` as keyof TimegrapherReading]) return null;
     return (
       (reading[`${p.key}_rate` as keyof TimegrapherReading] as
@@ -142,28 +153,29 @@ function PositionChart({ reading }: { reading: TimegrapherReading }) {
     <div className='rounded-xl border border-border bg-card p-5 mb-5'>
       <div className='flex items-center justify-between mb-4'>
         <span className='font-serif font-semibold text-sm text-foreground'>
-          Rate by Position
+          {t('timegrapherRateByPosition')}
         </span>
         <div className='flex items-center gap-4'>
           <span className='flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground'>
             <span className='w-2 h-2 rounded-full bg-green-400 inline-block' />
-            Within spec (≤±3)
+            {t('timegrapherWithinSpec')}
           </span>
           <span className='flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground'>
             <span className='w-2 h-2 rounded-full bg-amber-400 inline-block' />
-            Marginal (±3–6)
+            {t('timegrapherMarginal')}
           </span>
           <span className='flex items-center gap-1.5 font-mono text-[9px] text-muted-foreground'>
             <span className='w-2 h-2 rounded-full bg-red-400 inline-block' />
-            Out of spec (&gt;±6)
+            {t('timegrapherOutOfSpec')}
           </span>
         </div>
       </div>
       <div className='grid grid-cols-6 gap-3'>
-        {POSITIONS.map((pos, i) => {
+        {positions.map((pos, i) => {
           const rate = allRates[i];
           const pct = rate !== null ? (Math.abs(rate) / maxAbs) * 45 : 0;
           const isPositive = rate !== null && rate >= 0;
+          // eslint-disable-next-line i18next/no-literal-string
           const colorClass =
             rate === null
               ? 'bg-muted'
@@ -220,6 +232,8 @@ function PositionChart({ reading }: { reading: TimegrapherReading }) {
 // ── Premium chart preview banner ─────────────────────────────────────────────
 
 function PremiumChartBanner({ onDismiss }: { onDismiss: () => void }) {
+  const { t } = useTranslation();
+  const positions = getPositions(t);
   const maxAbs = Math.max(...SAMPLE_RATES.map(Math.abs), 4);
 
   return (
@@ -227,7 +241,7 @@ function PremiumChartBanner({ onDismiss }: { onDismiss: () => void }) {
       <button
         type='button'
         onClick={onDismiss}
-        aria-label='Dismiss banner'
+        aria-label={t('timegrapherDismissBanner')}
         className='absolute top-3 right-3 z-20 w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors bg-transparent border-none cursor-pointer text-base leading-none'
       >
         ×
@@ -236,23 +250,23 @@ function PremiumChartBanner({ onDismiss }: { onDismiss: () => void }) {
       <div className='p-5'>
         <div className='mb-4'>
           <span className='font-mono text-[9px] uppercase tracking-widest text-amber-400'>
-            Pro Feature
+            {t('timegrapherProFeature')}
           </span>
           <h3 className='mt-1 font-serif text-sm font-semibold text-foreground'>
-            6-Position Rate Tracking
+            {t('timegrapherSixPositionTitle')}
           </h3>
           <p className='mt-0.5 font-mono text-[11px] text-muted-foreground max-w-lg'>
-            Track rate, amplitude, and beat error in every orientation — dial
-            up, dial down, crown up, crown down, crown left, and crown right.
+            {t('timegrapherSixPositionDesc')}
           </p>
         </div>
 
         <div className='relative rounded-lg border border-border bg-muted/10 p-4 select-none'>
           <div className='grid grid-cols-6 gap-3'>
-            {POSITIONS.map((pos, i) => {
+            {positions.map((pos, i) => {
               const rate = SAMPLE_RATES[i] ?? 0;
               const pct = (Math.abs(rate) / maxAbs) * 45;
               const isPositive = rate >= 0;
+              // eslint-disable-next-line i18next/no-literal-string
               const colorClass =
                 Math.abs(rate) <= 3
                   ? 'bg-green-400/60'
@@ -297,16 +311,16 @@ function PremiumChartBanner({ onDismiss }: { onDismiss: () => void }) {
           </div>
           <div className='absolute inset-0 rounded-lg backdrop-blur-[2px] bg-card/65 flex flex-col items-center justify-center gap-2'>
             <span className='font-serif text-sm font-semibold text-foreground'>
-              Rate by Position
+              {t('timegrapherRateByPosition')}
             </span>
             <span className='font-mono text-[10px] text-muted-foreground'>
-              Available with Pro
+              {t('timegrapherAvailableWithPro')}
             </span>
             <Link
               to='/pro'
               className='mt-1 font-mono text-[10px] tracking-widest uppercase px-3 py-1.5 rounded bg-amber-500 text-zinc-950 hover:bg-amber-400 transition-colors'
             >
-              View Pro →
+              {t('timegrapherViewPro')}
             </Link>
           </div>
         </div>
@@ -338,6 +352,7 @@ function FreeAddSessionForm({
   onSuccess: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const createReading = useCreateTimegrapherReading(watchId);
   const { control, handleSubmit } = useForm<FreeFormData>({
     resolver: zodResolver(freeSchema),
@@ -371,20 +386,32 @@ function FreeAddSessionForm({
             control={control}
             render={({ fieldState, field }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='free-status'>Session Type</FieldLabel>
+                <FieldLabel htmlFor='free-status'>
+                  {t('timegrapherSessionType')}
+                </FieldLabel>
                 <Select
                   name={field.name}
                   value={field.value}
                   onValueChange={field.onChange}
                 >
                   <SelectTrigger id='free-status' className={inputCls}>
-                    <SelectValue placeholder='Session type' />
+                    <SelectValue
+                      placeholder={t('timegrapherPlaceholderSessionType')}
+                    />
                   </SelectTrigger>
                   <SelectContent position='popper'>
-                    <SelectItem value='routine'>Routine</SelectItem>
-                    <SelectItem value='pre_service'>Pre-Service</SelectItem>
-                    <SelectItem value='post_service'>Post-Service</SelectItem>
-                    <SelectItem value='incoming'>Incoming</SelectItem>
+                    <SelectItem value='routine'>
+                      {t('timegrapherStatusRoutine')}
+                    </SelectItem>
+                    <SelectItem value='pre_service'>
+                      {t('timegrapherStatusPreService')}
+                    </SelectItem>
+                    <SelectItem value='post_service'>
+                      {t('timegrapherStatusPostService')}
+                    </SelectItem>
+                    <SelectItem value='incoming'>
+                      {t('timegrapherStatusIncoming')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 {fieldState.invalid && (
@@ -400,7 +427,9 @@ function FreeAddSessionForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='free-lift'>Lift Angle (°)</FieldLabel>
+                <FieldLabel htmlFor='free-lift'>
+                  {t('timegrapherLiftAngleLabel')}
+                </FieldLabel>
                 <Input
                   {...field}
                   type='number'
@@ -424,13 +453,15 @@ function FreeAddSessionForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='free-rate'>Average Rate (s/d)</FieldLabel>
+                <FieldLabel htmlFor='free-rate'>
+                  {t('timegrapherAvgRateLabel')}
+                </FieldLabel>
                 <Input
                   {...field}
                   type='number'
                   step='0.1'
                   id='free-rate'
-                  placeholder='e.g. +2.1'
+                  placeholder={t('timegrapherPlaceholderRate')}
                   className={inputCls}
                 />
                 {fieldState.invalid && (
@@ -447,14 +478,14 @@ function FreeAddSessionForm({
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor='free-amp'>
-                  Average Amplitude (°)
+                  {t('timegrapherAvgAmplitudeLabel')}
                 </FieldLabel>
                 <Input
                   {...field}
                   type='number'
                   step='1'
                   id='free-amp'
-                  placeholder='e.g. 298'
+                  placeholder={t('timegrapherPlaceholderAmplitude')}
                   className={inputCls}
                 />
                 {fieldState.invalid && (
@@ -470,13 +501,15 @@ function FreeAddSessionForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='free-be'>Beat Error (ms)</FieldLabel>
+                <FieldLabel htmlFor='free-be'>
+                  {t('timegrapherBeatErrorLabel')}
+                </FieldLabel>
                 <Input
                   {...field}
                   type='number'
                   step='0.1'
                   id='free-be'
-                  placeholder='e.g. 0.3'
+                  placeholder={t('timegrapherPlaceholderBe')}
                   className={inputCls}
                 />
                 {fieldState.invalid && (
@@ -494,14 +527,16 @@ function FreeAddSessionForm({
           disabled={createReading.isPending}
           className='inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-mono text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity'
         >
-          {createReading.isPending ? 'Saving…' : 'Save Session'}
+          {createReading.isPending
+            ? t('timegrapherSaving')
+            : t('timegrapherSaveSession')}
         </button>
         <button
           type='button'
           onClick={onCancel}
           className='inline-flex items-center rounded-md border border-border px-4 py-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent cursor-pointer'
         >
-          Cancel
+          {t('cancel')}
         </button>
       </div>
     </form>
@@ -560,14 +595,17 @@ function AddSessionForm({
   onSuccess: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
+  const positions = getPositions(t);
   const createReading = useCreateTimegrapherReading(watchId);
-  const { control, register, handleSubmit, watch, setValue } = useForm<FormData>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      status: 'routine',
-      lift_angle: String(defaultLiftAngle),
-    },
-  });
+  const { control, register, handleSubmit, watch, setValue } =
+    useForm<FormData>({
+      resolver: zodResolver(schema),
+      defaultValues: {
+        status: 'routine',
+        lift_angle: String(defaultLiftAngle),
+      },
+    });
 
   const snowstorms = watch([
     'du_snowstorm',
@@ -629,7 +667,9 @@ function AddSessionForm({
             control={control}
             render={({ fieldState, field }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='status'>Session Type</FieldLabel>
+                <FieldLabel htmlFor='status'>
+                  {t('timegrapherSessionType')}
+                </FieldLabel>
                 <Select
                   name={field.name}
                   value={field.value}
@@ -640,13 +680,23 @@ function AddSessionForm({
                     aria-invalid={fieldState.invalid}
                     className={inputCls}
                   >
-                    <SelectValue placeholder='Session type' />
+                    <SelectValue
+                      placeholder={t('timegrapherPlaceholderSessionType')}
+                    />
                   </SelectTrigger>
                   <SelectContent position='popper'>
-                    <SelectItem value='routine'>Routine</SelectItem>
-                    <SelectItem value='pre_service'>Pre-Service</SelectItem>
-                    <SelectItem value='post_service'>Post-Service</SelectItem>
-                    <SelectItem value='incoming'>Incoming</SelectItem>
+                    <SelectItem value='routine'>
+                      {t('timegrapherStatusRoutine')}
+                    </SelectItem>
+                    <SelectItem value='pre_service'>
+                      {t('timegrapherStatusPreService')}
+                    </SelectItem>
+                    <SelectItem value='post_service'>
+                      {t('timegrapherStatusPostService')}
+                    </SelectItem>
+                    <SelectItem value='incoming'>
+                      {t('timegrapherStatusIncoming')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 {fieldState.invalid && (
@@ -662,7 +712,9 @@ function AddSessionForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='lift_angle'>Lift Angle (º)</FieldLabel>
+                <FieldLabel htmlFor='lift_angle'>
+                  {t('timegrapherLiftAngleLabel')}
+                </FieldLabel>
                 <Input
                   {...field}
                   type='number'
@@ -684,13 +736,15 @@ function AddSessionForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='notes'>Notes</FieldLabel>
+                <FieldLabel htmlFor='notes'>
+                  {t('timegrapherColNotes')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='notes'
                   type='text'
                   aria-invalid={fieldState.invalid}
-                  placeholder='Optional...'
+                  placeholder={t('timegrapherPlaceholderNotes')}
                   className={inputCls}
                 />
                 {fieldState.invalid && (
@@ -708,24 +762,24 @@ function AddSessionForm({
           <thead>
             <tr className='bg-muted/40 border-b border-border'>
               <th className='px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-muted-foreground'>
-                Position
+                {t('timegrapherPosition')}
               </th>
               <th className='px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-muted-foreground'>
-                Snowstorm?
+                {t('timegrapherSnowstorm')}
               </th>
               <th className='px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-muted-foreground'>
-                Rate (s/d)
+                {t('timegrapherRateSD')}
               </th>
               <th className='px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-muted-foreground'>
-                Amplitude (°)
+                {t('timegrapherAmplitudeDeg')}
               </th>
               <th className='px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-muted-foreground'>
-                Beat Error (ms)
+                {t('timegrapherBeatErrorMS')}
               </th>
             </tr>
           </thead>
           <tbody className='divide-y divide-border'>
-            {POSITIONS.map((pos, i) => {
+            {positions.map((pos, i) => {
               const isSnowstorm = snowstorms[i] === true;
               return (
                 <tr
@@ -755,7 +809,7 @@ function AddSessionForm({
                       )}
                     />
                     <Label htmlFor={`${pos.key}_snowstorm`} className='sr-only'>
-                      Snowstorm
+                      {t('timegrapherSnowstormLabel')}
                     </Label>
                   </td>
                   <td className='px-3 py-2'>
@@ -763,7 +817,7 @@ function AddSessionForm({
                       {...register(`${pos.key}_rate`)}
                       type='number'
                       step='0.1'
-                      placeholder='e.g. +2.1'
+                      placeholder={t('timegrapherPlaceholderRate')}
                       className={cn(inputCls, 'w-full')}
                       disabled={isSnowstorm}
                     />
@@ -773,7 +827,7 @@ function AddSessionForm({
                       {...register(`${pos.key}_amp`)}
                       type='number'
                       step='1'
-                      placeholder='e.g. 298'
+                      placeholder={t('timegrapherPlaceholderAmplitude')}
                       className={cn(inputCls, 'w-full')}
                       disabled={isSnowstorm}
                     />
@@ -783,7 +837,7 @@ function AddSessionForm({
                       {...register(`${pos.key}_be`)}
                       type='number'
                       step='0.1'
-                      placeholder='e.g. 0.3'
+                      placeholder={t('timegrapherPlaceholderBe')}
                       className={cn(inputCls, 'w-full')}
                       disabled={isSnowstorm}
                     />
@@ -801,14 +855,16 @@ function AddSessionForm({
           disabled={createReading.isPending}
           className='inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-mono text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity'
         >
-          {createReading.isPending ? 'Saving…' : 'Save Session'}
+          {createReading.isPending
+            ? t('timegrapherSaving')
+            : t('timegrapherSaveSession')}
         </button>
         <button
           type='button'
           onClick={onCancel}
           className='inline-flex items-center rounded-md border border-border px-4 py-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent cursor-pointer'
         >
-          Cancel
+          {t('cancel')}
         </button>
       </div>
     </form>
@@ -818,6 +874,8 @@ function AddSessionForm({
 // ── Main page ────────────────────────────────────────────────────────────────
 
 function TimegrapherPage() {
+  const { t } = useTranslation();
+  const statusLabels = getStatusLabels(t);
   const { watchId } = Route.useParams();
   const aiFeatureFlag = useFeatureFlagEnabled(
     FeatureFlags.TimegrapherAIAnalysis,
@@ -846,7 +904,9 @@ function TimegrapherPage() {
 
   if (watchLoading || readingsLoading) {
     return (
-      <div className='text-sm font-mono text-muted-foreground'>Loading…</div>
+      <div className='text-sm font-mono text-muted-foreground'>
+        {t('equipmentLoading')}
+      </div>
     );
   }
 
@@ -857,9 +917,11 @@ function TimegrapherPage() {
           to='/watches'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Watches
+          {t('watchesBackToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>Watch not found.</div>
+        <div className='text-sm text-red-400 font-mono'>
+          {t('equipmentItemNotFound')}
+        </div>
       </div>
     );
   }
@@ -883,7 +945,7 @@ function TimegrapherPage() {
         params={{ watchId }}
         className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
       >
-        ← Back to Watch
+        {t('timegrapherBackToWatch')}
       </Link>
 
       {/* Header */}
@@ -897,7 +959,9 @@ function TimegrapherPage() {
             {latest && (
               <>
                 <span className='text-muted-foreground/40'>·</span>
-                <span>Lift Angle {latest.lift_angle}°</span>
+                <span>
+                  {t('timegrapherLiftAngleShort')} {latest.lift_angle}{t('unitDeg')}
+                </span>
               </>
             )}
             <span className='text-muted-foreground/40'>·</span>
@@ -909,7 +973,7 @@ function TimegrapherPage() {
             onClick={() => setShowForm((v) => !v)}
             className='inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-mono text-primary-foreground hover:opacity-90 transition-opacity'
           >
-            + Add Session
+            {t('timegrapherAddSession')}
           </button>
         )}
       </div>
@@ -919,55 +983,55 @@ function TimegrapherPage() {
         <div className='grid grid-cols-2 sm:grid-cols-5 gap-3'>
           <KpiCard
             highlight
-            label='Latest DU Rate'
+            label={t('timegrapherKpiLatestDuRate')}
             value={fmtRate(latest?.du_rate)}
             valueClass={rateClass(latest?.du_rate)}
-            sub='s/d dial up'
+            sub={t('timegrapherKpiSubSdDialUp')}
           />
           <KpiCard
-            label='Avg Amplitude'
-            value={avgAmp !== null ? `${fmtNum(avgAmp)}°` : '—'}
-            sub='target ≥ 270°'
+            label={t('timegrapherKpiAvgAmplitude')}
+            value={avgAmp !== null ? `${fmtNum(avgAmp)}${t('unitDeg')}` : '—'}
+            sub={t('timegrapherKpiTargetAmplitude')}
           />
           <KpiCard
-            label='Avg Beat Error'
-            value={avgBe !== null ? `${fmtNum(avgBe, 1)} ms` : '—'}
-            sub='target ≤ 0.5'
+            label={t('timegrapherKpiAvgBeatError')}
+            value={avgBe !== null ? `${fmtNum(avgBe, 1)} ${t('unitMs')}` : '—'}
+            sub={t('timegrapherKpiTargetBe')}
           />
           <KpiCard
-            label='Mean Rate'
+            label={t('timegrapherKpiMeanRate')}
             value={fmtRate(meanRate)}
             valueClass={rateClass(meanRate ?? undefined)}
-            sub='avg all positions'
+            sub={t('timegrapherKpiAvgAllPositions')}
           />
           <KpiCard
-            label='Sessions'
+            label={t('timegrapherKpiSessions')}
             value={readings.length}
-            sub={`${readings.length} total`}
+            sub={t('timegrapherKpiSessionsTotal', { count: readings.length })}
           />
         </div>
       ) : (
         <div className='grid grid-cols-2 sm:grid-cols-3 gap-3'>
           <KpiCard
             highlight
-            label='Avg Rate'
+            label={t('timegrapherKpiAvgRate')}
             value={fmtRate(latest?.du_rate)}
             valueClass={rateClass(latest?.du_rate)}
-            sub='s/d'
+            sub={t('timegrapherKpiSubSd')}
           />
           <KpiCard
-            label='Avg Amplitude'
+            label={t('timegrapherKpiAvgAmplitude')}
             value={
               latest?.du_amp !== undefined && latest?.du_amp !== null
-                ? `${fmtNum(latest.du_amp)}°`
+                ? `${fmtNum(latest.du_amp)}${t('unitDeg')}`
                 : '—'
             }
-            sub='target ≥ 270°'
+            sub={t('timegrapherKpiTargetAmplitude')}
           />
           <KpiCard
-            label='Sessions'
+            label={t('timegrapherKpiSessions')}
             value={readings.length}
-            sub={`${readings.length} total`}
+            sub={t('timegrapherKpiSessionsTotal', { count: readings.length })}
           />
         </div>
       )}
@@ -989,14 +1053,13 @@ function TimegrapherPage() {
       {!isPro && bannerDismissed && (
         <div className='flex items-center gap-3 rounded-lg border border-amber-500/40 bg-amber-950/80 px-4 py-3'>
           <span className='font-mono text-[11px] text-amber-200'>
-            Upgrade to Pro for 6-position logging (DU · DD · CU · CD · CL · CR)
-            and delta tracking.
+            {t('timegrapherUpgradeTo6Pos')}
           </span>
           <Link
             to='/pro'
             className='shrink-0 font-mono text-[10px] tracking-widest uppercase px-3 py-1 rounded border border-amber-500/60 bg-amber-500/20 text-amber-200 hover:bg-amber-500/35 transition-colors'
           >
-            View Pro
+            {t('timegrapherViewProLink')}
           </Link>
         </div>
       )}
@@ -1004,7 +1067,7 @@ function TimegrapherPage() {
       {/* Add session form */}
       {showForm && user && (
         <div className='rounded-xl border border-border bg-card p-5'>
-          <SectionLabel>New Session</SectionLabel>
+          <SectionLabel>{t('timegrapherNewSessionSection')}</SectionLabel>
           <div className='mt-3'>
             {isPro ? (
               <AddSessionForm
@@ -1028,20 +1091,19 @@ function TimegrapherPage() {
       {/* Sessions table */}
       <div>
         <SectionLabel>
-          {'Session History · '}
-          {readings.length}
-          {readings.length === 1 ? ' session' : ' sessions'}
+          {t('timegrapherSessionHistory')} ·{' '}
+          {t('timegrapherSessionCount', { count: readings.length })}
         </SectionLabel>
         <div className='mt-3'>
           {readings.length === 0 ? (
             <div className='rounded-xl border border-border bg-card px-5 py-8 text-center font-mono text-xs text-muted-foreground'>
-              No timegrapher sessions yet.{' '}
+              {t('watchNoTimegrapherSessions')}{' '}
               {user && (
                 <button
                   onClick={() => setShowForm(true)}
                   className='text-primary hover:text-primary/80 bg-transparent border-none cursor-pointer font-mono text-xs p-0'
                 >
-                  Log the first one →
+                  {t('watchLogFirstSession')}
                 </button>
               )}
             </div>
@@ -1049,17 +1111,17 @@ function TimegrapherPage() {
             <TableWrap>
               <thead>
                 <tr>
-                  <Th>Date</Th>
-                  <Th>Type</Th>
-                  <Th>Lift °</Th>
+                  <Th>{t('timegrapherColDate')}</Th>
+                  <Th>{t('timegrapherColType')}</Th>
+                  <Th>{t('timegrapherLiftAngleCol')}</Th>
                   <Th>DU</Th>
                   <Th>DD</Th>
                   <Th>CU</Th>
                   <Th>CD</Th>
                   <Th>CL</Th>
                   <Th>CR</Th>
-                  <Th>Mean</Th>
-                  <Th>Notes</Th>
+                  <Th>{t('timegrapherColMean')}</Th>
+                  <Th>{t('timegrapherColNotes')}</Th>
                   {user && aiFeatureFlag && <Th>{''}</Th>}
                   {user && <Th>{''}</Th>}
                 </tr>
@@ -1091,13 +1153,14 @@ function TimegrapherPage() {
                           isSelected && 'text-primary',
                         )}
                       >
+                        {/* eslint-disable-next-line i18next/no-literal-string */}
                         {format(new Date(r.created), 'MMM d, yyyy')}
                       </Td>
                       <Td className='font-mono text-[11px] text-muted-foreground'>
-                        {STATUS_LABELS[r.status]}
+                        {statusLabels[r.status]}
                       </Td>
                       <Td className='font-mono text-[11px] text-muted-foreground'>
-                        {r.lift_angle}°
+                        {r.lift_angle}{t('unitDeg')}
                       </Td>
                       {rates.map((rate, i) => (
                         <Td
@@ -1130,7 +1193,7 @@ function TimegrapherPage() {
                                 setAnalysisReading(r);
                               }}
                               className='font-mono text-[9px] tracking-widest uppercase px-2 py-1 rounded bg-amber-500 text-zinc-950 font-semibold hover:bg-amber-400 transition-colors cursor-pointer'
-                              aria-label='AI analysis'
+                              aria-label={t('timegrapherAiAnalysis')}
                             >
                               AI
                             </button>
@@ -1142,13 +1205,13 @@ function TimegrapherPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (confirm('Delete this session?')) {
+                              if (confirm(t('timegrapherDeleteConfirm'))) {
                                 deleteReading.mutate(r.id);
                                 if (selectedId === r.id) setSelectedId(null);
                               }
                             }}
                             className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                            aria-label='Delete session'
+                            aria-label={t('timegrapherDeleteSession')}
                           >
                             ×
                           </button>
@@ -1163,12 +1226,12 @@ function TimegrapherPage() {
             <TableWrap>
               <thead>
                 <tr>
-                  <Th>Date</Th>
-                  <Th>Type</Th>
-                  <Th>Lift °</Th>
-                  <Th>Avg Rate</Th>
-                  <Th>Avg Amplitude</Th>
-                  <Th>Beat Error</Th>
+                  <Th>{t('timegrapherColDate')}</Th>
+                  <Th>{t('timegrapherColType')}</Th>
+                  <Th>{t('timegrapherLiftAngleCol')}</Th>
+                  <Th>{t('timegrapherColAvgRate')}</Th>
+                  <Th>{t('timegrapherColAvgAmplitude')}</Th>
+                  <Th>{t('timegrapherColBeatError')}</Th>
                   {user && aiFeatureFlag && <Th>{''}</Th>}
                   {user && <Th>{''}</Th>}
                 </tr>
@@ -1177,13 +1240,14 @@ function TimegrapherPage() {
                 {readings.map((r) => (
                   <TableRow key={r.id}>
                     <Td className='font-mono text-[11px]'>
+                      {/* eslint-disable-next-line i18next/no-literal-string */}
                       {format(new Date(r.created), 'MMM d, yyyy')}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
-                      {STATUS_LABELS[r.status]}
+                      {statusLabels[r.status]}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
-                      {r.lift_angle}°
+                      {r.lift_angle}{t('unitDeg')}
                     </Td>
                     <Td
                       className={cn(
@@ -1195,24 +1259,25 @@ function TimegrapherPage() {
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
                       {r.du_amp !== undefined && r.du_amp !== null
-                        ? `${fmtNum(r.du_amp)}°`
+                        ? `${fmtNum(r.du_amp)}${t('unitDeg')}`
                         : '—'}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
                       {r.du_be !== undefined && r.du_be !== null
-                        ? `${fmtNum(r.du_be, 1)} ms`
+                        ? `${fmtNum(r.du_be, 1)} ${t('unitMs')}`
                         : '—'}
                     </Td>
                     {user && showAiAnalysis && (
                       <Td>
                         <div className='flex items-center gap-2'>
+                          {/* eslint-disable-next-line i18next/no-literal-string */}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               setShowAiUpsell(true);
                             }}
                             className='font-mono text-[9px] tracking-widest uppercase px-2 py-1 rounded bg-amber-500/15 text-amber-400/70 border border-amber-500/30 hover:bg-amber-500/25 hover:text-amber-400 transition-colors cursor-pointer'
-                            aria-label='AI analysis (Pro)'
+                            aria-label={t('timegrapherAiAnalysisPro')}
                           >
                             ✦ AI
                           </button>
@@ -1224,12 +1289,12 @@ function TimegrapherPage() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm('Delete this session?')) {
+                            if (confirm(t('timegrapherDeleteConfirm'))) {
                               deleteReading.mutate(r.id);
                             }
                           }}
                           className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                          aria-label='Delete session'
+                          aria-label={t('timegrapherDeleteSession')}
                         >
                           ×
                         </button>
@@ -1248,25 +1313,26 @@ function TimegrapherPage() {
         <DialogContent className='sm:max-w-sm'>
           <DialogHeader>
             <DialogTitle className='font-serif text-base flex items-center gap-2'>
-              <span className='text-amber-400'>✦</span> AI Timegrapher Analysis
+              {/* eslint-disable-next-line i18next/no-literal-string */}
+              <span className='text-amber-400'>✦</span>{' '}
+              {t('timegrapherAiDialogTitle')}
             </DialogTitle>
           </DialogHeader>
           <div className='space-y-3 py-1'>
             <p className='font-mono text-[11px] leading-relaxed text-muted-foreground'>
-              Pro members get an instant AI-generated interpretation of each
-              session — explaining what the numbers mean, flagging issues, and
-              suggesting next steps.
+              {t('timegrapherAiDialogDesc')}
             </p>
             <ul className='space-y-1.5'>
               {[
-                'Rate deviation diagnosis across all 6 positions',
-                'Amplitude & beat error interpretation',
-                'Service recommendations based on the data',
+                t('timegrapherAnalysisBullet1'),
+                t('timegrapherAnalysisBullet2'),
+                t('timegrapherAnalysisBullet3'),
               ].map((item) => (
                 <li
                   key={item}
                   className='flex items-start gap-2 font-mono text-[11px] text-foreground'
                 >
+                  {/* eslint-disable-next-line i18next/no-literal-string */}
                   <span className='mt-px text-amber-400 shrink-0'>✦</span>
                   {item}
                 </li>
@@ -1278,7 +1344,7 @@ function TimegrapherPage() {
               to='/pro'
               className='inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-[11px] font-mono text-zinc-950 font-semibold hover:bg-amber-400 transition-colors'
             >
-              Upgrade to Pro →
+              {t('timegrapherUpgradeToPro')}
             </Link>
           </DialogFooter>
         </DialogContent>
@@ -1294,10 +1360,11 @@ function TimegrapherPage() {
         <DialogContent className='sm:max-w-lg flex flex-col max-h-[80vh]'>
           <DialogHeader>
             <DialogTitle className='font-serif text-base'>
-              AI Analysis
+              {t('timegrapherAiAnalysisTitle')}
               {analysisReading && (
                 <span className='ml-2 font-mono text-[10px] font-normal text-muted-foreground'>
-                  {STATUS_LABELS[analysisReading.status]} ·{' '}
+                  {/* eslint-disable-next-line i18next/no-literal-string */}
+                  {statusLabels[analysisReading.status]} ·{' '}
                   {format(new Date(analysisReading.created), 'MMM d, yyyy')}
                 </span>
               )}
@@ -1312,7 +1379,7 @@ function TimegrapherPage() {
                 </p>
               ) : (
                 <p className='font-mono text-xs text-muted-foreground'>
-                  No analysis yet. Generate one below.
+                  {t('timegrapherNoAnalysis')}
                 </p>
               )}
             </div>
@@ -1334,8 +1401,8 @@ function TimegrapherPage() {
                 className='inline-flex items-center gap-1.5 rounded-md bg-amber-500 px-3 py-1.5 text-[11px] font-mono text-zinc-950 font-medium hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {analyzeReading.isPending
-                  ? 'Analyzing…'
-                  : '✦ Generate Analysis'}
+                  ? t('timegrapherAnalyzing')
+                  : t('timegrapherGenerateAnalysis')}
               </button>
             )}
           </DialogFooter>

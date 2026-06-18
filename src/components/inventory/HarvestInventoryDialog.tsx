@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,7 @@ type HarvestInventoryDialogProps = {
 };
 
 export function HarvestInventoryDialog({ open, parts, onConfirm, onSkip }: HarvestInventoryDialogProps) {
+  const { t } = useTranslation();
   const [checked, setChecked] = useState<Set<string>>(new Set(parts));
 
   useEffect(() => {
@@ -37,9 +39,9 @@ export function HarvestInventoryDialog({ open, parts, onConfirm, onSkip }: Harve
     <Dialog open={open}>
       <DialogContent showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Add Parts to Inventory?</DialogTitle>
+          <DialogTitle>{t('harvestDialogTitle')}</DialogTitle>
           <DialogDescription>
-            Select which harvested parts to add to your spare parts inventory.
+            {t('harvestDialogDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -61,10 +63,10 @@ export function HarvestInventoryDialog({ open, parts, onConfirm, onSkip }: Harve
 
         <DialogFooter>
           <Button variant='outline' onClick={onSkip}>
-            Skip
+            {t('harvestSkip')}
           </Button>
           <Button onClick={() => onConfirm([...checked])} disabled={checked.size === 0}>
-            Add to Inventory
+            {t('harvestAddSelected')}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -44,21 +46,27 @@ export const Route = createFileRoute('/wishlist')({
   component: WishlistPage,
 });
 
-const PRIORITY_LABELS: Record<WishlistPriority, string> = {
-  low: 'Low',
-  medium: 'Medium',
-  high: 'High',
-};
+function getPriorityLabels(t: TFunction): Record<WishlistPriority, string> {
+  return {
+    low: t('wishlistPriorityLow'),
+    medium: t('wishlistPriorityMedium'),
+    high: t('wishlistPriorityHigh'),
+  };
+}
 
-const STATUS_LABELS: Record<WishlistStatus, string> = {
-  wanted: 'Wanted',
-  watching: 'Watching',
-  acquired: 'Acquired',
-};
+function getStatusLabels(t: TFunction): Record<WishlistStatus, string> {
+  return {
+    wanted: t('wishlistStatusWanted'),
+    watching: t('wishlistStatusWatching'),
+    acquired: t('wishlistStatusAcquired'),
+  };
+}
 
 const WISHLIST_STATUSES: WishlistStatus[] = ['wanted', 'watching', 'acquired'];
 
 function WishlistStatusPicker({ item }: { item: WishlistItem }) {
+  const { t } = useTranslation();
+  const statusLabels = getStatusLabels(t);
   const [open, setOpen] = useState(false);
   const updateItem = useUpdateWishlistItem();
   return (
@@ -70,13 +78,13 @@ function WishlistStatusPicker({ item }: { item: WishlistItem }) {
             statusClass(item.status),
           )}
         >
-          {STATUS_LABELS[item.status]}
+          {statusLabels[item.status]}
         </button>
       </DialogTrigger>
       <DialogContent className='sm:max-w-xs'>
         <DialogHeader>
           <DialogTitle className='font-mono text-sm font-medium'>
-            Update Status
+            {t('wishlistUpdateStatus')}
           </DialogTitle>
         </DialogHeader>
         <div className='space-y-1.5 py-1'>
@@ -101,11 +109,11 @@ function WishlistStatusPicker({ item }: { item: WishlistItem }) {
                   statusClass(s),
                 )}
               >
-                {STATUS_LABELS[s]}
+                {statusLabels[s]}
               </span>
               {item.status === s && (
                 <span className='font-mono text-[10px] text-muted-foreground'>
-                  current
+                  {t('wishlistCurrent')}
                 </span>
               )}
             </button>
@@ -139,13 +147,6 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>;
 
-const FILTER_TABS: { id: WishlistStatus | 'all'; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'wanted', label: 'Wanted' },
-  { id: 'watching', label: 'Watching' },
-  { id: 'acquired', label: 'Acquired' },
-];
-
 function AddWatchForm({
   userId,
   onSuccess,
@@ -155,6 +156,7 @@ function AddWatchForm({
   onSuccess: () => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const createItem = useCreateWishlistItem();
   const { control, handleSubmit, reset } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -188,11 +190,11 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='make'>Make</FieldLabel>
+                <FieldLabel htmlFor='make'>{t('wishlistLabelMake')}</FieldLabel>
                 <Input
                   {...field}
                   id='make'
-                  placeholder='e.g. Omega'
+                  placeholder={t('wishlistPlaceholderMake')}
                   aria-invalid={fieldState.invalid}
                   className={inputCls}
                 />
@@ -209,11 +211,11 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='model'>Model</FieldLabel>
+                <FieldLabel htmlFor='model'>{t('wishlistLabelModel')}</FieldLabel>
                 <Input
                   {...field}
                   id='model'
-                  placeholder='e.g. Seamaster 300'
+                  placeholder={t('wishlistPlaceholderModel')}
                   aria-invalid={fieldState.invalid}
                   className={inputCls}
                 />
@@ -230,11 +232,11 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='reference'>Reference</FieldLabel>
+                <FieldLabel htmlFor='reference'>{t('wishlistLabelReference')}</FieldLabel>
                 <Input
                   {...field}
                   id='reference'
-                  placeholder='Optional'
+                  placeholder={t('optional')}
                   aria-invalid={fieldState.invalid}
                   className={inputCls}
                 />
@@ -251,13 +253,13 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='target_price'>Target Price</FieldLabel>
+                <FieldLabel htmlFor='target_price'>{t('wishlistLabelTargetPrice')}</FieldLabel>
                 <Input
                   {...field}
                   id='target_price'
                   type='number'
                   step='0.01'
-                  placeholder='Optional'
+                  placeholder={t('optional')}
                   aria-invalid={fieldState.invalid}
                   className={inputCls}
                 />
@@ -276,19 +278,19 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='priority'>Priority</FieldLabel>
+                <FieldLabel htmlFor='priority'>{t('wishlistPriorityLabel')}</FieldLabel>
                 <Select
                   name={field.name}
                   value={field.value}
                   onValueChange={field.onChange}
                 >
                   <SelectTrigger id='priority' className={inputCls}>
-                    <SelectValue placeholder='Priority' />
+                    <SelectValue placeholder={t('wishlistPriorityLabel')} />
                   </SelectTrigger>
                   <SelectContent position='popper'>
-                    <SelectItem value='high'>High</SelectItem>
-                    <SelectItem value='medium'>Medium</SelectItem>
-                    <SelectItem value='low'>Low</SelectItem>
+                    <SelectItem value='high'>{t('wishlistPriorityHigh')}</SelectItem>
+                    <SelectItem value='medium'>{t('wishlistPriorityMedium')}</SelectItem>
+                    <SelectItem value='low'>{t('wishlistPriorityLow')}</SelectItem>
                   </SelectContent>
                 </Select>
                 {fieldState.invalid && (
@@ -304,11 +306,11 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='notes'>Notes</FieldLabel>
+                <FieldLabel htmlFor='notes'>{t('wishlistLabelNotes')}</FieldLabel>
                 <Input
                   {...field}
                   id='notes'
-                  placeholder='Optional — source, condition notes, price range…'
+                  placeholder={t('wishlistPlaceholderNotes')}
                   aria-invalid={fieldState.invalid}
                   className={inputCls}
                 />
@@ -326,14 +328,14 @@ function AddWatchForm({
           disabled={createItem.isPending}
           className='inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-mono text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity'
         >
-          {createItem.isPending ? 'Adding…' : 'Add Watch'}
+          {createItem.isPending ? t('wishlistAdding') : t('addWatch')}
         </button>
         <button
           type='button'
           onClick={onCancel}
           className='inline-flex items-center rounded-md border border-border px-4 py-2 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent cursor-pointer'
         >
-          Cancel
+          {t('cancel')}
         </button>
       </div>
     </form>
@@ -341,6 +343,9 @@ function AddWatchForm({
 }
 
 function WishlistPage() {
+  const { t } = useTranslation();
+  const statusLabels = getStatusLabels(t);
+  const priorityLabels = getPriorityLabels(t);
   const { data: items = [], isLoading } = useWishlist();
   const { data: user } = useUser();
   const { isPro } = useSubscription();
@@ -348,6 +353,13 @@ function WishlistPage() {
 
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState<WishlistStatus | 'all'>('all');
+
+  const filterTabs: { id: WishlistStatus | 'all'; label: string }[] = [
+    { id: 'all', label: t('filterAll') },
+    { id: 'wanted', label: t('wishlistStatusWanted') },
+    { id: 'watching', label: t('wishlistStatusWatching') },
+    { id: 'acquired', label: t('wishlistStatusAcquired') },
+  ];
 
   if (!isPro) {
     return (
@@ -358,11 +370,10 @@ function WishlistPage() {
           </div>
           <div className='space-y-1'>
             <h2 className='font-serif font-semibold text-foreground'>
-              Watch Wishlist
+              {t('wishlistProTitle')}
             </h2>
             <p className='font-mono text-xs text-muted-foreground max-w-xs'>
-              Track watches you want to acquire and restore. Set price targets,
-              add notes, and keep your pipeline organized.
+              {t('wishlistProDesc')}
             </p>
           </div>
           {user && <UpgradeButton pbUserId={user.id} />}
@@ -373,7 +384,7 @@ function WishlistPage() {
 
   if (isLoading) {
     return (
-      <div className='text-sm font-mono text-muted-foreground'>Loading…</div>
+      <div className='text-sm font-mono text-muted-foreground'>{t('loading')}</div>
     );
   }
 
@@ -392,10 +403,10 @@ function WishlistPage() {
       <div className='flex flex-wrap items-center justify-between gap-3'>
         <div>
           <h1 className='text-2xl font-serif font-semibold text-foreground'>
-            Wishlist
+            {t('wishlistTitle')}
           </h1>
           <p className='mt-0.5 font-mono text-[11px] text-muted-foreground'>
-            Watches you want to acquire and restore
+            {t('wishlistSubtitle')}
           </p>
         </div>
         {user && (
@@ -403,25 +414,25 @@ function WishlistPage() {
             onClick={() => setShowForm((v) => !v)}
             className='inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-mono text-primary-foreground hover:opacity-90 transition-opacity'
           >
-            + Add Watch
+            {t('wishlistAddWatch')}
           </button>
         )}
       </div>
 
       <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-        <KpiCard highlight label='Wanted' value={wanted} sub='target acquisitions' />
-        <KpiCard label='Watching' value={watching} sub='monitoring price' />
-        <KpiCard label='Acquired' value={acquired} sub='secured' />
+        <KpiCard highlight label={t('wishlistStatusWanted')} value={wanted} sub={t('wishlistKpiSubWanted')} />
+        <KpiCard label={t('wishlistStatusWatching')} value={watching} sub={t('wishlistKpiSubWatching')} />
+        <KpiCard label={t('wishlistStatusAcquired')} value={acquired} sub={t('wishlistKpiSubAcquired')} />
         <KpiCard
-          label='Target Spend'
+          label={t('wishlistKpiTargetSpend')}
           value={fmt(totalTarget)}
-          sub='estimated pipeline cost'
+          sub={t('wishlistKpiSubTargetSpend')}
         />
       </div>
 
       {showForm && user && (
         <div className='rounded-xl border border-border bg-card p-5'>
-          <SectionLabel>New Wishlist Entry</SectionLabel>
+          <SectionLabel>{t('wishlistNewEntry')}</SectionLabel>
           <div className='mt-3'>
             <AddWatchForm
               userId={user.id}
@@ -434,7 +445,7 @@ function WishlistPage() {
 
       {/* Filter tabs */}
       <div className='flex gap-1.5 flex-wrap'>
-        {FILTER_TABS.map((tab) => (
+        {filterTabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setFilter(tab.id)}
@@ -457,41 +468,40 @@ function WishlistPage() {
 
       <div>
         <SectionLabel>
-          {filter === 'all' ? 'All Watches' : STATUS_LABELS[filter as WishlistStatus]}
+          {filter === 'all' ? t('wishlistAllWatches') : statusLabels[filter as WishlistStatus]}
           {' · '}
-          {displayed.length}
-          {displayed.length === 1 ? ' watch' : ' watches'}
+          {t('wishlistWatchCount', { count: displayed.length })}
         </SectionLabel>
         <div className='mt-3'>
           {displayed.length === 0 ? (
             <div className='rounded-xl border border-border bg-card px-5 py-8 text-center font-mono text-xs text-muted-foreground'>
               {filter === 'all' ? (
                 <>
-                  No watches on your wishlist yet.{' '}
+                  {t('wishlistEmpty')}{' '}
                   {user && (
                     <button
                       onClick={() => setShowForm(true)}
                       className='text-primary hover:text-primary/80 bg-transparent border-none cursor-pointer font-mono text-xs p-0'
                     >
-                      Add the first one →
+                      {t('wishlistAddFirst')}
                     </button>
                   )}
                 </>
               ) : (
-                `No ${STATUS_LABELS[filter as WishlistStatus].toLowerCase()} watches.`
+                t('wishlistNoItems', { status: statusLabels[filter as WishlistStatus].toLowerCase() })
               )}
             </div>
           ) : (
             <TableWrap>
               <thead>
                 <tr>
-                  <Th>Watch</Th>
-                  <Th>Reference</Th>
-                  <Th>Priority</Th>
-                  <Th>Target Price</Th>
-                  <Th>Notes</Th>
-                  <Th>Added</Th>
-                  <Th>Status</Th>
+                  <Th>{t('wishlistColWatch')}</Th>
+                  <Th>{t('wishlistColReference')}</Th>
+                  <Th>{t('wishlistColPriority')}</Th>
+                  <Th>{t('wishlistColTargetPrice')}</Th>
+                  <Th>{t('wishlistColNotes')}</Th>
+                  <Th>{t('wishlistColAdded')}</Th>
+                  <Th>{t('wishlistColStatus')}</Th>
                   {user && <Th>{''}</Th>}
                 </tr>
               </thead>
@@ -511,7 +521,7 @@ function WishlistPage() {
                           priorityClass(item.priority),
                         )}
                       >
-                        {PRIORITY_LABELS[item.priority]}
+                        {priorityLabels[item.priority]}
                       </span>
                     </Td>
                     <Td className='font-mono text-[11px] text-foreground'>
@@ -521,6 +531,7 @@ function WishlistPage() {
                       {item.notes ?? '—'}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
+                      {/* eslint-disable-next-line i18next/no-literal-string */}
                       {format(new Date(item.created), 'MMM d, yyyy')}
                     </Td>
                     <Td>
@@ -530,12 +541,12 @@ function WishlistPage() {
                       <Td>
                         <button
                           onClick={() => {
-                            if (confirm('Remove from wishlist?')) {
+                            if (confirm(t('wishlistDeleteConfirm'))) {
                               deleteItem.mutate(item.id);
                             }
                           }}
                           className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                          aria-label='Delete item'
+                          aria-label={t('wishlistDeleteAriaLabel')}
                         >
                           ×
                         </button>

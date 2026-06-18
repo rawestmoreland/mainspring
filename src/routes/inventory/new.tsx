@@ -6,6 +6,8 @@ import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { usePostHog } from '@posthog/react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { InventoryCategory, InventoryItem } from '#/types';
 import { Btn } from '#/components/primitives/Button';
 import { numberField } from '#/lib/helpers';
@@ -42,6 +44,24 @@ export const Route = createFileRoute('/inventory/new')({
   component: NewInventoryRoute,
 });
 
+const CATEGORY_KEY_MAP = {
+  movement: 'categoryMovement',
+  harvested_part: 'categoryHarvestedPart',
+  mainspring: 'categoryMainspring',
+  crystal: 'categoryCrystal',
+  strap: 'categoryStrap',
+  bracelet: 'categoryBracelet',
+  crown: 'categoryCrown',
+  gasket: 'categoryGasket',
+  hand: 'categoryHand',
+  dial: 'categoryDial',
+  bezel: 'categoryBezel',
+  case: 'categoryCase',
+  tool: 'categoryTool',
+  oil: 'categoryOil',
+  other: 'categoryOther',
+} as const satisfies Record<InventoryCategory, string>;
+
 const INVENTORY_CATEGORIES: readonly InventoryCategory[] = [
   InventoryCategory.MOVEMENT,
   InventoryCategory.HARVESTED_PART,
@@ -60,46 +80,54 @@ const INVENTORY_CATEGORIES: readonly InventoryCategory[] = [
   InventoryCategory.OTHER,
 ] as const;
 
-const formSchema = z
-  .object({
-    name: z.string().trim().max(256),
-    caliber: z.string().trim().max(256),
-    manufacturer: z.string().trim().max(256),
-    jewels: z.number().int().min(0).optional(),
-    category: z.enum(INVENTORY_CATEGORIES),
-    qty: numberField({ min: 0, message: 'Quantity must be 0 or more' }),
-    unit_cost: numberField({ min: 0, message: 'Unit cost must be 0 or more' }),
-    supplier: z.string(),
-    notes: z.string(),
-    is_donor: z.boolean(),
-    missing_parts: z.array(z.string()),
-  })
-  .superRefine((data, ctx) => {
-    if (data.is_donor) {
-      if (!data.caliber) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['caliber'],
-          message: 'Required',
-        });
+function makeFormSchema(t: TFunction) {
+  return z
+    .object({
+      name: z.string().trim().max(256),
+      caliber: z.string().trim().max(256),
+      manufacturer: z.string().trim().max(256),
+      jewels: z.number().int().min(0).optional(),
+      category: z.enum(INVENTORY_CATEGORIES),
+      qty: numberField({ min: 0, message: t('validationQtyMin') }),
+      unit_cost: numberField({ min: 0, message: t('validationUnitCostMin') }),
+      supplier: z.string(),
+      notes: z.string(),
+      is_donor: z.boolean(),
+      missing_parts: z.array(z.string()),
+    })
+    .superRefine((data, ctx) => {
+      if (data.is_donor) {
+        if (!data.caliber) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['caliber'],
+            message: t('validationCaliberRequired'),
+          });
+        }
+        if (!data.manufacturer) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['manufacturer'],
+            message: t('validationManufacturerRequired'),
+          });
+        }
+      } else {
+        if (!data.name) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['name'],
+            message: t('validationPartNameRequired'),
+          });
+        }
       }
-      if (!data.manufacturer) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['manufacturer'],
-          message: 'Required',
-        });
-      }
-    } else {
-      if (!data.name) {
-        ctx.addIssue({ code: 'custom', path: ['name'], message: 'Required' });
-      }
-    }
-  });
+    });
+}
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<ReturnType<typeof makeFormSchema>>;
 
 function NewInventoryRoute() {
+  const { t } = useTranslation();
+  const formSchema = useMemo(() => makeFormSchema(t), [t]);
   const navigate = useNavigate();
   const posthog = usePostHog();
   const createInventory = useCreateInventory();
@@ -241,13 +269,13 @@ function NewInventoryRoute() {
             to='/inventory'
             className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
           >
-            ← Back to Inventory
+            {t('inventoryBackToInventory')}
           </Link>
           <h1 className='mt-3 text-2xl font-serif font-semibold text-foreground'>
-            Add Item
+            {t('inventoryAddItem')}
           </h1>
           <p className='mt-1 text-xs font-mono text-muted-foreground tracking-wide'>
-            Add a part to your inventory
+            {t('inventoryAddItemSub')}
           </p>
         </div>
 
@@ -272,12 +300,12 @@ function NewInventoryRoute() {
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor='name'>Name</FieldLabel>
+                    <FieldLabel htmlFor='name'>{t('colName')}</FieldLabel>
                     <Input
                       {...field}
                       id='name'
                       aria-invalid={fieldState.invalid}
-                      placeholder='Mainspring'
+                      placeholder={t('placeholderPartName')}
                       autoComplete='off'
                     />
                     {fieldState.invalid && (
@@ -296,7 +324,7 @@ function NewInventoryRoute() {
                     data-invalid={fieldState.invalid}
                   >
                     <FieldContent>
-                      <FieldLabel htmlFor='category'>Category</FieldLabel>
+                      <FieldLabel htmlFor='category'>{t('fieldCategory')}</FieldLabel>
                       {fieldState.invalid && (
                         <FieldError errors={[fieldState.error]} />
                       )}
@@ -311,12 +339,12 @@ function NewInventoryRoute() {
                         aria-invalid={fieldState.invalid}
                         className='min-w-30'
                       >
-                        <SelectValue placeholder='select' />
+                        <SelectValue placeholder={t('placeholderSelect')} />
                       </SelectTrigger>
                       <SelectContent position='item-aligned'>
                         {INVENTORY_CATEGORIES.map((c) => (
                           <SelectItem key={c} value={c}>
-                            {c.replace('_', ' ').toUpperCase()}
+                            {t(CATEGORY_KEY_MAP[c])}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -340,10 +368,10 @@ function NewInventoryRoute() {
                     className='size-4 rounded border-input bg-transparent accent-amber-500 cursor-pointer'
                   />
                   <span className='font-mono text-xs text-foreground'>
-                    Donor movement
+                    {t('inventoryDonorMovementLabel')}
                   </span>
                   <span className='font-mono text-[10px] text-muted-foreground'>
-                    (cannibalize for parts)
+                    {t('inventoryDonorMovementHint')}
                   </span>
                 </label>
               )}
@@ -358,12 +386,12 @@ function NewInventoryRoute() {
                   control={control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor='caliber'>Caliber</FieldLabel>
+                      <FieldLabel htmlFor='caliber'>{t('fieldCaliber')}</FieldLabel>
                       <Input
                         {...field}
                         id='caliber'
                         aria-invalid={fieldState.invalid}
-                        placeholder='ETA 2824-2'
+                        placeholder={t('placeholderCaliber')}
                         autoComplete='off'
                       />
                       {fieldState.invalid && (
@@ -379,13 +407,13 @@ function NewInventoryRoute() {
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
                       <FieldLabel htmlFor='manufacturer'>
-                        Manufacturer
+                        {t('fieldManufacturer')}
                       </FieldLabel>
                       <Input
                         {...field}
                         id='manufacturer'
                         aria-invalid={fieldState.invalid}
-                        placeholder='ETA'
+                        placeholder={t('placeholderManufacturer')}
                         autoComplete='off'
                       />
                       {fieldState.invalid && (
@@ -398,10 +426,10 @@ function NewInventoryRoute() {
 
               <section>
                 <p className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5'>
-                  Missing Parts
+                  {t('inventoryMissingParts')}
                 </p>
                 <p className='font-mono text-[10px] text-muted-foreground mb-2'>
-                  Add the parts already harvested from this movement.
+                  {t('inventoryMissingPartsSub')}
                 </p>
                 <Controller
                   name='missing_parts'
@@ -428,7 +456,7 @@ function NewInventoryRoute() {
                 control={control}
                 render={({ field: { onChange, ...field }, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor='qty'>Quantity</FieldLabel>
+                    <FieldLabel htmlFor='qty'>{t('fieldQuantity')}</FieldLabel>
                     <Input
                       {...field}
                       id='qty'
@@ -451,7 +479,7 @@ function NewInventoryRoute() {
                 control={control}
                 render={({ field: { onChange, ...field }, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor='unit_cost'>Unit Cost</FieldLabel>
+                    <FieldLabel htmlFor='unit_cost'>{t('fieldUnitCost')}</FieldLabel>
                     <Input
                       {...field}
                       id='unit_cost'
@@ -479,12 +507,12 @@ function NewInventoryRoute() {
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldLabel htmlFor='supplier'>Supplier</FieldLabel>
+                    <FieldLabel htmlFor='supplier'>{t('fieldSupplier')}</FieldLabel>
                     <Input
                       {...field}
                       id='supplier'
                       aria-invalid={fieldState.invalid}
-                      placeholder='e.g. Cousins UK'
+                      placeholder={t('placeholderSupplier')}
                       autoComplete='off'
                     />
                     {fieldState.invalid && (
@@ -502,13 +530,13 @@ function NewInventoryRoute() {
               control={control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor='notes'>Notes</FieldLabel>
+                  <FieldLabel htmlFor='notes'>{t('fieldNotes')}</FieldLabel>
                   <textarea
                     {...field}
                     id='notes'
                     rows={4}
                     aria-invalid={fieldState.invalid}
-                    placeholder='Anything worth remembering…'
+                    placeholder={t('placeholderNotes')}
                     className='w-full min-w-0 resize-y rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30'
                   />
                   {fieldState.invalid && (
@@ -529,15 +557,15 @@ function NewInventoryRoute() {
               }
             >
               {createInventory.isPending || createDonorMovement.isPending
-                ? 'Creating…'
-                : 'Create item'}
+                ? t('inventoryCreating')
+                : t('inventoryCreateItem')}
             </Btn>
             <Link to='/inventory' className='inline-block'>
               <button
                 type='button'
                 className='rounded font-semibold tracking-wide transition-opacity hover:opacity-90 cursor-pointer bg-transparent text-muted-foreground border border-border hover:text-foreground hover:border-ring px-4 py-2 text-xs'
               >
-                Cancel
+                {t('cancel')}
               </button>
             </Link>
           </div>

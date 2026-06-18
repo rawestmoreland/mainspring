@@ -1,10 +1,12 @@
 'use client';
 
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { Inventory, InventoryCategory } from '#/types';
 import { Btn } from '#/components/primitives/Button';
 import { numberField } from '#/lib/helpers';
@@ -35,6 +37,24 @@ export const Route = createFileRoute('/inventory/$inventoryId/edit')({
   component: EditInventoryRoute,
 });
 
+const CATEGORY_KEY_MAP = {
+  movement: 'categoryMovement',
+  harvested_part: 'categoryHarvestedPart',
+  mainspring: 'categoryMainspring',
+  crystal: 'categoryCrystal',
+  strap: 'categoryStrap',
+  bracelet: 'categoryBracelet',
+  crown: 'categoryCrown',
+  gasket: 'categoryGasket',
+  hand: 'categoryHand',
+  dial: 'categoryDial',
+  bezel: 'categoryBezel',
+  case: 'categoryCase',
+  tool: 'categoryTool',
+  oil: 'categoryOil',
+  other: 'categoryOther',
+} as const satisfies Record<InventoryCategory, string>;
+
 const INVENTORY_CATEGORIES: readonly InventoryCategory[] = [
   'harvested_part',
   'movement',
@@ -53,24 +73,27 @@ const INVENTORY_CATEGORIES: readonly InventoryCategory[] = [
   'other',
 ] as const;
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, 'This is required')
-    .max(256, 'Must be fewer than 256 characters'),
-  category: z.enum(INVENTORY_CATEGORIES),
-  qty: numberField({ min: 0, message: 'Quantity must be 0 or more' }),
-  unit_cost: numberField({ min: 0, message: 'Unit cost must be 0 or more' }),
-  supplier: z.string(),
-  notes: z.string(),
-  is_donor: z.boolean(),
-  missing_parts: z.array(z.string()),
-});
+function makeFormSchema(t: TFunction) {
+  return z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, t('validationRequired'))
+      .max(256, t('validationMaxLength', { max: 256 })),
+    category: z.enum(INVENTORY_CATEGORIES),
+    qty: numberField({ min: 0, message: t('validationQtyMin') }),
+    unit_cost: numberField({ min: 0, message: t('validationUnitCostMin') }),
+    supplier: z.string(),
+    notes: z.string(),
+    is_donor: z.boolean(),
+    missing_parts: z.array(z.string()),
+  });
+}
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<ReturnType<typeof makeFormSchema>>;
 
 function EditInventoryRoute() {
+  const { t } = useTranslation();
   const { inventoryId } = Route.useParams();
   const { data: item, isLoading: isItemLoading } =
     useGetInventoryById(inventoryId);
@@ -78,7 +101,7 @@ function EditInventoryRoute() {
 
   if (isItemLoading || isUserLoading) {
     return (
-      <div className='text-sm text-muted-foreground font-mono'>Loading…</div>
+      <div className='text-sm text-muted-foreground font-mono'>{t('inventoryLoading')}</div>
     );
   }
 
@@ -89,21 +112,23 @@ function EditInventoryRoute() {
           to='/inventory'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Inventory
+          {t('inventoryBackToInventory')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>Item not found.</div>
+        <div className='text-sm text-red-400 font-mono'>{t('inventoryItemNotFound')}</div>
       </div>
     );
   }
 
   if (!user) {
-    return <div className='text-sm text-red-400 font-mono'>Unauthorized</div>;
+    return <div className='text-sm text-red-400 font-mono'>{t('inventoryUnauthorized')}</div>;
   }
 
   return <EditInventoryForm item={item} />;
 }
 
 function EditInventoryForm({ item }: { item: RecordModel }) {
+  const { t } = useTranslation();
+  const formSchema = useMemo(() => makeFormSchema(t), [t]);
   const navigate = useNavigate();
   const updateInventory = useUpdateInventory();
   const createMovementPart = useCreateMovementPart();
@@ -161,10 +186,10 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
           to='/inventory'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Inventory
+          {t('inventoryBackToInventory')}
         </Link>
         <h1 className='mt-3 text-2xl font-serif font-semibold text-foreground'>
-          Edit Item
+          {t('inventoryEditItem')}
         </h1>
         <p className='mt-1 text-xs font-mono text-muted-foreground tracking-wide'>
           {item.name as string}
@@ -187,13 +212,13 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='name'>Name</FieldLabel>
+                <FieldLabel htmlFor='name'>{t('colName')}</FieldLabel>
                 <Input
                   {...field}
                   id='name'
                   autoFocus
                   aria-invalid={fieldState.invalid}
-                  placeholder='Mainspring'
+                  placeholder={t('placeholderPartName')}
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -209,7 +234,7 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
             render={({ fieldState, field }) => (
               <Field orientation='responsive' data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor='category'>Category</FieldLabel>
+                  <FieldLabel htmlFor='category'>{t('fieldCategory')}</FieldLabel>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
@@ -224,12 +249,12 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
                     aria-invalid={fieldState.invalid}
                     className='min-w-30'
                   >
-                    <SelectValue placeholder='select' />
+                    <SelectValue placeholder={t('placeholderSelect')} />
                   </SelectTrigger>
                   <SelectContent position='item-aligned'>
                     {INVENTORY_CATEGORIES.map((c) => (
                       <SelectItem key={c} value={c}>
-                        {c.replace('_', ' ').toUpperCase()}
+                        {t(CATEGORY_KEY_MAP[c])}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -252,10 +277,10 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
                   className='size-4 rounded border-input bg-transparent accent-amber-500 cursor-pointer'
                 />
                 <span className='font-mono text-xs text-foreground'>
-                  Donor movement
+                  {t('inventoryDonorMovementLabel')}
                 </span>
                 <span className='font-mono text-[10px] text-muted-foreground'>
-                  (cannibalize for parts)
+                  {t('inventoryDonorMovementHint')}
                 </span>
               </label>
             )}
@@ -265,10 +290,10 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
         {isDonor && (
           <section>
             <p className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5'>
-              Missing Parts
+              {t('inventoryMissingParts')}
             </p>
             <p className='font-mono text-[10px] text-muted-foreground mb-2'>
-              Add the parts already harvested from this movement.
+              {t('inventoryMissingPartsSub')}
             </p>
             <Controller
               name='missing_parts'
@@ -293,7 +318,7 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='qty'>Quantity</FieldLabel>
+                <FieldLabel htmlFor='qty'>{t('fieldQuantity')}</FieldLabel>
                 <Input
                   {...field}
                   id='qty'
@@ -316,7 +341,7 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='unit_cost'>Unit Cost</FieldLabel>
+                <FieldLabel htmlFor='unit_cost'>{t('fieldUnitCost')}</FieldLabel>
                 <Input
                   {...field}
                   id='unit_cost'
@@ -342,12 +367,12 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='supplier'>Supplier</FieldLabel>
+                <FieldLabel htmlFor='supplier'>{t('fieldSupplier')}</FieldLabel>
                 <Input
                   {...field}
                   id='supplier'
                   aria-invalid={fieldState.invalid}
-                  placeholder='e.g. Cousins UK'
+                  placeholder={t('placeholderSupplier')}
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -364,13 +389,13 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='notes'>Notes</FieldLabel>
+                <FieldLabel htmlFor='notes'>{t('fieldNotes')}</FieldLabel>
                 <textarea
                   {...field}
                   id='notes'
                   rows={4}
                   aria-invalid={fieldState.invalid}
-                  placeholder='Anything worth remembering…'
+                  placeholder={t('placeholderNotes')}
                   className='w-full min-w-0 resize-y rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30'
                 />
                 {fieldState.invalid && (
@@ -386,14 +411,14 @@ function EditInventoryForm({ item }: { item: RecordModel }) {
             type='submit'
             disabled={isSubmitting || updateInventory.isPending}
           >
-            {updateInventory.isPending ? 'Saving…' : 'Save changes'}
+            {updateInventory.isPending ? t('inventorySaving') : t('inventorySaveChanges')}
           </Btn>
           <Link to='/inventory' className='inline-block'>
             <button
               type='button'
               className='rounded font-semibold tracking-wide transition-opacity hover:opacity-90 cursor-pointer bg-transparent text-muted-foreground border border-border hover:text-foreground hover:border-ring px-4 py-2 text-xs'
             >
-              Cancel
+              {t('cancel')}
             </button>
           </Link>
         </div>

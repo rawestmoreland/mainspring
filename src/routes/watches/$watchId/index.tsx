@@ -1,6 +1,7 @@
 import DOMPurify from 'dompurify';
 import { useState, useRef } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import {
   useGetWatchById,
   useDeleteWatchPhoto,
@@ -51,6 +52,7 @@ export const Route = createFileRoute('/watches/$watchId/')({
 type Tab = 'log' | 'timegrapher' | 'parts' | 'notes';
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { watchId } = Route.useParams();
   const { data: watch, isLoading } = useGetWatchById(watchId);
@@ -77,7 +79,9 @@ function RouteComponent() {
       ? (() => {
           const h = Math.floor(totalSessionSeconds / 3600);
           const m = Math.floor((totalSessionSeconds % 3600) / 60);
-          return h > 0 && m > 0 ? `${h}h ${m}m` : h > 0 ? `${h}h` : `${m}m`;
+          return h > 0 && m > 0
+            ? `${h}${t('unitH')} ${m}${t('unitM')}`
+            : h > 0 ? `${h}${t('unitH')}` : `${m}${t('unitM')}`;
         })()
       : '—';
 
@@ -104,9 +108,9 @@ function RouteComponent() {
           to='/watches'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Watches
+          {t('watchesBackToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>Watch not found.</div>
+        <div className='text-sm text-red-400 font-mono'>{t('equipmentItemNotFound')}</div>
       </div>
     );
   }
@@ -160,10 +164,10 @@ function RouteComponent() {
   const r = roi(watch);
 
   const tabs: { id: Tab; label: string; badge?: number }[] = [
-    { id: 'log', label: 'Repair Log', badge: postCount },
-    { id: 'timegrapher', label: 'Timegrapher' },
-    { id: 'parts', label: 'Parts' },
-    { id: 'notes', label: 'Notes' },
+    { id: 'log', label: t('watchTabRepairLog'), badge: postCount },
+    { id: 'timegrapher', label: t('watchTabTimegrapher') },
+    { id: 'parts', label: t('watchTabParts') },
+    { id: 'notes', label: t('watchTabNotes') },
   ];
 
   return (
@@ -173,7 +177,7 @@ function RouteComponent() {
         to='/watches'
         className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
       >
-        ← Back to Watches
+        {t('watchesBackToWatches')}
       </Link>
 
       {/* Frozen banner */}
@@ -182,15 +186,14 @@ function RouteComponent() {
           <LockIcon className='w-4 h-4 text-amber-400 shrink-0' />
           <div className='flex-1 min-w-0'>
             <p className='font-mono text-xs text-foreground'>
-              This project is frozen — you&apos;ve reached the 2-project limit
-              on the free plan.
+              {t('watchFrozenTitle')}
             </p>
             <p className='font-mono text-[11px] text-muted-foreground mt-0.5'>
-              Archive another watch or{' '}
+              {t('watchFrozenArchive')}{' '}
               <Link to='/pro' className='text-amber-400 hover:text-amber-300'>
-                upgrade to Pro
+                {t('watchFrozenUpgradePro')}
               </Link>{' '}
-              to edit.
+              {t('watchFrozenToEdit')}
             </p>
           </div>
         </div>
@@ -216,14 +219,14 @@ function RouteComponent() {
                 className='relative w-12 h-12 rounded-lg overflow-hidden border border-border bg-zinc-900 cursor-pointer p-0 block disabled:opacity-50'
                 aria-label={
                   watch.featured_image_url
-                    ? 'Change featured image'
-                    : 'Set featured image'
+                    ? t('featuredImageChange')
+                    : t('featuredImageUpload')
                 }
               >
                 {watch.featured_image_url ? (
                   <img
                     src={watch.featured_image_url}
-                    alt='Featured'
+                    alt={t('placeholderFeaturedImageAlt')}
                     className='w-full h-full object-cover'
                   />
                 ) : (
@@ -266,7 +269,7 @@ function RouteComponent() {
               params={{ watchId }}
               className='text-primary hover:text-primary/80 no-underline'
             >
-              View Gallery →
+              {t('watchViewGallery')}
             </Link>
           )}
           {user && !isFrozen && (
@@ -275,7 +278,7 @@ function RouteComponent() {
               params={{ watchId }}
               className='text-muted-foreground hover:text-foreground no-underline'
             >
-              Edit Watch
+              {t('watchDetailsEdit')}
             </Link>
           )}
         </div>
@@ -293,11 +296,10 @@ function RouteComponent() {
                   <CameraIcon className='w-4.5 h-4.5 text-zinc-200' />
                 </div>
                 <p className='font-mono text-sm text-foreground/80 mb-1'>
-                  No photos yet
+                  {t('watchNoPhotos')}
                 </p>
                 <p className='font-mono text-xs text-muted-foreground max-w-60 leading-relaxed'>
-                  Document each stage — before, during, after, and listing
-                  shots.
+                  {t('watchPhotosSubtitle')}
                 </p>
               </div>
               {user && !isFrozen && (
@@ -315,7 +317,7 @@ function RouteComponent() {
                           className='mt-2 font-mono text-[11px] text-red-400'
                         >
                           {(uploadPhotos.error as Error)?.message ??
-                            'Upload failed. Please try again.'}
+                            t('watchUploadFailed')}
                         </p>
                       )}
                     </>
@@ -323,7 +325,7 @@ function RouteComponent() {
                     <div className='mt-4 flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6'>
                       <LockIcon className='w-4 h-4 text-amber-400' />
                       <p className='font-mono text-xs text-muted-foreground'>
-                        {FREE_PHOTO_LIMIT} photo limit reached
+                        {t('watchPhotoLimitReached', { limit: FREE_PHOTO_LIMIT })}
                       </p>
                       <UpgradeButton pbUserId={user.id} />
                     </div>
@@ -388,7 +390,7 @@ function RouteComponent() {
                           e.stopPropagation();
                           if (
                             confirm(
-                              'Are you sure you want to delete this photo?',
+                              t('watchDeletePhotoConfirm'),
                             )
                           ) {
                             deletePhoto.mutate(activePhoto.id);
@@ -407,7 +409,7 @@ function RouteComponent() {
                 </div>
               ) : (
                 <div className='w-full aspect-4/3 flex items-center justify-center text-muted-foreground font-mono text-xs bg-zinc-950'>
-                  No photos for this stage
+                  {t('watchNoPhotosStage')}
                 </div>
               )}
 
@@ -452,7 +454,7 @@ function RouteComponent() {
                       className='flex items-center gap-1.5 text-[10.5px] font-mono text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0'
                     >
                       <UploadCloudIcon className='w-3.5 h-3.5' />
-                      Upload photos ({photos.length})
+                      {t('watchUploadPhotos', { count: photos.length })}
                     </button>
                   </div>
                   {showUpload && (
@@ -470,7 +472,7 @@ function RouteComponent() {
                               className='font-mono text-[11px] text-red-400'
                             >
                               {(uploadPhotos.error as Error)?.message ??
-                                'Upload failed. Please try again.'}
+                                t('watchUploadFailed')}
                             </p>
                           )}
                         </div>
@@ -478,7 +480,7 @@ function RouteComponent() {
                         <div className='flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6 mt-3'>
                           <LockIcon className='w-4 h-4 text-amber-400' />
                           <p className='font-mono text-xs text-muted-foreground'>
-                            {FREE_PHOTO_LIMIT} photo limit reached
+                            {t('watchPhotoLimitReached', { limit: FREE_PHOTO_LIMIT })}
                           </p>
                           <UpgradeButton pbUserId={user.id} />
                         </div>
@@ -498,28 +500,22 @@ function RouteComponent() {
             {(
               [
                 [
-                  'Invested',
+                  t('watchKpiInvested'),
                   fmt(watch.bought_price + (watch.parts_cost ?? 0)),
                   null,
                 ],
-                ['Sale Price', fmt(watch.sold_price), null],
+                [t('watchKpiSalePrice'), fmt(watch.sold_price), null],
                 [
-                  'Profit',
+                  t('watchKpiProfit'),
                   p !== null ? fmt(p) : '—',
-                  p !== null
-                    ? p >= 0
-                      ? 'text-green-400'
-                      : 'text-red-400'
-                    : null,
+                  // eslint-disable-next-line i18next/no-literal-string
+                  p !== null ? (p >= 0 ? 'text-green-400' : 'text-red-400') : null,
                 ],
                 [
-                  'ROI',
+                  t('watchKpiRoi'),
                   r !== null ? fmtPct(r) : '—',
-                  r !== null
-                    ? parseFloat(r) >= 0
-                      ? 'text-green-400'
-                      : 'text-red-400'
-                    : null,
+                  // eslint-disable-next-line i18next/no-literal-string
+                  r !== null ? (parseFloat(r) >= 0 ? 'text-green-400' : 'text-red-400') : null,
                 ],
               ] as [string, string, string | null][]
             ).map(([label, value, colorClass]) => (
@@ -546,7 +542,7 @@ function RouteComponent() {
           <section className='rounded-xl border border-border bg-card overflow-hidden'>
             <div className='flex items-center justify-between px-4 py-2.5 border-b border-border'>
               <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                Details
+                {t('watchDetailsSection')}
               </span>
               {user && !isFrozen && (
                 <Link
@@ -554,7 +550,7 @@ function RouteComponent() {
                   params={{ watchId }}
                   className='font-mono text-[10px] text-muted-foreground hover:text-foreground no-underline'
                 >
-                  Edit
+                  {t('watchDetailsEdit')}
                 </Link>
               )}
             </div>
@@ -563,12 +559,12 @@ function RouteComponent() {
                 {(
                   [
                     [
-                      'Condition',
+                      t('watchDetailsCondition'),
                       capitalize(watch.condition_bought?.replace('_', ' ')) ??
                         '—',
                     ],
-                    ['Purchase', fmt(watch.bought_price)],
-                    ['Parts Cost', fmt(watch.parts_cost)],
+                    [t('watchDetailsPurchase'), fmt(watch.bought_price)],
+                    [t('watchDetailsPartsCost'), fmt(watch.parts_cost)],
                   ] as [string, string][]
                 ).map(([k, v]) => (
                   <div key={k} className='flex flex-col px-3 py-2'>
@@ -584,21 +580,16 @@ function RouteComponent() {
               <div className='divide-y divide-border'>
                 {(
                   [
-                    ['Hours', totalSessionHours],
+                    [t('watchDetailsHours'), totalSessionHours],
                     [
-                      'Acquired',
-                      watch.bought_date
-                        ? format(watch.bought_date, 'MMM d, yyyy')
-                        : '—',
+                      t('watchDetailsAcquired'),
+                      // eslint-disable-next-line i18next/no-literal-string
+                      watch.bought_date ? format(watch.bought_date, 'MMM d, yyyy') : '—',
                     ],
                     [
-                      'Sold',
-                      watch.sold_date
-                        ? format(
-                            new Date(watch.sold_date as string),
-                            'MMM d, yyyy',
-                          )
-                        : '—',
+                      t('watchDetailsSold'),
+                      // eslint-disable-next-line i18next/no-literal-string
+                      watch.sold_date ? format(new Date(watch.sold_date as string), 'MMM d, yyyy') : '—',
                     ],
                   ] as [string, string][]
                 ).map(([k, v]) => (
@@ -627,7 +618,7 @@ function RouteComponent() {
                   <TimerIcon className='w-4 h-4 text-amber-500 shrink-0' />
                   <div>
                     <div className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                      Time Tracker
+                      {t('watchTimeTracker')}
                     </div>
                     <div className='font-mono text-sm font-semibold text-foreground mt-0.5'>
                       {totalSessionHours}
@@ -635,7 +626,7 @@ function RouteComponent() {
                   </div>
                 </div>
                 <span className='font-mono text-[10px] text-muted-foreground group-hover:text-foreground transition-colors'>
-                  Track Time →
+                  {t('watchTrackTime')}
                 </span>
               </div>
             </Link>
@@ -647,14 +638,15 @@ function RouteComponent() {
                   <div>
                     <div className='flex items-center gap-2'>
                       <span className='font-mono text-[10px] uppercase tracking-widest text-amber-500/80'>
-                        Time Tracker
+                        {t('watchTimeTracker')}
                       </span>
+                      {/* eslint-disable-next-line i18next/no-literal-string */}
                       <span className='inline-flex items-center px-1.5 py-0.5 rounded-full font-mono text-[8px] tracking-widest border border-amber-500/40 bg-amber-500/10 text-amber-500 uppercase'>
                         Pro
                       </span>
                     </div>
                     <div className='font-mono text-[11px] text-muted-foreground mt-0.5'>
-                      Track hours per session with pause &amp; resume
+                      {t('watchTimeTrackerHint')}
                     </div>
                   </div>
                 </div>
@@ -699,14 +691,14 @@ function RouteComponent() {
               <div>
                 {postCount === 0 ? (
                   <div className='text-center py-8 text-xs font-mono text-muted-foreground'>
-                    No repair sessions yet.{' '}
+                    {t('watchNoRepairSessions')}{' '}
                     {user && !isFrozen && (
                       <Link
                         to='/watches/$watchId/posts/new'
                         params={{ watchId }}
                         className='text-primary'
                       >
-                        Log the first one →
+                        {t('watchLogFirstSession')}
                       </Link>
                     )}
                   </div>
@@ -724,12 +716,8 @@ function RouteComponent() {
                               {post.title}
                             </span>
                             <span className='text-[11px] font-mono text-muted-foreground shrink-0 ml-3'>
-                              {post.session_date
-                                ? format(
-                                    new Date(post.session_date),
-                                    'MMM d, yyyy',
-                                  )
-                                : '—'}
+                              {/* eslint-disable-next-line i18next/no-literal-string */}
+                              {post.session_date ? format(new Date(post.session_date), 'MMM d, yyyy') : '—'}
                             </span>
                           </Link>
                         </li>
@@ -742,7 +730,7 @@ function RouteComponent() {
                           params={{ watchId }}
                           className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
                         >
-                          + New session
+                          {t('watchNewSession')}
                         </Link>
                       )}
                       {postCount > 5 && (
@@ -751,7 +739,7 @@ function RouteComponent() {
                           params={{ watchId }}
                           className='text-xs font-mono text-muted-foreground hover:text-primary no-underline ml-auto'
                         >
-                          View all ({postCount}) →
+                          {t('watchViewAll', { count: postCount })}
                         </Link>
                       )}
                     </div>
@@ -765,14 +753,14 @@ function RouteComponent() {
               <div>
                 {timegrapherReadings.length === 0 ? (
                   <div className='text-center py-8 text-xs font-mono text-muted-foreground'>
-                    No timegrapher sessions yet.{' '}
+                    {t('watchNoTimegrapherSessions')}{' '}
                     {user && !isFrozen && (
                       <Link
                         to='/watches/$watchId/timegrapher'
                         params={{ watchId }}
                         className='text-primary'
                       >
-                        Log the first one →
+                        {t('watchLogFirstSession')}
                       </Link>
                     )}
                   </div>
@@ -782,17 +770,17 @@ function RouteComponent() {
                     const rows = isPro
                       ? [
                           [
-                            'DU Rate',
+                            t('watchDetailsDuRate'),
                             latest.du_rate != null
                               ? `${latest.du_rate >= 0 ? '+' : ''}${latest.du_rate.toFixed(1)} s/d`
                               : '—',
                           ],
                           [
-                            'DU Amplitude',
+                            t('watchDetailsDuAmplitude'),
                             latest.du_amp != null ? `${latest.du_amp}°` : '—',
                           ],
                           [
-                            'DU Beat Error',
+                            t('watchDetailsDuBeatError'),
                             latest.du_be != null
                               ? `${latest.du_be.toFixed(1)} ms`
                               : '—',
@@ -800,13 +788,13 @@ function RouteComponent() {
                         ]
                       : [
                           [
-                            'Avg Rate',
+                            t('timegrapherColAvgRate'),
                             latest.du_rate != null
                               ? `${latest.du_rate >= 0 ? '+' : ''}${latest.du_rate.toFixed(1)} s/d`
                               : '—',
                           ],
                           [
-                            'Avg Amplitude',
+                            t('timegrapherColAvgAmplitude'),
                             latest.du_amp != null ? `${latest.du_amp}°` : '—',
                           ],
                         ];
@@ -833,7 +821,7 @@ function RouteComponent() {
                             params={{ watchId }}
                             className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
                           >
-                            Full log ({timegrapherReadings.length}) →
+                            {t('watchFullLog', { count: timegrapherReadings.length })}
                           </Link>
                         </div>
                       </div>
@@ -850,7 +838,7 @@ function RouteComponent() {
                 <div className='border-b border-border'>
                   <div className='flex items-center justify-between px-4 py-2 bg-muted/20 border-b border-border'>
                     <span className='font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground'>
-                      Parts Used
+                      {t('watchPartsUsed')}
                     </span>
                     {user && !isFrozen && (
                       <AddPartUsedDialog watchId={watchId} />
@@ -858,23 +846,23 @@ function RouteComponent() {
                   </div>
                   {partsUsed.length === 0 ? (
                     <p className='px-4 py-3 font-mono text-xs italic text-muted-foreground/50'>
-                      No parts logged yet.
+                      {t('watchNoPartsLogged')}
                     </p>
                   ) : (
                     <table className='w-full text-xs font-mono'>
                       <thead>
                         <tr className='border-b border-border bg-muted/20'>
                           <th className='px-3.5 py-2 text-left text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
-                            Part
+                            {t('watchColPart')}
                           </th>
                           <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
-                            Qty
+                            {t('watchColQty')}
                           </th>
                           <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
-                            Unit
+                            {t('watchColUnit')}
                           </th>
                           <th className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'>
-                            Total
+                            {t('watchColTotal')}
                           </th>
                           {user && <th className='px-3.5 py-2 w-6' />}
                         </tr>
@@ -907,14 +895,14 @@ function RouteComponent() {
                                     onClick={() => {
                                       if (
                                         confirm(
-                                          'Remove this part from the log?',
+                                          t('watchRemovePartConfirm'),
                                         )
                                       ) {
                                         deletePartUsed.mutate(part.id);
                                       }
                                     }}
                                     className='text-muted-foreground hover:text-red-400 transition-colors bg-transparent border-none cursor-pointer text-base leading-none p-0'
-                                    aria-label='Remove part'
+                                    aria-label={t('watchRemovePart')}
                                   >
                                     ×
                                   </button>
@@ -930,7 +918,7 @@ function RouteComponent() {
                             colSpan={3}
                             className='px-3.5 py-2 text-right text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium'
                           >
-                            Total
+                            {t('watchColTotal')}
                           </td>
                           <td className='px-3.5 py-2 text-right font-semibold text-foreground'>
                             {fmt(watch.parts_cost)}
@@ -947,13 +935,11 @@ function RouteComponent() {
                   <div className='flex items-center justify-between px-4 py-2 bg-muted/20 border-b border-border'>
                     <div className='flex items-center gap-2'>
                       <span className='font-mono text-[9.5px] uppercase tracking-widest text-muted-foreground'>
-                        Shopping List
+                        {t('watchShoppingList')}
                       </span>
                       {!isPro && (
-                        <span className='inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'>
-                          <LockIcon className='w-2.5 h-2.5' />
-                          Pro
-                        </span>
+                        // eslint-disable-next-line i18next/no-literal-string
+                        <span className='inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'><LockIcon className='w-2.5 h-2.5' />Pro</span>
                       )}
                     </div>
                     {isPro && (
@@ -962,7 +948,7 @@ function RouteComponent() {
                         params={{ watchId }}
                         className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
                       >
-                        View all ({partsShoppingItems.length})
+                        {t('watchShoppingViewAll', { count: partsShoppingItems.length })}
                       </Link>
                     )}
                   </div>
@@ -972,11 +958,11 @@ function RouteComponent() {
                         className='divide-y divide-border blur-sm select-none pointer-events-none'
                         aria-hidden
                       >
-                        {[
-                          ['Mainspring', 'Needed'],
-                          ['Crystal', 'Ordered'],
-                          ['Crown', 'In Hand'],
-                        ].map(([k, v]) => (
+                        {([
+                          [t('categoryMainspring'), t('watchShoppingNeeded')],
+                          [t('categoryCrystal'), t('watchShoppingOrdered')],
+                          [t('categoryCrown'), t('watchShoppingInHand')],
+                        ] as [string, string][]).map(([k, v]) => (
                           <div
                             key={String(k)}
                             className='flex justify-between items-center px-4 py-2.5'
@@ -993,46 +979,46 @@ function RouteComponent() {
                       <div className='absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-card/70 backdrop-blur-[2px]'>
                         <LockIcon className='w-4 h-4 text-amber-400' />
                         <p className='font-mono text-xs text-muted-foreground'>
-                          Parts shopping list is a Pro feature
+                          {t('watchPartsShoppingListProFeature')}
                         </p>
                         {user && <UpgradeButton pbUserId={user.id} />}
                       </div>
                     </div>
                   ) : partsShoppingItems.length === 0 ? (
                     <div className='text-center py-6 text-xs font-mono text-muted-foreground'>
-                      No parts on the list yet.{' '}
+                      {t('watchNoPartsOnList')}{' '}
                       {user && (
                         <Link
                           to='/watches/$watchId/shopping-list'
                           params={{ watchId }}
                           className='text-primary'
                         >
-                          Add the first one →
+                          {t('watchAddFirstShoppingItem')}
                         </Link>
                       )}
                     </div>
                   ) : (
                     <div className='divide-y divide-border'>
-                      {[
+                      {([
                         [
-                          'Needed',
+                          t('watchShoppingNeeded'),
                           partsShoppingItems.filter(
                             (i) => i.status === 'needed',
                           ).length,
                         ],
                         [
-                          'Ordered',
+                          t('watchShoppingOrdered'),
                           partsShoppingItems.filter(
                             (i) => i.status === 'ordered',
                           ).length,
                         ],
                         [
-                          'In Hand',
+                          t('watchShoppingInHand'),
                           partsShoppingItems.filter(
                             (i) => i.status === 'in_hand',
                           ).length,
                         ],
-                      ].map(([k, v]) => (
+                      ] as [string, number][]).map(([k, v]) => (
                         <div
                           key={String(k)}
                           className='flex justify-between items-center px-4 py-2.5 hover:bg-white/2 transition-colors'
@@ -1051,7 +1037,7 @@ function RouteComponent() {
                           params={{ watchId }}
                           className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
                         >
-                          Full list →
+                          {t('watchFullList')}
                         </Link>
                       </div>
                     </div>
@@ -1086,13 +1072,13 @@ function RouteComponent() {
                         disabled={updateWatch.isPending}
                         className='text-xs font-mono text-primary hover:text-primary/80 disabled:opacity-50 bg-transparent border-none cursor-pointer p-0'
                       >
-                        Save
+                        {t('watchSave')}
                       </button>
                       <button
                         onClick={() => setEditingNotes(false)}
                         className='text-xs font-mono text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer p-0'
                       >
-                        Cancel
+                        {t('cancel')}
                       </button>
                     </div>
                   </div>
@@ -1107,7 +1093,7 @@ function RouteComponent() {
                       />
                     ) : (
                       <p className='font-mono text-xs italic text-muted-foreground/50'>
-                        No notes yet.
+                        {t('watchNoNotes')}
                       </p>
                     )}
                     {user && !isFrozen && (
@@ -1118,7 +1104,7 @@ function RouteComponent() {
                         }}
                         className='mt-2 text-xs font-mono text-primary hover:text-primary/80 bg-transparent border-none cursor-pointer p-0'
                       >
-                        {watch.notes ? 'Edit notes' : 'Add notes'}
+                        {watch.notes ? t('watchEditNotes') : t('watchAddNotes')}
                       </button>
                     )}
                   </div>
@@ -1135,7 +1121,7 @@ function RouteComponent() {
                 e.preventDefault();
                 if (
                   confirm(
-                    'Are you sure you want to delete this watch? All associated photos, and part usage will also be deleted.',
+                    t('watchDeleteConfirm'),
                   )
                 ) {
                   await deleteWatch.mutateAsync(watch.id);
@@ -1146,7 +1132,7 @@ function RouteComponent() {
               variant='link'
             >
               <Trash2Icon />
-              Delete this watch
+              {t('watchDeleteAction')}
             </Button>
           </section>
         </div>

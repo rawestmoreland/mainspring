@@ -21,12 +21,14 @@ import {
 } from '#/components/ui/tooltip';
 import { FREE_PROJECT_LIMIT } from '#/lib/constants';
 import { useSubscription } from '#/hooks/subscription';
+import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
 });
 
 function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -81,32 +83,32 @@ function Dashboard() {
       <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7'>
         <KpiCard
           highlight
-          label='Total Profit (sold)'
+          label={t('kpiTotalProfit')}
           value={fmt(totalProfit)}
           valueClass={totalProfit >= 0 ? 'text-forest' : 'text-wax'}
-          sub={`net after parts · ${sold.length} watches`}
+          sub={t('kpiTotalProfitSub', { count: sold.length })}
         />
         <KpiCard
-          label='Capital Deployed'
+          label={t('kpiCapitalDeployed')}
           value={fmt(totalInvested)}
-          sub={`across ${watches?.length ?? 0} watches`}
+          sub={t('kpiCapitalDeployedSub', { count: watches?.length ?? 0 })}
         />
         <KpiCard
-          label='Avg ROI (sold)'
+          label={t('kpiAvgRoi')}
           value={fmtPct(avgRoi)}
           valueClass='text-brass-deep'
-          sub='per sold watch'
+          sub={t('kpiAvgRoiSub')}
         />
         <KpiCard
-          label='Hours Logged'
-          value={`${totalHours ?? 0}h`}
-          sub='bench time'
+          label={t('kpiHoursLogged')}
+          value={`${totalHours ?? 0}${t('unitH')}`}
+          sub={t('kpiBenchTimeSub')}
         />
       </div>
 
       {/* Watch ledger */}
       <div className='flex items-center justify-between mb-3.5'>
-        <SectionLabel>Watch Ledger</SectionLabel>
+        <SectionLabel>{t('watchLedger')}</SectionLabel>
         {user && !!watches?.length && (
           <TooltipProvider>
             <Tooltip>
@@ -115,7 +117,7 @@ function Dashboard() {
                   <Button asChild disabled={atProjectLimit}>
                     <Link to='/watches/new'>
                       <PlusIcon className='size-3' />
-                      Add Watch
+                      {t('addWatch')}
                     </Link>
                   </Button>
                 </span>
@@ -123,10 +125,9 @@ function Dashboard() {
               {atProjectLimit && (
                 <TooltipContent>
                   <p className='font-mono text-xs'>
-                    Free accounts are limited to {FREE_PROJECT_LIMIT} active
-                    projects.{' '}
+                    {t('freeAccountLimit', { limit: FREE_PROJECT_LIMIT })}{' '}
                     <Link to='/pro' className='text-amber-400 hover:underline'>
-                      Upgrade to Pro
+                      {t('upgradeToPro')}
                     </Link>
                   </p>
                 </TooltipContent>
@@ -138,15 +139,15 @@ function Dashboard() {
       <TableWrap className='mb-7'>
         <thead>
           <tr>
-            <Th className='hidden sm:table-cell'>Photos</Th>
-            <Th>Watch</Th>
-            <Th>Status</Th>
-            <Th>Paid</Th>
-            <Th className='hidden sm:table-cell'>Parts</Th>
-            <Th>Sold</Th>
-            <Th>Profit</Th>
-            <Th>ROI</Th>
-            <Th className='hidden sm:table-cell'>Hrs</Th>
+            <Th className='hidden sm:table-cell'>{t('colPhoto_other')}</Th>
+            <Th>{t('colWatch')}</Th>
+            <Th>{t('colStatus')}</Th>
+            <Th>{t('colPaid')}</Th>
+            <Th className='hidden sm:table-cell'>{t('colParts')}</Th>
+            <Th>{t('colSold')}</Th>
+            <Th>{t('colProfit')}</Th>
+            <Th>{t('colRoi')}</Th>
+            <Th className='hidden sm:table-cell'>{t('colHrs')}</Th>
           </tr>
         </thead>
         <tbody>
@@ -165,8 +166,7 @@ function Dashboard() {
                   (order[a.status] ?? 99) - (order[b.status] ?? 99);
                 if (statusDiff !== 0) return statusDiff;
                 return (
-                  new Date(b.updated).getTime() -
-                  new Date(a.updated).getTime()
+                  new Date(b.updated).getTime() - new Date(a.updated).getTime()
                 );
               })
               .map((w) => {
@@ -231,9 +231,8 @@ function Dashboard() {
                     >
                       {fmtPct(r)}
                     </Td>
-                    <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
-                      {w.hours_spent}h
-                    </Td>
+                    {/* eslint-disable-next-line i18next/no-literal-string */}
+                    <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>{w.hours_spent}h</Td>
                   </TableRow>
                 );
               })
@@ -243,12 +242,12 @@ function Dashboard() {
                 colSpan={9}
                 className='py-10 text-center text-sm text-muted-foreground'
               >
-                No watches yet.{' '}
+                {t('noWatches')}{' '}
                 <Link
                   to='/watches/new'
                   className='text-foreground underline underline-offset-2'
                 >
-                  Add your first watch
+                  {t('addFirstWatch')}
                 </Link>
               </td>
             </tr>
@@ -261,16 +260,16 @@ function Dashboard() {
         {/* Inventory */}
         <div>
           <div className='flex items-center justify-between mb-3.5'>
-            <SectionLabel>Parts Inventory</SectionLabel>
+            <SectionLabel>{t('partsInventory')}</SectionLabel>
             <div className='flex items-center gap-2'>
               <span className='font-mono text-[10px] text-muted-foreground'>
-                {fmt(inventoryValue)} value
+                {t('inventoryValue', { value: fmt(inventoryValue) })}
               </span>
               {user && !!inventory?.length && (
                 <Button variant='outline' asChild>
                   <Link to='/inventory/new'>
                     <PlusIcon className='size-3' />
-                    Add Part
+                    {t('addPart')}
                   </Link>
                 </Button>
               )}
@@ -279,10 +278,10 @@ function Dashboard() {
           <TableWrap>
             <thead>
               <tr>
-                <Th>Part</Th>
-                <Th>Cat</Th>
-                <Th>Qty</Th>
-                <Th>Value</Th>
+                <Th>{t('colPart')}</Th>
+                <Th>{t('colCat')}</Th>
+                <Th>{t('colQty')}</Th>
+                <Th>{t('colValue')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -309,12 +308,12 @@ function Dashboard() {
                     colSpan={9}
                     className='py-10 text-center text-sm text-muted-foreground'
                   >
-                    No inventory yet.{' '}
+                    {t('noInventory')}{' '}
                     <Link
                       to='/inventory/new'
                       className='text-foreground underline underline-offset-2'
                     >
-                      Add your first item
+                      {t('addFirstItem')}
                     </Link>
                   </td>
                 </tr>
@@ -326,12 +325,12 @@ function Dashboard() {
         {/* Equipment */}
         <div>
           <div className='flex items-center justify-between mb-3.5'>
-            <SectionLabel>Tools &amp; Equipment</SectionLabel>
+            <SectionLabel>{t('toolsEquipment')}</SectionLabel>
             {user && !!equipment?.length && (
               <Button variant='outline' asChild>
                 <Link to='/equipment/new'>
                   <PlusIcon className='size-3' />
-                  Add Tool
+                  {t('addTool')}
                 </Link>
               </Button>
             )}
@@ -339,8 +338,8 @@ function Dashboard() {
           <TableWrap>
             <thead>
               <tr>
-                <Th>Name</Th>
-                <Th>Cost</Th>
+                <Th>{t('colName')}</Th>
+                <Th>{t('colCost')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -357,12 +356,12 @@ function Dashboard() {
                     colSpan={2}
                     className='py-10 text-center text-sm text-muted-foreground'
                   >
-                    No tools yet.{' '}
+                    {t('noTools')}{' '}
                     <Link
                       to='/equipment/new'
                       className='text-foreground underline underline-offset-2'
                     >
-                      Add your first item
+                      {t('addFirstItem')}
                     </Link>
                   </td>
                 </tr>
@@ -371,7 +370,7 @@ function Dashboard() {
             {!!equipCost && (
               <tfoot>
                 <tr className='border-t-2 border-border'>
-                  <Td className='font-medium text-foreground text-xs'>Total</Td>
+                  <Td className='font-medium text-foreground text-xs'>{t('total')}</Td>
                   <Td className='font-mono text-xs text-brass font-semibold'>
                     {fmt(equipCost)}
                   </Td>

@@ -26,6 +26,7 @@ import dmMonoUrl from '@fontsource/dm-mono/files/dm-mono-latin-400-normal.woff2?
 import playfairUrl from '@fontsource/playfair-display/files/playfair-display-latin-600-normal.woff2?url';
 import loraUrl from '@fontsource/lora/files/lora-latin-400-normal.woff2?url';
 import redditPixelCode from '#/lib/scripts/reddit-pixel.js?raw';
+import '../i18n';
 
 declare global {
   interface Window {
@@ -97,13 +98,18 @@ const resolveLandingPageFlag = createIsomorphicFn()
     let distinctId: string;
     if (match) {
       const raw = decodeURIComponent(match.slice(cookieName.length + 1));
-      distinctId = (JSON.parse(raw) as { distinct_id?: string }).distinct_id ?? crypto.randomUUID();
+      distinctId =
+        (JSON.parse(raw) as { distinct_id?: string }).distinct_id ??
+        crypto.randomUUID();
     } else {
       distinctId = crypto.randomUUID();
     }
 
     const ph = getPostHogClient();
-    const flagValue = await ph.getFeatureFlag('landing-page-copy-test', distinctId);
+    const flagValue = await ph.getFeatureFlag(
+      'landing-page-copy-test',
+      distinctId,
+    );
     return (flagValue ?? undefined) as string | boolean | undefined;
   });
 
@@ -137,7 +143,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       // PostHog toolbar opens the app with a #__posthog=... hash for its own auth.
       // Skip the app-level redirect so the toolbar can initialize; it handles its own auth.
       const isPostHogToolbar = location.hash?.includes('__posthog');
-      if (!isPublicPath(location.pathname) && !pb.authStore.isValid && !isPostHogToolbar) {
+      if (
+        !isPublicPath(location.pathname) &&
+        !pb.authStore.isValid &&
+        !isPostHogToolbar
+      ) {
         throw redirect({ to: '/login', search: { from: location.pathname } });
       }
     }

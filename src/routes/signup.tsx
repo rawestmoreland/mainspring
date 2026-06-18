@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -29,6 +30,7 @@ type FormData = z.infer<typeof schema>;
 export const Route = createFileRoute('/signup')({ component: SignupPage });
 
 function SignupPage() {
+  const { t } = useTranslation();
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const posthog = usePostHog();
@@ -45,7 +47,7 @@ function SignupPage() {
       window.rdt?.('track', 'SignUp', { conversionId: result.record.id });
       navigate({ to: '/', replace: true });
     } catch {
-      toast.error('Sign-in failed. Please try again.');
+      toast.error(t('signupFailed'));
     }
   };
 
@@ -86,9 +88,8 @@ function SignupPage() {
     <div className='min-h-screen bg-background flex items-center justify-center p-4'>
       <div className='w-full max-w-sm'>
         <div className='mb-8 text-center'>
-          <h1 className='font-serif text-2xl font-bold text-primary mb-5'>
-            Create an account
-          </h1>
+          {/* eslint-disable-next-line i18next/no-literal-string */}
+          <h1 className='font-serif text-2xl font-bold text-primary mb-5'>Create an account</h1>
           {/* <p className='font-mono text-xs text-muted-foreground tracking-widest uppercase'>
             Hairspring is opening to the public soon. Join the waitlist to be
             notified when you can officially create an account. New accounts get{' '}
@@ -102,22 +103,22 @@ function SignupPage() {
             <GoogleSignInButton
               onClick={() => onOauthSubmit('google')}
               loading={oauthPending}
-              label='Sign up with Google'
+              label={t('signupWithGoogle')}
             />
             <AppleSignInButton
               onClick={() => onOauthSubmit('apple')}
               loading={oauthPending}
-              label='Sign up with Apple'
+              label={t('signupWithApple')}
             />
             <DiscordSignInButton
               onClick={() => onOauthSubmit('discord')}
               loading={oauthPending}
-              label='Sign up with Discord'
+              label={t('signupWithDiscord')}
             />
           </div>
           <div className='flex items-center my-4'>
             <div className='h-0.5 w-full border' />
-            <span className='px-4 text-sm'>OR</span>
+            <span className='px-4 text-sm'>{t('loginOr')}</span>
             <div className='h-0.5 w-full border' />
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
@@ -127,7 +128,7 @@ function SignupPage() {
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <Label htmlFor='email'>Email</Label>
+                    <Label htmlFor='email'>{t('loginEmail')}</Label>
                     <Input
                       id='email'
                       type='email'
@@ -145,7 +146,7 @@ function SignupPage() {
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <Label htmlFor='password'>Password</Label>
+                    <Label htmlFor='password'>{t('loginPassword')}</Label>
                     <Input
                       id='password'
                       type='password'
@@ -162,21 +163,20 @@ function SignupPage() {
 
             {error && (
               <p className='text-sm text-destructive'>
-                {(error as Error).message ??
-                  'Request failed. Please try again.'}
+                {(error as Error).message ?? t('signupFailed')}
               </p>
             )}
 
             <Button type='submit' className='w-full' disabled={isPending}>
-              {isPending ? 'Signing up...' : 'Sign up'}
+              {isPending ? t('signupSigningUp') : t('signupSignUp')}
             </Button>
           </form>
         </div>
 
         <p className='mt-6 text-center font-mono text-xs text-muted-foreground'>
-          Already have an account?{' '}
+          {t('signupHaveAccount')}{' '}
           <Link to='/login' className='text-primary hover:underline'>
-            Sign in
+            {t('signupLogIn')}
           </Link>
         </p>
       </div>

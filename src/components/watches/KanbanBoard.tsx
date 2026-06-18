@@ -14,17 +14,23 @@ import { useUpdateWatch } from '#/hooks/watches';
 import { cn } from '#/lib/helpers';
 import type { Watch, WatchStatus } from '#/types';
 import { KanbanCard } from '#/components/watches/KanbanCard';
+import { ParseKeys } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 // Colors chosen to meet WCAG AA (4.5:1) against the paper background (#fcfbf9).
 // Light "400" Tailwind variants fail on this light theme — use design-system
 // ink/status colors instead.
-const COLUMNS: { status: WatchStatus; label: string; color: string }[] = [
-  { status: 'acquired', label: 'Acquired', color: 'text-plum' }, // #5a3a5a — 9.5:1
-  { status: 'in_progress', label: 'In Progress', color: 'text-[#6d4512]' }, // 8.0:1
-  { status: 'paused', label: 'Paused', color: 'text-[#6b5a45]' }, // 5.7:1
-  { status: 'listed', label: 'Listed', color: 'text-[#2c4a6b]' }, // #indigo — 9.0:1
-  { status: 'sold', label: 'Sold', color: 'text-forest' }, // #3a5a3a — 6.8:1
-  { status: 'kept', label: 'Kept', color: 'text-[#4a4a4a]' }, // #4a4a4a — 4.5:1
+const COLUMNS: {
+  status: WatchStatus;
+  label: string | ParseKeys;
+  color: string;
+}[] = [
+  { status: 'acquired', label: 'statusAcquired', color: 'text-plum' }, // #5a3a5a — 9.5:1
+  { status: 'in_progress', label: 'statusInProgress', color: 'text-[#6d4512]' }, // 8.0:1
+  { status: 'paused', label: 'statusPaused', color: 'text-[#6b5a45]' }, // 5.7:1
+  { status: 'listed', label: 'statusListed', color: 'text-[#2c4a6b]' }, // #indigo — 9.0:1
+  { status: 'sold', label: 'colSold', color: 'text-forest' }, // #3a5a3a — 6.8:1
+  { status: 'kept', label: 'statusKept', color: 'text-[#4a4a4a]' }, // #4a4a4a — 4.5:1
 ];
 
 type KanbanBoardProps = {
@@ -35,7 +41,7 @@ type KanbanBoardProps = {
 
 type DroppableColumnProps = {
   status: WatchStatus;
-  label: string;
+  label: string | ParseKeys;
   color: string;
   cards: Watch[];
   selectedWatchId: string | null;
@@ -50,10 +56,11 @@ function DroppableColumn({
   selectedWatchId,
   onSelectWatch,
 }: DroppableColumnProps) {
+  const { t } = useTranslation();
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <div className='w-[230px] shrink-0 flex flex-col gap-2'>
+    <div className='w-57.5 shrink-0 flex flex-col gap-2'>
       <div className='flex items-center justify-between px-1 mb-0.5'>
         <span
           className={`font-mono text-[10px] uppercase tracking-widest ${color}`}
@@ -68,8 +75,8 @@ function DroppableColumn({
       <div
         ref={setNodeRef}
         className={cn(
-          'flex flex-col gap-2 min-h-[80px] rounded-lg p-1 transition-colors',
-          isOver ? 'ring-1 ring-amber-500/30 bg-amber-500/[0.03]' : '',
+          'flex flex-col gap-2 min-h-20 rounded-lg p-1 transition-colors',
+          isOver ? 'ring-1 ring-amber-500/30 bg-amber-500/3' : '',
         )}
       >
         {cards.map((w) => (
@@ -84,7 +91,7 @@ function DroppableColumn({
           // text-ink-soft on paper bg: 8.5:1
           <div className='rounded-lg border border-dashed border-border py-8 flex items-center justify-center'>
             <span className='font-mono text-[10px] text-ink-soft uppercase tracking-widest'>
-              Empty
+              {t('statusEmpty')}
             </span>
           </div>
         )}
@@ -98,6 +105,7 @@ export function KanbanBoard({
   selectedWatchId,
   onSelectWatch,
 }: KanbanBoardProps) {
+  const { t } = useTranslation();
   const [activeWatchId, setActiveWatchId] = useState<string | null>(null);
   const { mutate: updateWatch } = useUpdateWatch();
   const sensors = useSensors(
@@ -135,7 +143,7 @@ export function KanbanBoard({
             <DroppableColumn
               key={status}
               status={status}
-              label={label}
+              label={t(label as ParseKeys)}
               color={color}
               cards={cards}
               selectedWatchId={selectedWatchId}

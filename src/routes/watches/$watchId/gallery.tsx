@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import {
   useGetWatchById,
@@ -26,15 +27,9 @@ const STAGES: (WatchStage | 'all')[] = [
   'after',
   'listing',
 ];
-const STAGE_LABELS: Record<WatchStage | 'all', string> = {
-  all: 'All',
-  before: 'Before',
-  during: 'During',
-  after: 'After',
-  listing: 'Listing',
-};
 
 function GalleryPage() {
+  const { t } = useTranslation();
   const { watchId } = Route.useParams();
   const { data: watch, isLoading } = useGetWatchById(watchId);
   const { data: user } = useUser();
@@ -84,7 +79,7 @@ function GalleryPage() {
 
   if (isLoading) {
     return (
-      <div className='text-sm text-muted-foreground font-mono'>Loading…</div>
+      <div className='text-sm text-muted-foreground font-mono'>{t('loading')}</div>
     );
   }
 
@@ -95,9 +90,9 @@ function GalleryPage() {
           to='/watches'
           className='text-xs font-mono text-muted-foreground hover:text-foreground no-underline'
         >
-          ← Back to Watches
+          {t('backToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>Watch not found.</div>
+        <div className='text-sm text-red-400 font-mono'>{t('watchNotFound')}</div>
       </div>
     );
   }
@@ -127,7 +122,7 @@ function GalleryPage() {
             <div className='flex items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2'>
               <LockIcon className='w-3.5 h-3.5 text-amber-400 shrink-0' />
               <span className='font-mono text-xs text-muted-foreground'>
-                {FREE_PHOTO_LIMIT} photo limit reached
+                {t('watchPhotoLimitReached', { limit: FREE_PHOTO_LIMIT })}
               </span>
               <UpgradeButton pbUserId={user.id} />
             </div>
@@ -140,7 +135,7 @@ function GalleryPage() {
           role='alert'
           className='rounded-md border border-red-900/60 bg-red-950/30 px-3 py-2 font-mono text-xs text-red-300'
         >
-          {(uploadPhotos.error as Error)?.message ?? 'Upload failed. Please try again.'}
+          {(uploadPhotos.error as Error)?.message ?? t('galleryUploadFailed')}
         </div>
       )}
 
@@ -148,7 +143,7 @@ function GalleryPage() {
         <div className='flex flex-col items-center justify-center py-32 border border-dashed border-border rounded-lg gap-3'>
           <div className='text-4xl text-muted-foreground/20'>⬜</div>
           <p className='text-xs font-mono text-muted-foreground'>
-            No photos yet.
+            {t('galleryNoPhotosYet')}
           </p>
         </div>
       ) : (
@@ -171,7 +166,7 @@ function GalleryPage() {
                       : 'border-border bg-transparent text-muted-foreground hover:text-foreground hover:border-zinc-600'
                   }`}
                 >
-                  {STAGE_LABELS[s]}
+                  {s === 'all' ? t('stageAll') : ({ before: t('stageBefore'), during: t('stageDuring'), after: t('stageAfter'), listing: t('stageListing') } as Record<WatchStage, string>)[s]}
                   <span className='ml-1.5 opacity-60'>{count}</span>
                 </button>
               );
@@ -180,7 +175,7 @@ function GalleryPage() {
 
           {filtered.length === 0 ? (
             <div className='text-center py-16 text-xs font-mono text-muted-foreground'>
-              No photos in this stage.
+              {t('galleryNoPhotosStage')}
             </div>
           ) : (
             <>
@@ -251,7 +246,7 @@ function GalleryPage() {
                       }}
                       disabled={deletePhoto.isPending}
                       className='absolute bottom-4 right-4 hidden group-hover:flex items-center justify-center w-7 h-7 rounded bg-black/70 text-white/80 hover:text-red-400 hover:bg-black/90 transition-colors text-base border border-white/10'
-                      aria-label='Delete photo'
+                      aria-label={t('galleryDeletePhoto')}
                     >
                       ×
                     </button>

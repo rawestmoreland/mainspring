@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import { Link, createFileRoute } from '@tanstack/react-router';
 import { Camera, FolderOpen, ListChecks, Sparkles, Timer } from 'lucide-react';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';

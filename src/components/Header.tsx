@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import { Link } from '@tanstack/react-router'
 import ThemeToggle from './ThemeToggle'
 

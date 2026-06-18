@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import { StatusBadge } from '#/components/primitives/StatusBadge';
 import { useUpdateWatch } from '#/hooks/watches';
 
 export function StatusPicker({ watch, disabled }: { watch: Watch; disabled?: boolean }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const updateWatch = useUpdateWatch();
 
@@ -30,7 +32,7 @@ export function StatusPicker({ watch, disabled }: { watch: Watch; disabled?: boo
       <DialogContent className='sm:max-w-xs'>
         <DialogHeader>
           <DialogTitle className='font-mono text-sm font-medium'>
-            Update Status
+            {t('wishlistUpdateStatus')}
           </DialogTitle>
         </DialogHeader>
         <div className='space-y-1.5 py-1'>
@@ -52,7 +54,7 @@ export function StatusPicker({ watch, disabled }: { watch: Watch; disabled?: boo
               <StatusBadge status={s} />
               {watch.status === s && (
                 <span className='font-mono text-[10px] text-muted-foreground'>
-                  current
+                  {t('wishlistCurrent')}
                 </span>
               )}
             </button>

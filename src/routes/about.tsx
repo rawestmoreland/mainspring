@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/about')({

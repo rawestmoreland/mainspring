@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { format } from 'date-fns/format';
 import {
   LockIcon,
@@ -41,13 +43,13 @@ function formatClock(seconds: number): string {
   return [h, m, s].map((n) => String(n).padStart(2, '0')).join(':');
 }
 
-function fmtDuration(seconds: number): string {
+function fmtDuration(seconds: number, t: TFunction): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  if (h > 0 && m > 0) return `${h}h ${m}m`;
-  if (h > 0) return `${h}h`;
-  if (m > 0) return `${m}m`;
-  return `${seconds}s`;
+  if (h > 0 && m > 0) return `${h}${t('unitH')} ${m}${t('unitM')}`;
+  if (h > 0) return `${h}${t('unitH')}`;
+  if (m > 0) return `${m}${t('unitM')}`;
+  return `${seconds}${t('unitS')}`;
 }
 
 function fmtTime(iso: string): string {
@@ -94,6 +96,7 @@ function computeElapsed(session: WorkSession): number {
 }
 
 function TimePage() {
+  const { t } = useTranslation();
   const { watchId } = Route.useParams();
   const { data: watch, isLoading: watchLoading } = useGetWatchById(watchId);
   const { data: user } = useUser();
@@ -153,7 +156,7 @@ function TimePage() {
   }
 
   function confirmDelete(id: string) {
-    if (window.confirm('Delete this session? This cannot be undone.')) {
+    if (window.confirm(t('timeDeleteConfirm'))) {
       deleteSession.mutate(id, { onSuccess: () => setEditingId(null) });
     }
   }
@@ -217,7 +220,7 @@ function TimePage() {
 
   if (watchLoading || sessionLoading) {
     return (
-      <div className='text-sm font-mono text-muted-foreground'>Loading…</div>
+      <div className='text-sm font-mono text-muted-foreground'>{t('equipmentLoading')}</div>
     );
   }
 
@@ -228,9 +231,9 @@ function TimePage() {
           to='/watches'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Watches
+          {t('watchesBackToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>Watch not found.</div>
+        <div className='text-sm text-red-400 font-mono'>{t('equipmentItemNotFound')}</div>
       </div>
     );
   }
@@ -242,7 +245,7 @@ function TimePage() {
         params={{ watchId }}
         className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
       >
-        ← Back to Watch
+        {t('timeBackToWatch')}
       </Link>
 
       <div className='flex flex-wrap items-start justify-between gap-3'>
@@ -262,8 +265,7 @@ function TimePage() {
         <div className='flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border py-14 mt-2'>
           <LockIcon className='w-5 h-5 text-amber-400' />
           <p className='font-mono text-xs text-muted-foreground text-center max-w-xs'>
-            Time tracking is a Pro feature. Upgrade to track sessions and build
-            an accurate hours log for each project.
+            {t('timeProGate')}
           </p>
           {user && <UpgradeButton pbUserId={user.id} />}
         </div>
@@ -273,9 +275,9 @@ function TimePage() {
           <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
             <KpiCard
               highlight
-              label='Total Time on Project'
-              value={totalWithActive > 0 ? fmtDuration(totalWithActive) : '—'}
-              sub={`${completedSessions.length} session${completedSessions.length !== 1 ? 's' : ''} logged`}
+              label={t('timeTotalTime')}
+              value={totalWithActive > 0 ? fmtDuration(totalWithActive, t) : '—'}
+              sub={t('timeSessionsLogged', { count: completedSessions.length })}
             />
           </div>
 
@@ -283,7 +285,7 @@ function TimePage() {
           <div className='rounded-xl border border-border bg-card overflow-hidden'>
             <div className='px-5 py-3 border-b border-border'>
               <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                Current Session
+                {t('timeCurrentSession')}
               </span>
             </div>
 
@@ -311,7 +313,7 @@ function TimePage() {
                   type='text'
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
-                  placeholder='What are you working on? (optional)'
+                  placeholder={t('timePlaceholderLabel')}
                   className='w-full max-w-sm bg-transparent border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring'
                 />
               )}
@@ -330,7 +332,7 @@ function TimePage() {
                     className='inline-flex items-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-mono font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed'
                   >
                     <PlayIcon className='w-4 h-4' />
-                    Start Session
+                    {t('timeStartSession')}
                   </button>
                 )}
 
@@ -347,7 +349,7 @@ function TimePage() {
                       className='inline-flex items-center gap-2 rounded-md border border-border bg-transparent px-5 py-2.5 text-sm font-mono text-foreground hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                     >
                       <PauseIcon className='w-4 h-4' />
-                      Pause
+                      {t('timePause')}
                     </button>
                     <button
                       onClick={() =>
@@ -360,7 +362,7 @@ function TimePage() {
                       className='inline-flex items-center gap-2 rounded-md border border-border bg-transparent px-5 py-2.5 text-sm font-mono text-foreground hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                     >
                       <StopCircleIcon className='w-4 h-4' />
-                      Stop
+                      {t('timeStop')}
                     </button>
                   </>
                 )}
@@ -373,7 +375,7 @@ function TimePage() {
                       className='inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-mono font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed'
                     >
                       <PlayIcon className='w-4 h-4' />
-                      Resume
+                      {t('timeResume')}
                     </button>
                     <button
                       onClick={() =>
@@ -386,7 +388,7 @@ function TimePage() {
                       className='inline-flex items-center gap-2 rounded-md border border-border bg-transparent px-5 py-2.5 text-sm font-mono text-foreground hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
                     >
                       <StopCircleIcon className='w-4 h-4' />
-                      Stop & Save
+                      {t('timeStopAndSave')}
                     </button>
                   </>
                 )}
@@ -401,7 +403,7 @@ function TimePage() {
               className='w-full flex items-center justify-between px-5 py-3 hover:bg-white/2 transition-colors'
             >
               <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                Log Manual Session
+                {t('timeLogManual')}
               </span>
               <PlusIcon
                 className={cn(
@@ -416,7 +418,7 @@ function TimePage() {
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                   <div className='space-y-1'>
                     <label className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                      Start
+                      {t('timeStart')}
                     </label>
                     <input
                       type='datetime-local'
@@ -432,7 +434,7 @@ function TimePage() {
                   </div>
                   <div className='space-y-1'>
                     <label className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                      End
+                      {t('timeEnd')}
                     </label>
                     <input
                       type='datetime-local'
@@ -454,7 +456,7 @@ function TimePage() {
                   onChange={(e) =>
                     setManualDraft((d) => ({ ...d, label: e.target.value }))
                   }
-                  placeholder='Label (optional)'
+                  placeholder={t('timePlaceholderLabelOpt')}
                   className='w-full bg-transparent border border-border rounded-md px-3 py-2 text-sm font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring'
                 />
 
@@ -467,10 +469,10 @@ function TimePage() {
                     return (
                       <div className='flex items-center gap-2'>
                         <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                          Duration
+                          {t('timeDuration')}
                         </span>
                         <span className='font-mono text-sm text-amber-400'>
-                          {fmtDuration(dur)}
+                          {fmtDuration(dur, t)}
                         </span>
                       </div>
                     );
@@ -478,7 +480,7 @@ function TimePage() {
                   if (manualDraft.startedAt && manualDraft.endedAt) {
                     return (
                       <p className='font-mono text-[10px] text-red-400'>
-                        End time must be after start time.
+                        {t('timeEndAfterStart')}
                       </p>
                     );
                   }
@@ -490,7 +492,7 @@ function TimePage() {
                     onClick={resetManualForm}
                     className='font-mono text-[10px] text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer'
                   >
-                    Cancel
+                    {t('cancel')}
                   </button>
                   <button
                     onClick={submitManualSession}
@@ -503,7 +505,7 @@ function TimePage() {
                     }
                     className='inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-xs font-mono font-semibold text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed'
                   >
-                    Save Session
+                    {t('timeSaveSession')}
                   </button>
                 </div>
               </div>
@@ -514,13 +516,13 @@ function TimePage() {
           <div className='rounded-xl border border-border bg-card overflow-hidden'>
             <div className='px-5 py-3 border-b border-border'>
               <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                Session History
+                {t('timeSessionHistory')}
               </span>
             </div>
 
             {completedSessions.length === 0 ? (
               <div className='py-10 text-center font-mono text-xs text-muted-foreground'>
-                No sessions recorded yet.
+                {t('timeNoSessions')}
               </div>
             ) : (
               <div className='divide-y divide-border'>
@@ -544,13 +546,13 @@ function TimePage() {
                                   label: e.target.value,
                                 }))
                               }
-                              placeholder='Session label (optional)'
+                              placeholder={t('timePlaceholderSessionLabel')}
                               className='w-full bg-transparent border border-border rounded-md px-3 py-1.5 text-[11px] font-mono text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-ring'
                             />
                             <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
                               <div className='space-y-1'>
                                 <label className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                                  Start
+                                  {t('timeStart')}
                                 </label>
                                 <input
                                   type='datetime-local'
@@ -566,7 +568,7 @@ function TimePage() {
                               </div>
                               <div className='space-y-1'>
                                 <label className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                                  End
+                                  {t('timeEnd')}
                                 </label>
                                 <input
                                   type='datetime-local'
@@ -590,10 +592,10 @@ function TimePage() {
                                 return (
                                   <div className='flex items-center gap-2'>
                                     <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
-                                      Duration
+                                      {t('timeDuration')}
                                     </span>
                                     <span className='font-mono text-sm text-amber-400'>
-                                      {fmtDuration(dur)}
+                                      {fmtDuration(dur, t)}
                                     </span>
                                   </div>
                                 );
@@ -601,7 +603,7 @@ function TimePage() {
                               if (editDraft.startedAt && editDraft.endedAt) {
                                 return (
                                   <p className='font-mono text-[10px] text-red-400'>
-                                    End time must be after start time.
+                                    {t('timeEndAfterStart')}
                                   </p>
                                 );
                               }
@@ -619,7 +621,7 @@ function TimePage() {
                                 onClick={cancelEdit}
                                 className='font-mono text-[10px] text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer'
                               >
-                                Cancel
+                                {t('cancel')}
                               </button>
                               <button
                                 onClick={() => saveEdit(s.id)}
@@ -632,7 +634,7 @@ function TimePage() {
                                 }
                                 className='font-mono text-[10px] text-primary hover:opacity-80 bg-transparent border-none cursor-pointer disabled:opacity-50'
                               >
-                                Save
+                                {t('timeSave')}
                               </button>
                             </div>
                           </li>
@@ -656,7 +658,7 @@ function TimePage() {
                             </div>
                             <div className='flex items-center gap-3 shrink-0 ml-4'>
                               <span className='font-mono text-[11px] text-muted-foreground'>
-                                {fmtDuration(s.final_duration_seconds ?? 0)}
+                                {fmtDuration(s.final_duration_seconds ?? 0, t)}
                               </span>
                               <button
                                 onClick={() => startEdit(s)}

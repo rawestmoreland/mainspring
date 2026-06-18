@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { cn, fmt } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
@@ -24,6 +25,7 @@ export const Route = createFileRoute('/inventory/')({
 });
 
 function InventoryPage() {
+  const { t } = useTranslation();
   const [filterZeroQty, setFilterZeroQty] = useState(false);
   const { data: inventory, isPending: isInventoryPending } = useInventory();
   const deleteInventoryItem = useDeleteInventory();
@@ -47,7 +49,7 @@ function InventoryPage() {
 
   if (isInventoryPending || isDonorsPending || isUserPending)
     return <InventorySkeleton />;
-  if (!inventory) return <div>No inventory found</div>;
+  if (!inventory) return <div>{t('inventoryNotFound')}</div>;
 
   const totalValue = inventory.reduce((s, i) => s + i.qty * i.unit_cost, 0);
   const selectedDonor =
@@ -56,11 +58,11 @@ function InventoryPage() {
   return (
     <>
       <div className='grid grid-cols-3 gap-4 mb-7'>
-        <KpiCard label='Total SKUs' value={inventory.length} />
-        <KpiCard label='Donor Movements' value={donorMovements.length} />
+        <KpiCard label={t('inventoryTotalSkus')} value={inventory.length} />
+        <KpiCard label={t('inventoryDonorMovements')} value={donorMovements.length} />
         <KpiCard
           highlight
-          label='Parts Value'
+          label={t('inventoryPartsValue')}
           value={fmt(totalValue)}
           valueClass='text-primary'
         />
@@ -77,7 +79,7 @@ function InventoryPage() {
               : 'bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-border',
           )}
         >
-          Parts
+          {t('inventoryTabParts')}
         </button>
         <button
           type='button'
@@ -89,7 +91,7 @@ function InventoryPage() {
               : 'bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-border',
           )}
         >
-          Donor Movements
+          {t('inventoryDonorMovements')}
         </button>
       </div>
 
@@ -97,7 +99,7 @@ function InventoryPage() {
         <>
           <div className='flex items-center justify-between mb-3.5'>
             <div className='flex items-center gap-4'>
-              <SectionLabel>Spare Parts</SectionLabel>
+              <SectionLabel>{t('inventorySpareParts')}</SectionLabel>
               <Button
                 onClick={() => {
                   setFilterZeroQty((f) => {
@@ -110,14 +112,14 @@ function InventoryPage() {
                 }}
                 size='sm'
               >
-                {filterZeroQty ? 'Show All' : 'Hide Zero Qty'}
+                {filterZeroQty ? t('inventoryShowAll') : t('inventoryHideZeroQty')}
               </Button>
             </div>
             {user && (
               <Button asChild>
                 <Link to='/inventory/new'>
                   <PlusIcon className='size-3' />
-                  Add Part
+                  {t('addPart')}
                 </Link>
               </Button>
             )}
@@ -126,11 +128,11 @@ function InventoryPage() {
           <TableWrap>
             <thead>
               <tr>
-                <Th>Part Name</Th>
-                <Th>Category</Th>
-                <Th>Qty</Th>
-                <Th>Unit Cost</Th>
-                <Th>Total Value</Th>
+                <Th>{t('inventoryColPartName')}</Th>
+                <Th>{t('fieldCategory')}</Th>
+                <Th>{t('colQty')}</Th>
+                <Th>{t('fieldUnitCost')}</Th>
+                <Th>{t('inventoryColTotalValue')}</Th>
                 <Th>{''}</Th>
                 <Th>{''}</Th>
               </tr>
@@ -167,11 +169,7 @@ function InventoryPage() {
                     {user && (
                       <Button
                         onClick={async () => {
-                          if (
-                            window.confirm(
-                              'Are you sure you want to delete this part?',
-                            )
-                          ) {
+                          if (window.confirm(t('inventoryDeleteConfirm'))) {
                             await deleteInventoryItem.mutateAsync(i.id);
                           }
                         }}
@@ -190,7 +188,7 @@ function InventoryPage() {
                     colSpan={6}
                     className='px-3.5 py-8 text-center text-muted-foreground font-mono text-xs'
                   >
-                    No parts in inventory yet.
+                    {t('inventoryNoPartsYet')}
                   </td>
                 </tr>
               )}
@@ -200,12 +198,12 @@ function InventoryPage() {
       ) : (
         <>
           <div className='flex items-center justify-between mb-3.5'>
-            <SectionLabel>Donor Movements</SectionLabel>
+            <SectionLabel>{t('inventoryDonorMovements')}</SectionLabel>
             {user && (
               <Button asChild>
                 <Link to='/inventory/new'>
                   <PlusIcon className='size-3' />
-                  Add Donor
+                  {t('inventoryAddDonor')}
                 </Link>
               </Button>
             )}
@@ -214,9 +212,9 @@ function InventoryPage() {
           <TableWrap>
             <thead>
               <tr>
-                <Th>Caliber</Th>
-                <Th>Manufacturer</Th>
-                <Th>Missing Parts</Th>
+                <Th>{t('fieldCaliber')}</Th>
+                <Th>{t('fieldManufacturer')}</Th>
+                <Th>{t('inventoryMissingParts')}</Th>
               </tr>
             </thead>
             <tbody>
@@ -252,7 +250,7 @@ function InventoryPage() {
                     colSpan={3}
                     className='px-3.5 py-8 text-center text-muted-foreground font-mono text-xs'
                   >
-                    No donor movements yet.
+                    {t('inventoryNoDonorsYet')}
                   </td>
                 </tr>
               )}
