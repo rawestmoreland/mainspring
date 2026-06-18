@@ -6,6 +6,8 @@ import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { usePostHog } from '@posthog/react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { WatchCondition, WatchStatus } from '#/types';
 import { numberField } from '#/lib/helpers';
 import { FREE_PROJECT_LIMIT } from '#/lib/constants';
@@ -14,13 +16,7 @@ import { useUser } from '#/hooks/user';
 import { useSubscription } from '#/hooks/subscription';
 import { UpgradeButton } from '#/components/primitives/UpgradeButton';
 import { WatchesApi } from '#/lib/api/watches';
-import {
-  AlertCircleIcon,
-  CheckCircle2Icon,
-  ImagePlusIcon,
-  InfoIcon,
-  LockIcon,
-} from 'lucide-react';
+import { AlertCircleIcon, ImagePlusIcon, LockIcon } from 'lucide-react';
 import {
   Field,
   FieldContent,
@@ -61,30 +57,51 @@ const WATCH_CONDITIONS: readonly WatchCondition[] = [
   'parts_only',
 ] as const;
 
-const formSchema = z.object({
-  make: z.string().trim().min(1, 'Make is required'),
-  model: z.string().trim().min(1, 'Model is required'),
-  reference: z.string().trim().optional(),
-  year: numberField({ min: 1, message: 'Year is required' }).pipe(
-    z.number().int(),
-  ),
-  status: z.enum(WATCH_STATUSES),
-  condition_bought: z.enum(WATCH_CONDITIONS),
-  bought_price: numberField({
-    min: 0,
-    message: 'Bought price must be 0 or more',
-  }),
-  parts_cost: numberField({ min: 0, message: 'Parts cost must be 0 or more' }),
-  hours_spent: numberField({ min: 0, message: 'Hours must be 0 or more' }),
-  bought_date: z.string().trim().min(1, 'Bought date is required'),
-  sold_price: z.number().min(0).nullable(),
-  sold_date: z.string().trim().nullable(),
-  notes: z.string(),
-});
+const STATUS_LABELS = {
+  acquired: 'statusAcquired',
+  in_progress: 'statusInProgress',
+  listed: 'statusListed',
+  sold: 'statusSold',
+  paused: 'statusPaused',
+  kept: 'statusKept',
+} as const satisfies Record<WatchStatus, string>;
 
-type FormData = z.infer<typeof formSchema>;
+const CONDITION_LABELS = {
+  good: 'conditionGood',
+  fair: 'conditionFair',
+  poor: 'conditionPoor',
+  worn: 'conditionWorn',
+  parts_only: 'conditionPartsOnly',
+} as const satisfies Record<WatchCondition, string>;
+
+function makeFormSchema(t: TFunction) {
+  return z.object({
+    make: z.string().trim().min(1, t('validationMakeRequired')),
+    model: z.string().trim().min(1, t('validationModelRequired')),
+    reference: z.string().trim().optional(),
+    year: numberField({ min: 1, message: t('validationYearRequired') }).pipe(
+      z.number().int(),
+    ),
+    status: z.enum(WATCH_STATUSES),
+    condition_bought: z.enum(WATCH_CONDITIONS),
+    bought_price: numberField({
+      min: 0,
+      message: t('validationBoughtPriceMin'),
+    }),
+    parts_cost: numberField({ min: 0, message: t('validationPartsCostMin') }),
+    hours_spent: numberField({ min: 0, message: t('validationHoursMin') }),
+    bought_date: z.string().trim().min(1, t('validationBoughtDateRequired')),
+    sold_price: z.number().min(0).nullable(),
+    sold_date: z.string().trim().nullable(),
+    notes: z.string(),
+  });
+}
+
+type FormData = z.infer<ReturnType<typeof makeFormSchema>>;
 
 function NewWatchRoute() {
+  const { t } = useTranslation();
+  const formSchema = useMemo(() => makeFormSchema(t), [t]);
   const navigate = useNavigate();
   const posthog = usePostHog();
   const createWatch = useCreateWatch();
@@ -145,7 +162,7 @@ function NewWatchRoute() {
             to='/watches'
             className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
           >
-            ← Back to Watches
+            {t('watchesBackToWatches')}
           </Link>
         </div>
         <div className='flex flex-col items-center justify-center gap-4 rounded-xl border border-border bg-card px-8 py-16 text-center'>
@@ -154,11 +171,13 @@ function NewWatchRoute() {
           </div>
           <div className='space-y-1'>
             <h2 className='font-serif font-semibold text-foreground'>
-              Project Limit Reached
+              {t('watchesProjectLimitTitle')}
             </h2>
             <p className='font-mono text-xs text-muted-foreground max-w-xs'>
-              Free accounts support up to {FREE_PROJECT_LIMIT} active projects.
-              You have {activeCount}. Upgrade to Pro for unlimited projects.
+              {t('watchesProjectLimitDesc', {
+                limit: FREE_PROJECT_LIMIT,
+                count: activeCount,
+              })}
             </p>
           </div>
           {user && <UpgradeButton pbUserId={user.id} />}
@@ -210,13 +229,13 @@ function NewWatchRoute() {
           to='/watches'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Watches
+          {t('watchesBackToWatches')}
         </Link>
         <h1 className='mt-3 text-2xl font-serif font-semibold text-foreground'>
-          Add Watch
+          {t('addWatch')}
         </h1>
         <p className='mt-1 text-xs font-mono text-muted-foreground tracking-wide'>
-          Create a new watch record.
+          {t('watchesNewSub')}
         </p>
       </div>
 
@@ -224,7 +243,7 @@ function NewWatchRoute() {
         <div className='grid w-full max-w-md items-start gap-4 mb-6'>
           <Alert className='bg-destructive/10'>
             <AlertCircleIcon />
-            <AlertTitle>Uh Oh!</AlertTitle>
+            <AlertTitle>{t('uhOh')}</AlertTitle>
             <AlertDescription>{submitError}</AlertDescription>
           </Alert>
         </div>
@@ -241,13 +260,13 @@ function NewWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='make'>Make</FieldLabel>
+                <FieldLabel htmlFor='make'>{t('fieldMake')}</FieldLabel>
                 <Input
                   {...field}
                   id='make'
                   autoFocus
                   aria-invalid={fieldState.invalid}
-                  placeholder='Rolex'
+                  placeholder={t('placeholderMake')}
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -262,12 +281,12 @@ function NewWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='model'>Model</FieldLabel>
+                <FieldLabel htmlFor='model'>{t('fieldModel')}</FieldLabel>
                 <Input
                   {...field}
                   id='model'
                   aria-invalid={fieldState.invalid}
-                  placeholder='Submariner'
+                  placeholder={t('placeholderModel')}
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -282,13 +301,15 @@ function NewWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='reference'>Reference</FieldLabel>
+                <FieldLabel htmlFor='reference'>
+                  {t('fieldReference')}
+                </FieldLabel>
                 <Input
                   {...field}
                   value={field.value ?? ''}
                   id='reference'
                   aria-invalid={fieldState.invalid}
-                  placeholder='16610'
+                  placeholder={t('placeholderReference')}
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -303,7 +324,7 @@ function NewWatchRoute() {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='year'>Year</FieldLabel>
+                <FieldLabel htmlFor='year'>{t('fieldYear')}</FieldLabel>
                 <Input
                   {...field}
                   id='year'
@@ -328,7 +349,7 @@ function NewWatchRoute() {
             render={({ fieldState, field }) => (
               <Field orientation='responsive' data-invalid={fieldState.invalid}>
                 <FieldContent>
-                  <FieldLabel htmlFor='status'>Status</FieldLabel>
+                  <FieldLabel htmlFor='status'>{t('colStatus')}</FieldLabel>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
@@ -343,12 +364,12 @@ function NewWatchRoute() {
                     aria-invalid={fieldState.invalid}
                     className='min-w-30'
                   >
-                    <SelectValue placeholder='select' />
+                    <SelectValue placeholder={t('placeholderSelect')} />
                   </SelectTrigger>
                   <SelectContent position='item-aligned'>
                     {WATCH_STATUSES.map((s) => (
                       <SelectItem key={s} value={s}>
-                        {s.replace('_', ' ').toUpperCase()}
+                        {t(STATUS_LABELS[s])}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -364,7 +385,7 @@ function NewWatchRoute() {
               <Field orientation='responsive' data-invalid={fieldState.invalid}>
                 <FieldContent>
                   <FieldLabel htmlFor='condition_bought'>
-                    Condition (bought)
+                    {t('fieldConditionBought')}
                   </FieldLabel>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -380,12 +401,12 @@ function NewWatchRoute() {
                     aria-invalid={fieldState.invalid}
                     className='min-w-30'
                   >
-                    <SelectValue placeholder='select' />
+                    <SelectValue placeholder={t('placeholderSelect')} />
                   </SelectTrigger>
                   <SelectContent position='item-aligned'>
                     {WATCH_CONDITIONS.map((c) => (
                       <SelectItem key={c} value={c}>
-                        {c.replace('_', ' ').toUpperCase()}
+                        {t(CONDITION_LABELS[c])}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -401,7 +422,9 @@ function NewWatchRoute() {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='bought_price'>Bought price</FieldLabel>
+                <FieldLabel htmlFor='bought_price'>
+                  {t('fieldBoughtPrice')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='bought_price'
@@ -424,7 +447,7 @@ function NewWatchRoute() {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='parts_cost'>Parts cost</FieldLabel>
+                <FieldLabel htmlFor='parts_cost'>{t('partsCost')}</FieldLabel>
                 <Input
                   {...field}
                   id='parts_cost'
@@ -447,7 +470,9 @@ function NewWatchRoute() {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='hours_spent'>Hours spent</FieldLabel>
+                <FieldLabel htmlFor='hours_spent'>
+                  {t('fieldHoursSpent')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='hours_spent'
@@ -472,7 +497,9 @@ function NewWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='bought_date'>Bought date</FieldLabel>
+                <FieldLabel htmlFor='bought_date'>
+                  {t('fieldBoughtDate')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='bought_date'
@@ -492,7 +519,7 @@ function NewWatchRoute() {
             render={({ field: { onChange, value, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor='sold_date'>
-                  Sold date (optional)
+                  {t('fieldSoldDateOptional')}
                 </FieldLabel>
                 <Input
                   {...field}
@@ -517,7 +544,7 @@ function NewWatchRoute() {
             render={({ field: { onChange, value, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
                 <FieldLabel htmlFor='sold_price'>
-                  Sold price (optional)
+                  {t('fieldSoldPriceOptional')}
                 </FieldLabel>
                 <Input
                   {...field}
@@ -544,7 +571,9 @@ function NewWatchRoute() {
 
         <section>
           <Field>
-            <FieldLabel htmlFor='featured_image'>Featured Image</FieldLabel>
+            <FieldLabel htmlFor='featured_image'>
+              {t('fieldFeaturedImage')}
+            </FieldLabel>
             <div className='flex items-center gap-4'>
               <input
                 ref={featuredInputRef}
@@ -566,7 +595,7 @@ function NewWatchRoute() {
                 {featuredPreviewUrl ? (
                   <img
                     src={featuredPreviewUrl}
-                    alt='Featured preview'
+                    alt={t('placeholderFeaturedImageAlt')}
                     className='w-full h-full object-cover'
                   />
                 ) : (
@@ -579,7 +608,9 @@ function NewWatchRoute() {
                   onClick={() => featuredInputRef.current?.click()}
                   className='text-xs font-mono text-amber-400 hover:text-amber-300 text-left'
                 >
-                  {featuredPreviewUrl ? 'Change image' : 'Upload image'}
+                  {featuredPreviewUrl
+                    ? t('featuredImageChange')
+                    : t('featuredImageUpload')}
                 </button>
                 {featuredImageFile ? (
                   <>
@@ -591,12 +622,12 @@ function NewWatchRoute() {
                       onClick={() => setFeaturedImageFile(null)}
                       className='text-xs font-mono text-muted-foreground hover:text-red-400 text-left'
                     >
-                      Remove
+                      {t('featuredImageRemove')}
                     </button>
                   </>
                 ) : (
                   <span className='text-xs font-mono text-muted-foreground'>
-                    Optional. Used as the watch thumbnail.
+                    {t('featuredImageHint')}
                   </span>
                 )}
               </div>
@@ -610,7 +641,7 @@ function NewWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='notes'>Notes</FieldLabel>
+                <FieldLabel htmlFor='notes'>{t('fieldNotes')}</FieldLabel>
                 <TiptapEditor
                   ref={editorRef}
                   value={field.value}
@@ -641,10 +672,12 @@ function NewWatchRoute() {
             type='submit'
             disabled={isSubmitting || createWatch.isPending}
           >
-            {createWatch.isPending ? 'Creating…' : 'Create watch'}
+            {createWatch.isPending
+              ? t('watchesCreating')
+              : t('watchesCreateWatch')}
           </Button>
           <Button asChild variant='outline'>
-            <Link to='/watches'>Cancel</Link>
+            <Link to='/watches'>{t('cancel')}</Link>
           </Button>
         </div>
       </form>

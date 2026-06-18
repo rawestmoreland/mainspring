@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Popover } from 'radix-ui';
 import { XIcon } from 'lucide-react';
 import { cn } from '#/lib/helpers';
@@ -20,6 +21,7 @@ export function PartTagInput({
   disabled,
   placeholder = 'Search or add a part…',
 }: PartTagInputProps) {
+  const { t } = useTranslation();
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -150,13 +152,13 @@ export function PartTagInput({
             disabled={creating}
             className='w-full text-left px-2.5 py-1.5 rounded font-mono text-xs text-brass hover:bg-muted transition-colors cursor-pointer disabled:opacity-50'
           >
-            {creating ? 'Adding…' : `Add "${trimmed}" to vocabulary`}
+            {creating ? t('partTagAdding') : t('partTagAddToVocab', { name: trimmed })}
           </button>
         )}
 
         {filtered.length === 0 && !showCreate && (
           <p className='px-2.5 py-1.5 font-mono text-xs text-muted-foreground'>
-            No parts match. Type to create one.
+            {t('partTagNoResults')}
           </p>
         )}
       </Popover.Content>

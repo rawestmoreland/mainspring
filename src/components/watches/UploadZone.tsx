@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { WatchStage } from '#/types';
 import { cn } from '#/lib/helpers';
 import { STAGE_META } from '#/lib/mocks/meta';
@@ -22,6 +23,7 @@ type UploadZoneProps = {
 };
 
 export function UploadZone({ onUpload, currentCount = 0, limit }: UploadZoneProps) {
+  const { t } = useTranslation();
   const [dragOver, setDragOver] = useState(false);
   const [stage, setStage] = useState<WatchStage>('before');
   const [pending, setPending] = useState<PendingPhoto[]>([]);
@@ -79,7 +81,7 @@ export function UploadZone({ onUpload, currentCount = 0, limit }: UploadZoneProp
     <div className='mt-4'>
       {/* Stage selector */}
       <div className='flex items-center justify-between mb-2.5 flex-wrap gap-2'>
-        <SectionLabel>Add Photos</SectionLabel>
+        <SectionLabel>{t('uploadZoneAddPhotos')}</SectionLabel>
         <div className='flex gap-1.5 flex-wrap'>
           {(
             Object.entries(STAGE_META) as [
@@ -127,25 +129,26 @@ export function UploadZone({ onUpload, currentCount = 0, limit }: UploadZoneProp
         <div className='text-2xl mb-1.5'>📷</div>
         <div className='text-xs text-muted-foreground'>
           {isAtLimit ? (
-            <span>Photo limit reached</span>
+            <span>{t('uploadZonePhotoLimitReached')}</span>
           ) : (
             <>
-              <span className='text-primary font-medium'>Click to upload</span>{' '}
-              or drag &amp; drop
+              <span className='text-primary font-medium'>{t('uploadZoneClickToUpload')}</span>{' '}
+              {t('uploadZoneDragDrop')}
             </>
           )}
         </div>
         <div className='text-[11px] text-muted-foreground/80 mt-1'>
           {!isAtLimit && (
             <>
-              Tagging as{' '}
-              <span className={stageTextClass}>{stageMeta.label}</span> · JPG,
-              PNG, HEIC, WEBP
+              {t('uploadZoneTaggingAs')}{' '}
+              <span className={stageTextClass}>{stageMeta.label}</span>
+              {/* eslint-disable-next-line i18next/no-literal-string */}
+              {' · '}{t('uploadZoneFileFormats')}
             </>
           )}
           {limit !== undefined && (
             <span className={cn('block mt-0.5', slotsLeft <= 1 && 'text-amber-400/80')}>
-              {slotsLeft === Infinity ? '' : `${slotsLeft} slot${slotsLeft !== 1 ? 's' : ''} remaining`}
+              {slotsLeft === Infinity ? '' : t('uploadZoneSlotsRemaining', { count: slotsLeft })}
             </span>
           )}
         </div>
@@ -193,7 +196,7 @@ export function UploadZone({ onUpload, currentCount = 0, limit }: UploadZoneProp
             ))}
           </div>
           <Btn sm onClick={save} className='mt-2.5'>
-            Save {pending.length} photo{pending.length !== 1 ? 's' : ''}
+            {t('uploadZoneSavePhotos', { count: pending.length })}
           </Btn>
         </div>
       )}

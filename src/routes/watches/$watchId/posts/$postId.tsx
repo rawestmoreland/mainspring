@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify';
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -30,6 +31,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 function PostPage() {
+  const { t } = useTranslation();
   const { watchId, postId } = Route.useParams();
   const { data: post, isLoading } = useGetPostById(postId);
   const { data: watch } = useGetWatchById(watchId);
@@ -111,7 +113,7 @@ function PostPage() {
 
   if (isLoading) {
     return (
-      <div className='text-sm font-mono text-muted-foreground'>Loading…</div>
+      <div className='text-sm font-mono text-muted-foreground'>{t('loading')}</div>
     );
   }
 
@@ -123,9 +125,9 @@ function PostPage() {
           params={{ watchId }}
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Repair Log
+          {t('backToRepairLog')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>Post not found.</div>
+        <div className='text-sm text-red-400 font-mono'>{t('postNotFound')}</div>
       </div>
     );
   }
@@ -139,7 +141,7 @@ function PostPage() {
           params={{ watchId }}
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Repair Log
+          {t('backToRepairLog')}
         </Link>
       </div>
 
@@ -149,7 +151,7 @@ function PostPage() {
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <div className='space-y-1.5'>
               <label className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-                Title
+                {t('repairLogSessionTitle')}
               </label>
               <input
                 {...register('title')}
@@ -164,7 +166,7 @@ function PostPage() {
             </div>
             <div className='space-y-1.5'>
               <label className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-                Session Date
+                {t('repairLogSessionDate')}
               </label>
               <input
                 {...register('session_date')}
@@ -177,7 +179,7 @@ function PostPage() {
           {/* Body */}
           <div className='space-y-1.5'>
             <label className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-              Notes
+              {t('repairLogNotes')}
             </label>
             <Controller
               name='body'
@@ -206,14 +208,15 @@ function PostPage() {
             />
             {!isPro && (
               <p className='text-[11px] font-mono text-muted-foreground/60'>
-                Photo uploads require a{' '}
+                {t('repairLogPhotoUploadsRequire')}{' '}
                 <Link
                   to='/pro'
                   className='text-amber-500 hover:text-amber-400 underline underline-offset-2'
                 >
-                  Pro subscription
+                  {t('repairLogProSubscription')}
                 </Link>
-                .
+                {/* eslint-disable-next-line i18next/no-literal-string */}
+                {'.'}
               </p>
             )}
             <WatchPhotoPicker
@@ -230,14 +233,14 @@ function PostPage() {
               disabled={updatePost.isPending}
               className='inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-mono text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity'
             >
-              {updatePost.isPending ? 'Saving…' : 'Save Changes'}
+              {updatePost.isPending ? t('repairLogSaving') : t('repairLogSaveChanges')}
             </button>
             <button
               type='button'
               onClick={handleCancel}
               className='inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-mono text-muted-foreground hover:text-foreground transition-colors'
             >
-              Cancel
+              {t('cancel')}
             </button>
           </div>
         </form>
@@ -260,7 +263,7 @@ function PostPage() {
                 onClick={() => setEditing(true)}
                 className='shrink-0 rounded-md border border-border px-3 py-1.5 text-xs font-mono text-muted-foreground hover:text-foreground transition-colors'
               >
-                Edit
+                {t('repairLogEdit')}
               </button>
             )}
           </section>
@@ -275,7 +278,7 @@ function PostPage() {
             />
           ) : (
             <p className='text-sm text-muted-foreground italic'>
-              No notes written yet.
+              {t('repairLogNoNotes')}
             </p>
           )}
 
@@ -283,7 +286,7 @@ function PostPage() {
           {post.imageUrls.length > 0 && (
             <section className='space-y-3'>
               <div className='text-[11px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-                Attachments ({post.imageUrls.length})
+                {t('repairLogAttachments', { count: post.imageUrls.length })}
               </div>
               <div className='grid grid-cols-3 gap-3'>
                 {post.images.map((filename, i) => (
@@ -309,7 +312,7 @@ function PostPage() {
                         onClick={() => deleteImage.mutate(filename)}
                         disabled={deleteImage.isPending}
                         className='absolute top-1.5 right-1.5 hidden group-hover:flex items-center justify-center w-6 h-6 rounded bg-black/70 text-white/80 hover:text-red-400 hover:bg-black/90 transition-colors'
-                        aria-label='Delete image'
+                        aria-label={t('repairLogDeleteImage')}
                       >
                         ×
                       </button>
@@ -326,12 +329,6 @@ function PostPage() {
 }
 
 const STAGE_ORDER: WatchStage[] = ['before', 'during', 'after', 'listing'];
-const STAGE_LABELS: Record<WatchStage, string> = {
-  before: 'Before',
-  during: 'During',
-  after: 'After',
-  listing: 'Listing',
-};
 
 function WatchPhotoPicker({
   photos,
@@ -344,6 +341,13 @@ function WatchPhotoPicker({
   onToggle: () => void;
   onInsert: (url: string) => void;
 }) {
+  const { t } = useTranslation();
+  const stageLabels: Record<WatchStage, string> = {
+    before: t('stageBefore'),
+    during: t('stageDuring'),
+    after: t('stageAfter'),
+    listing: t('stageListing'),
+  };
   const [recentlyInserted, setRecentlyInserted] = useState<Set<string>>(
     new Set(),
   );
@@ -374,15 +378,16 @@ function WatchPhotoPicker({
         onClick={onToggle}
         className='flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80 hover:text-foreground transition-colors'
       >
+        {/* eslint-disable-next-line i18next/no-literal-string */}
         <span>{open ? '▾' : '▸'}</span>
-        Insert from Watch Photos ({photos.length})
+        {t('markdownInsertFromPhotos', { count: photos.length })}
       </button>
       {open && (
         <div className='rounded-md border border-border bg-card px-3 py-3 space-y-3'>
           {grouped.map(({ stage, photos: stagePhs }) => (
             <div key={stage}>
               <div className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-1.5'>
-                {STAGE_LABELS[stage]}
+                {stageLabels[stage]}
               </div>
               <div className='flex flex-wrap gap-2'>
                 {stagePhs.map((ph) => {
@@ -394,9 +399,8 @@ function WatchPhotoPicker({
                       onClick={() => handleInsert(ph)}
                       title={
                         inserted
-                          ? 'Inserted!'
-                          : ph.caption ||
-                            `Insert ${STAGE_LABELS[ph.stage]} photo`
+                          ? t('markdownPhotosInserted')
+                          : ph.caption || t('markdownPhotosInsert', { stage: stageLabels[ph.stage] })
                       }
                       className={`relative group overflow-hidden rounded border w-14 h-14 shrink-0 transition-all ${
                         inserted
@@ -417,6 +421,7 @@ function WatchPhotoPicker({
                             : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
                         }`}
                       >
+                        {/* eslint-disable-next-line i18next/no-literal-string */}
                         {inserted ? '✓' : '+'}
                       </div>
                     </button>
@@ -426,7 +431,7 @@ function WatchPhotoPicker({
             </div>
           ))}
           <p className='text-[10px] font-mono text-muted-foreground/60'>
-            Click a photo to insert it into the notes.
+            {t('markdownClickToInsert2')}
           </p>
         </div>
       )}

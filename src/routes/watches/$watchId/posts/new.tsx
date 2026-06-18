@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,6 +25,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 function NewPostPage() {
+  const { t } = useTranslation();
   const { watchId } = Route.useParams();
   const { data: user } = useUser();
   const { data: watch } = useGetWatchById(watchId);
@@ -100,7 +102,7 @@ function NewPostPage() {
   if (!user) {
     return (
       <div className='text-sm font-mono text-muted-foreground'>
-        You must be signed in to create repair sessions.
+        {t('repairLogMustSignIn')}
       </div>
     );
   }
@@ -113,7 +115,7 @@ function NewPostPage() {
           params={{ watchId }}
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Repair Log
+          {t('backToRepairLog')}
         </Link>
         <div className='rounded-lg border border-amber-500/30 bg-amber-500/5 px-5 py-5 flex items-start gap-3 max-w-lg'>
           <svg
@@ -126,15 +128,14 @@ function NewPostPage() {
           </svg>
           <div>
             <p className='font-mono text-sm font-medium text-foreground'>
-              This project is frozen
+              {t('repairLogFrozenTitle')}
             </p>
             <p className='font-mono text-xs text-muted-foreground mt-1 leading-relaxed'>
-              You&apos;ve reached the 2-project limit on the free plan. Repair
-              sessions cannot be added to frozen projects.{' '}
+              {t('repairLogFrozenDesc')}{' '}
               <Link to='/pro' className='text-amber-400 hover:text-amber-300'>
-                Upgrade to Pro
+                {t('repairLogUpgradePro')}
               </Link>{' '}
-              or archive another watch to continue.
+              {t('repairLogOrArchive')}
             </p>
           </div>
         </div>
@@ -151,12 +152,12 @@ function NewPostPage() {
           params={{ watchId }}
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Repair Log
+          {t('backToRepairLog')}
         </Link>
       </div>
 
       <h1 className='text-2xl font-serif font-semibold text-foreground'>
-        New Repair Session
+        {t('repairLogNewRepairSession')}
       </h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className='space-y-6 max-w-4xl'>
@@ -164,12 +165,12 @@ function NewPostPage() {
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
           <div className='space-y-1.5'>
             <label className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-              Title
+              {t('repairLogSessionTitle')}
             </label>
             <input
               {...register('title')}
               type='text'
-              placeholder='e.g. Movement service, crystal replacement…'
+              placeholder={t('repairLogSessionPlaceholder')}
               className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring'
             />
             {errors.title && (
@@ -178,7 +179,7 @@ function NewPostPage() {
           </div>
           <div className='space-y-1.5'>
             <label className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-              Session Date
+              {t('repairLogSessionDate')}
             </label>
             <input
               {...register('session_date')}
@@ -196,7 +197,7 @@ function NewPostPage() {
         {/* Body */}
         <div className='space-y-1.5'>
           <label className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80'>
-            Notes
+            {t('repairLogNotes')}
           </label>
           <Controller
             name='body'
@@ -225,14 +226,15 @@ function NewPostPage() {
           />
           {!isPro && (
             <p className='text-[11px] font-mono text-muted-foreground/60'>
-              Photo uploads require a{' '}
+              {t('repairLogPhotoUploadsRequire')}{' '}
               <Link
                 to='/pro'
                 className='text-amber-500 hover:text-amber-400 underline underline-offset-2'
               >
-                Pro subscription
+                {t('repairLogProSubscription')}
               </Link>
-              .
+              {/* eslint-disable-next-line i18next/no-literal-string */}
+              {'.'}
             </p>
           )}
           <WatchPhotoPicker
@@ -250,14 +252,14 @@ function NewPostPage() {
             disabled={createPost.isPending}
             className='inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-mono text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity'
           >
-            {createPost.isPending ? 'Saving…' : 'Save Session'}
+            {createPost.isPending ? t('repairLogSaving') : t('repairLogSaveSession')}
           </button>
           <Link
             to='/watches/$watchId/posts'
             params={{ watchId }}
             className='inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-mono text-muted-foreground hover:text-foreground transition-colors no-underline'
           >
-            Cancel
+            {t('cancel')}
           </Link>
         </div>
       </form>
@@ -266,12 +268,6 @@ function NewPostPage() {
 }
 
 const STAGE_ORDER: WatchStage[] = ['before', 'during', 'after', 'listing'];
-const STAGE_LABELS: Record<WatchStage, string> = {
-  before: 'Before',
-  during: 'During',
-  after: 'After',
-  listing: 'Listing',
-};
 
 function WatchPhotoPicker({
   photos,
@@ -284,6 +280,13 @@ function WatchPhotoPicker({
   onToggle: () => void;
   onInsert: (url: string) => void;
 }) {
+  const { t } = useTranslation();
+  const stageLabels: Record<WatchStage, string> = {
+    before: t('stageBefore'),
+    during: t('stageDuring'),
+    after: t('stageAfter'),
+    listing: t('stageListing'),
+  };
   const [recentlyInserted, setRecentlyInserted] = useState<Set<string>>(
     new Set(),
   );
@@ -314,15 +317,16 @@ function WatchPhotoPicker({
         onClick={onToggle}
         className='flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest text-muted-foreground/80 hover:text-foreground transition-colors'
       >
+        {/* eslint-disable-next-line i18next/no-literal-string */}
         <span>{open ? '▾' : '▸'}</span>
-        Insert from Watch Photos ({photos.length})
+        {t('markdownInsertFromPhotos', { count: photos.length })}
       </button>
       {open && (
         <div className='rounded-md border border-border bg-card px-3 py-3 space-y-3'>
           {grouped.map(({ stage, photos: stagePhs }) => (
             <div key={stage}>
               <div className='text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-1.5'>
-                {STAGE_LABELS[stage]}
+                {stageLabels[stage]}
               </div>
               <div className='flex flex-wrap gap-2'>
                 {stagePhs.map((ph) => {
@@ -334,9 +338,8 @@ function WatchPhotoPicker({
                       onClick={() => handleInsert(ph)}
                       title={
                         inserted
-                          ? 'Inserted!'
-                          : ph.caption ||
-                            `Insert ${STAGE_LABELS[ph.stage]} photo`
+                          ? t('markdownPhotosInserted')
+                          : ph.caption || t('markdownPhotosInsert', { stage: stageLabels[ph.stage] })
                       }
                       className={`relative group overflow-hidden rounded border w-14 h-14 shrink-0 transition-all ${
                         inserted
@@ -357,6 +360,7 @@ function WatchPhotoPicker({
                             : 'bg-black/50 text-white opacity-0 group-hover:opacity-100'
                         }`}
                       >
+                        {/* eslint-disable-next-line i18next/no-literal-string */}
                         {inserted ? '✓' : '+'}
                       </div>
                     </button>
@@ -366,7 +370,7 @@ function WatchPhotoPicker({
             </div>
           ))}
           <p className='text-[10px] font-mono text-muted-foreground/60'>
-            Click a photo to insert it into the notes.
+            {t('markdownClickToInsert2')}
           </p>
         </div>
       )}

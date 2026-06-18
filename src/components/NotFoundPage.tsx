@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 
 const HOUR_MARKERS = Array.from({ length: 12 }, (_, i) => {
   const angle = (i * 30 * Math.PI) / 180;
@@ -22,11 +23,11 @@ const MINUTE_MARKERS = Array.from({ length: 60 }, (_, i) => {
 }).filter((m): m is NonNullable<typeof m> => m !== null);
 
 export function NotFoundPage() {
+  const { t } = useTranslation();
   return (
     <div className='fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-8'>
-      <p className='font-mono text-[10px] tracking-[0.32em] uppercase text-primary opacity-70 mb-8'>
-        Ref. 404
-      </p>
+      {/* eslint-disable-next-line i18next/no-literal-string */}
+      <p className='font-mono text-[10px] tracking-[0.32em] uppercase text-primary opacity-70 mb-8'>Ref. 404</p>
 
       <svg
         viewBox='0 0 200 200'
@@ -114,25 +115,22 @@ export function NotFoundPage() {
       </div>
 
       <h1 className='font-serif text-[clamp(1.4rem,3.5vw,1.875rem)] font-semibold text-foreground text-center mb-3 tracking-[-0.01em] leading-[1.2]'>
-        The movement has stopped.
+        {t('notFoundTitle')}
       </h1>
 
       <p className='font-sans italic text-sm text-muted-foreground text-center leading-7 max-w-88 mb-10 tracking-[0.01em]'>
-        This page has wound down — it may have been moved,
-        <br />
-        removed, or lost somewhere in the register.
+        {t('notFoundBody')}
       </p>
 
       <Link
         to='/dashboard'
         className='font-mono text-[11px] tracking-[0.2em] uppercase text-primary no-underline opacity-75 border-b border-brass-light pb-0.5 transition-opacity duration-150 hover:opacity-100 hover:text-primary'
       >
-        ← Return to Workshop
+        {t('notFoundReturn')}
       </Link>
 
-      <p className='absolute bottom-6 font-mono text-[9px] tracking-[0.18em] text-(--ink-ghost) uppercase'>
-        Hairspring · ERR–404
-      </p>
+      {/* eslint-disable-next-line i18next/no-literal-string */}
+      <p className='absolute bottom-6 font-mono text-[9px] tracking-[0.18em] text-(--ink-ghost) uppercase'>Hairspring · ERR–404</p>
     </div>
   );
 }

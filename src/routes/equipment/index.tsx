@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { fmt } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
 import { SectionLabel } from '#/components/primitives/SectionLabel';
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/equipment/')({
 });
 
 function EquipmentPage() {
+  const { t } = useTranslation();
   const { data: equipment, isPending } = useEquipment();
 
   const { data: user, isPending: isUserPending } = useUser();
@@ -23,7 +25,7 @@ function EquipmentPage() {
     return <EquipmentSkeleton />;
   }
   if (!equipment) {
-    return <div>No equipment found</div>;
+    return <div>{t('equipmentNotFound')}</div>;
   }
 
   const total = equipment.reduce((s, e) => s + e.cost, 0);
@@ -31,23 +33,23 @@ function EquipmentPage() {
   return (
     <>
       <div className='grid grid-cols-2 gap-4 mb-7'>
-        <KpiCard label='Tools Owned' value={equipment.length} />
+        <KpiCard label={t('equipmentToolsOwned')} value={equipment.length} />
         <KpiCard
           highlight
-          label='Total Invested'
+          label={t('equipmentTotalInvested')}
           value={fmt(total)}
           valueClass='text-primary'
-          sub='one-time capex'
+          sub={t('equipmentCapexSub')}
         />
       </div>
 
       <div className='flex items-center justify-between mb-3.5'>
-        <SectionLabel>Tools &amp; Equipment</SectionLabel>
+        <SectionLabel>{t('toolsEquipment')}</SectionLabel>
         {user && (
           <Button asChild>
             <Link to='/equipment/new'>
               <PlusIcon className='size-3' />
-              Add Tool
+              {t('addTool')}
             </Link>
           </Button>
         )}
@@ -56,9 +58,9 @@ function EquipmentPage() {
       <TableWrap>
         <thead>
           <tr>
-            <Th>Tool / Equipment</Th>
-            <Th>Date Acquired</Th>
-            <Th>Cost</Th>
+            <Th>{t('equipmentColTool')}</Th>
+            <Th>{t('equipmentDateAcquired')}</Th>
+            <Th>{t('colCost')}</Th>
             <Th>{''}</Th>
           </tr>
         </thead>
@@ -67,6 +69,7 @@ function EquipmentPage() {
             <TableRow key={e.id}>
               <Td className='font-medium text-sm'>{e.name}</Td>
               <Td className='font-mono text-xs text-muted-foreground'>
+                {/* eslint-disable-next-line i18next/no-literal-string */}
                 {format(e.date_acquired, 'MM/dd/yyyy')}
               </Td>
               <Td className='font-mono text-xs'>{fmt(e.cost)}</Td>
@@ -88,7 +91,7 @@ function EquipmentPage() {
               colSpan={2}
               className='px-3.5 py-2.5 font-semibold text-sm text-foreground'
             >
-              Total
+              {t('total')}
             </td>
             <td className='px-3.5 py-2.5 font-mono text-xs text-primary font-semibold'>
               {fmt(total)}

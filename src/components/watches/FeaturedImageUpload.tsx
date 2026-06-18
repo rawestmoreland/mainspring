@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { ImagePlusIcon, PencilIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '#/lib/helpers';
 import { useUploadFeaturedImage } from '#/hooks/watches';
@@ -11,6 +12,7 @@ type FeaturedImageUploadProps = {
 };
 
 export function FeaturedImageUpload({ watchId, imageUrl, className }: FeaturedImageUploadProps) {
+  const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const upload = useUploadFeaturedImage(watchId);
 
@@ -29,14 +31,14 @@ export function FeaturedImageUpload({ watchId, imageUrl, className }: FeaturedIm
         accept="image/*"
         className="sr-only"
         onChange={handleFileChange}
-        aria-label="Upload featured image"
+        aria-label={t('featuredImageAriaUpload')}
       />
 
       {imageUrl ? (
         <>
           <img
             src={imageUrl}
-            alt="Featured"
+            alt={t('featuredImageAriaUpload')}
             className="w-full aspect-video object-cover rounded-md border border-border"
           />
           <button
@@ -48,7 +50,7 @@ export function FeaturedImageUpload({ watchId, imageUrl, className }: FeaturedIm
               'bg-black/0 group-hover:bg-black/50 transition-all cursor-pointer border-none',
               upload.isPending && 'bg-black/50',
             )}
-            aria-label="Change featured image"
+            aria-label={t('featuredImageAriaChange')}
           >
             <span
               className={cn(
@@ -58,7 +60,7 @@ export function FeaturedImageUpload({ watchId, imageUrl, className }: FeaturedIm
               )}
             >
               <PencilIcon className="size-3" />
-              {upload.isPending ? 'Uploading…' : 'Change image'}
+              {upload.isPending ? t('featuredImageUploading') : t('featuredImageChangeBtn')}
             </span>
           </button>
         </>
@@ -73,17 +75,17 @@ export function FeaturedImageUpload({ watchId, imageUrl, className }: FeaturedIm
             'flex flex-col items-center justify-center gap-2 cursor-pointer',
             upload.isPending && 'opacity-60 cursor-not-allowed',
           )}
-          aria-label="Upload featured image"
+          aria-label={t('featuredImageAriaUpload')}
         >
           <ImagePlusIcon className="size-5 text-muted-foreground" />
           <span className="font-mono text-[10px] text-muted-foreground uppercase tracking-widest">
-            {upload.isPending ? 'Uploading…' : 'Add featured image'}
+            {upload.isPending ? t('featuredImageUploading') : t('featuredImageAddBtn')}
           </span>
         </button>
       )}
 
       {upload.isError && (
-        <p className="mt-1 text-xs text-red-400 font-mono">Upload failed. Please try again.</p>
+        <p className="mt-1 text-xs text-red-400 font-mono">{t('watchUploadFailed')}</p>
       )}
     </div>
   );

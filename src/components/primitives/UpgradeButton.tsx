@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { usePostHog } from '@posthog/react';
 import { startProCheckout } from '#/server/checkout-actions';
@@ -13,6 +14,7 @@ import { useLocation } from '@tanstack/react-router';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
 
 export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
+  const { t } = useTranslation();
   const posthog = usePostHog();
   const ga4 = useGoogleAnalytics();
   const location = useLocation();
@@ -87,7 +89,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
       setCheckoutUrl(url);
     } catch (err) {
       posthog.captureException(err);
-      toast.error('Could not start checkout. Please try again.');
+      toast.error(t('upgradeCheckoutError'));
       console.error(err);
     } finally {
       setLoading(false);
@@ -97,7 +99,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
   return (
     <>
       <Button onClick={handleUpgrade} disabled={loading}>
-        {loading ? 'Loading…' : 'Upgrade'}
+        {loading ? t('upgradeLoading') : t('upgradeUpgrade')}
       </Button>
       <Dialog
         open={!!checkoutUrl}
@@ -115,13 +117,13 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
       >
         <DialogContent className='max-w-2xl p-0 overflow-hidden'>
           <DialogHeader className='sr-only'>
-            <DialogTitle>Upgrade to Pro</DialogTitle>
+            <DialogTitle>{t('upgradeToPro')}</DialogTitle>
           </DialogHeader>
           {checkoutUrl && (
             <iframe
               src={checkoutUrl}
               className='w-full h-175 border-0'
-              title='Checkout'
+              title={t('upgradeCheckoutTitle')}
             />
           )}
         </DialogContent>

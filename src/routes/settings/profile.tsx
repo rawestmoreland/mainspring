@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -42,6 +43,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 function ProfileSettingsPage() {
+  const { t } = useTranslation();
   const { user, profile, isLoading } = useAuth();
   const {
     subscriptionId,
@@ -136,13 +138,13 @@ function ProfileSettingsPage() {
   }, [subdomainValue, profile?.subdomain, profile?.id]);
 
   if (isLoading)
-    return <div className='text-muted-foreground text-sm'>Loading…</div>;
+    return <div className='text-muted-foreground text-sm'>{t('loading')}</div>;
   if (!user) return null;
 
   return (
     <div className='max-w-lg flex flex-col gap-4'>
       <div className='space-y-4'>
-        <h1 className='text-xl font-extrabold'>Profile Details</h1>
+        <h1 className='text-xl font-extrabold'>{t('profileDetails')}</h1>
         <form onSubmit={handleSubmit((d) => save(d))} className='space-y-5'>
           <FieldGroup>
             <Controller
@@ -150,7 +152,7 @@ function ProfileSettingsPage() {
               control={control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <Label htmlFor='display_name'>Display name</Label>
+                  <Label htmlFor='display_name'>{t('profileDisplayName')}</Label>
                   <Input id='display_name' {...field} />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -164,7 +166,7 @@ function ProfileSettingsPage() {
               control={control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <Label htmlFor='bio'>Bio</Label>
+                  <Label htmlFor='bio'>{t('profileBio')}</Label>
                   <div className='flex flex-col gap-2'>
                     <Textarea
                       id='bio'
@@ -172,7 +174,7 @@ function ProfileSettingsPage() {
                       maxLength={500}
                       placeholder='A few words about you…'
                     />
-                    <span className='text-xs text-muted-foreground'>{`${bioWatch?.length ?? 0} / 500 characters`}</span>
+                    <span className='text-xs text-muted-foreground'>{t('profileBioCharCount', { count: bioWatch?.length ?? 0 })}</span>
                   </div>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -206,15 +208,15 @@ function ProfileSettingsPage() {
                       className='font-mono text-sm'
                     />
                     <span className='font-mono text-[11px] text-muted-foreground whitespace-nowrap'>
-                      {subdomainStatus === 'checking' && 'checking…'}
+                      {subdomainStatus === 'checking' && t('profileSubdomainChecking')}
                       {subdomainStatus === 'available' && (
-                        <span className='text-green-400'>✓ available</span>
+                        <span className='text-green-400'>{t('profileSubdomainAvailable')}</span>
                       )}
                       {subdomainStatus === 'taken' && (
-                        <span className='text-red-400'>✗ taken</span>
+                        <span className='text-red-400'>{t('profileSubdomainTaken')}</span>
                       )}
                       {subdomainStatus === 'invalid' && (
-                        <span className='text-amber-400'>invalid format</span>
+                        <span className='text-amber-400'>{t('profileSubdomainInvalid')}</span>
                       )}
                     </span>
                   </div>
@@ -222,8 +224,7 @@ function ProfileSettingsPage() {
                     <FieldError errors={[fieldState.error]} />
                   )}
                   <p className='font-mono text-[10px] text-muted-foreground mt-1'>
-                    Lowercase letters, numbers, and hyphens only (3–63 chars).
-                    Setting a subdomain enables your public profile page.
+                    {t('profileSubdomainHint')}
                   </p>
                 </Field>
               )}
@@ -255,11 +256,11 @@ function ProfileSettingsPage() {
                 )}
               />
               <div>
-                <Label className='cursor-pointer'>Public profile</Label>
+                <Label className='cursor-pointer'>{t('profilePublicProfile')}</Label>
                 <p className='font-mono text-[10px] text-muted-foreground'>
                   {isPublic
-                    ? `Your profile is visible at ${subdomainValue}.hairspring.app`
-                    : 'Set a subdomain first to enable your public profile'}
+                    ? t('profilePublicEnabled', { subdomain: subdomainValue })
+                    : t('profilePublicDisabled')}
                 </p>
               </div>
             </div>
@@ -288,9 +289,9 @@ function ProfileSettingsPage() {
                 )}
               />
               <div>
-                <Label className='cursor-pointer'>Gallery view</Label>
+                <Label className='cursor-pointer'>{t('profileGalleryView')}</Label>
                 <p className='font-mono text-[10px] text-muted-foreground'>
-                  Show watches as a photo grid instead of a list
+                  {t('profileGalleryViewHint')}
                 </p>
               </div>
             </div>
@@ -298,7 +299,7 @@ function ProfileSettingsPage() {
 
           {error && (
             <p className='text-sm text-red-400'>
-              {(error as Error).message ?? 'Save failed. Please try again.'}
+              {(error as Error).message ?? t('profileSaveFailed')}
             </p>
           )}
 
@@ -306,25 +307,25 @@ function ProfileSettingsPage() {
             type='submit'
             disabled={isPending || subdomainStatus === 'taken'}
           >
-            {isPending ? 'Saving…' : 'Save profile'}
+            {isPending ? t('profileSaving') : t('profileSave')}
           </Button>
         </form>
         <Separator />
       </div>
       {!!lsCustomerId && (
         <div className='space-y-4'>
-          <h1 className='text-xl font-extrabold'>Billing & Subscription</h1>
+          <h1 className='text-xl font-extrabold'>{t('billingTitle')}</h1>
           {subscriptionId && canModifySubscription(subscriptionStatus) ? (
             <>
               <p className='text-sm text-muted-foreground'>
-                Current Plan:{' '}
+                {t('billingCurrentPlan')}{' '}
                 <span className='font-medium capitalize'>
                   {subscriptionStatus.replace('_', ' ')}
                 </span>
               </p>
               {!!renewsAt && (
                 <p className='text-sm text-muted-foreground'>
-                  Subscription Renews:{' '}
+                  {t('billingRenews')}{' '}
                   <span className='font-medium capitalize'>
                     {new Date(renewsAt).toLocaleDateString()}
                   </span>
@@ -332,7 +333,7 @@ function ProfileSettingsPage() {
               )}
               {!!endsAt && (
                 <p className='text-sm text-muted-foreground'>
-                  Subscription Ends:{' '}
+                  {t('billingEnds')}{' '}
                   <span className='font-medium capitalize'>
                     {new Date(endsAt).toLocaleDateString()}
                   </span>
@@ -345,26 +346,25 @@ function ProfileSettingsPage() {
                   if (url) window.open(url, '_blank', 'noopener,noreferrer');
                 }}
               >
-                Modify Subscription
+                {t('billingModify')}
               </Button>
             </>
           ) : (
             <>
               <p className='text-sm text-muted-foreground'>
-                No active subscription found.
+                {t('billingNoSubscription')}
               </p>
               <Button
                 variant='outline'
                 className='cursor-pointer mt-2'
                 onClick={async () => {
-                  // Priority 1: Manage the specific subscription
                   const url = await getCustomerPortalUrl({
                     data: lsCustomerId,
                   });
                   if (url) window.open(url, '_blank', 'noopener,noreferrer');
                 }}
               >
-                View Billing History
+                {t('billingHistory')}
               </Button>
             </>
           )}

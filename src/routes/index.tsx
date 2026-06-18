@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import { useMemo, useEffect } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';

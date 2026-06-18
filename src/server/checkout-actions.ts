@@ -18,21 +18,24 @@ export const startProCheckout = createServerFn({
       userId,
       pathname,
       gaClientId,
+      language = 'en',
     }: {
       userId: string;
       pathname: string;
       gaClientId: string;
+      language: 'en' | 'de' | 'fr';
     }) => ({
       userId,
       pathname,
       gaClientId,
+      language,
     }),
   )
   .handler(async ({ data: { userId, pathname, gaClientId } }) => {
     const storeId = process.env.LEMONSQUEEZY_STORE_ID!;
     const variantId = process.env.PRODUCT_VARIANT_ID ?? '1622808';
 
-    const appUrl = !!process.env.APP_URL
+    const appUrl = process.env.APP_URL
       ? `${process.env.APP_URL}`
       : 'http://localhost:3000';
 

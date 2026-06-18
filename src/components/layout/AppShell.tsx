@@ -16,30 +16,35 @@ import {
 } from '#/components/ui/sidebar';
 import { useSubscription } from '#/hooks/subscription';
 import { ImpersonationBanner } from './ImpersonationBanner';
+import { LanguageSelector } from './LanguageSelector';
+import { useTranslation } from 'react-i18next';
+import type { ParseKeys } from 'i18next';
 
-const PAGE_SUBTITLES: Record<string, string> = {
-  '/dashboard': 'PROFIT & LOSS OVERVIEW',
-  '/watches': 'ALL WATCH RECORDS',
-  '/inventory': 'SPARE PARTS STOCK',
-  '/equipment': 'TOOLS & CAPITAL EXPENDITURE',
-  '/settings/profile': 'YOUR PUBLIC PROFILE',
-  '/pro': 'UPGRADE YOUR PLAN',
-  '/wishlist': 'ACQUISITION TARGETS',
+const PAGE_SUBTITLE_KEYS: Record<string, ParseKeys> = {
+  '/dashboard': 'subtitleDashboard',
+  '/watches': 'subtitleWatches',
+  '/inventory': 'subtitleInventory',
+  '/equipment': 'subtitleEquipment',
+  '/settings/profile': 'subtitleProfile',
+  '/pro': 'subtitlePro',
+  '/wishlist': 'subtitleWishlist',
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { t } = useTranslation();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isPro } = useSubscription();
   const currentPage = NAV_PAGES.find((p) => p.path === pathname);
-  const subtitle =
-    PAGE_SUBTITLES[pathname] ??
+  const subtitleKey =
+    PAGE_SUBTITLE_KEYS[pathname] ??
     (pathname.endsWith('/timegrapher')
-      ? 'TIMEGRAPHER LOG'
+      ? 'subtitleTimegrapher'
       : pathname.endsWith('/shopping-list')
-        ? 'PARTS SHOPPING LIST'
+        ? 'subtitleShoppingList'
         : pathname.endsWith('/time')
-          ? 'TIME TRACKER'
+          ? 'subtitleTimeTracker'
           : '');
+  const subtitle = subtitleKey ? t(subtitleKey) : '';
 
   return (
     <SidebarProvider>
@@ -56,9 +61,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Breadcrumb>
               <BreadcrumbList className='flex items-baseline'>
                 <BreadcrumbItem>
-                  <BreadcrumbPage className='font-serif font-semibold text-foreground'>
-                    {currentPage?.label ?? 'Hairspring'}
-                  </BreadcrumbPage>
+                  {/* eslint-disable-next-line i18next/no-literal-string */}
+                  <BreadcrumbPage className='font-serif font-semibold text-foreground'>{t(currentPage?.label as ParseKeys) ?? 'Hairspring'}</BreadcrumbPage>
                 </BreadcrumbItem>
                 {subtitle && (
                   <BreadcrumbItem>
@@ -70,20 +74,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
-          {isPro && (
-            <span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-[10px] tracking-widest border border-amber-500/40 bg-amber-500/10 text-[#6d4512] uppercase shadow-[0_0_8px_rgba(245,158,11,0.15)]'>
-              <svg
-                width='8'
-                height='8'
-                viewBox='0 0 8 8'
-                fill='currentColor'
-                className='shrink-0'
-              >
-                <path d='M4 0L5.2 2.8L8 3.1L6 5.1L6.5 8L4 6.6L1.5 8L2 5.1L0 3.1L2.8 2.8Z' />
-              </svg>
-              Pro
-            </span>
-          )}
+          <div className='flex items-center gap-3'>
+            <LanguageSelector />
+            {/* eslint-disable-next-line i18next/no-literal-string */}
+            {isPro && (<span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-[10px] tracking-widest border border-amber-500/40 bg-amber-500/10 text-[#6d4512] uppercase shadow-[0_0_8px_rgba(245,158,11,0.15)]'><svg width='8' height='8' viewBox='0 0 8 8' fill='currentColor' className='shrink-0'><path d='M4 0L5.2 2.8L8 3.1L6 5.1L6.5 8L4 6.6L1.5 8L2 5.1L0 3.1L2.8 2.8Z' /></svg>Pro</span>)}
+          </div>
         </header>
         <div className='flex flex-1 flex-col px-4 py-5 md:px-9 md:py-7'>
           {children}

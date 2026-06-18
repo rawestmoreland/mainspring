@@ -9,6 +9,7 @@
     "dev": "vite dev --port 3000",
     "build": "vite build",
     "preview": "vite preview",
+    "lint": "eslint src",
     "test": "vitest run",
     "deploy": "npm run build && wrangler deploy",
     "cf-typegen": "wrangler types"
@@ -69,6 +70,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@tailwindcss/typography": "^0.5.16",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.0",
@@ -78,8 +80,12 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.1.4",
+    "eslint": "^10.5.0",
+    "eslint-plugin-i18next": "^6.1.4",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "jsdom": "^28.1.0",
     "typescript": "^5.7.2",
+    "typescript-eslint": "^8.61.1",
     "vite": "^7.3.1",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.5",

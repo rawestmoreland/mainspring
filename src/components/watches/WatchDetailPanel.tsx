@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 import { ArrowRightIcon, XIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns/format';
 import { capitalize } from 'lodash-es';
 
@@ -41,6 +42,7 @@ export function WatchDetailPanel({
   open,
   onClose,
 }: WatchDetailPanelProps) {
+  const { t } = useTranslation();
   const { data: user } = useUser();
 
   const p = watch ? profit(watch) : null;
@@ -74,7 +76,7 @@ export function WatchDetailPanel({
                 <SheetClose asChild>
                   <button
                     className='shrink-0 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0.5 mt-0.5'
-                    aria-label='Close panel'
+                    aria-label={t('closePanel')}
                   >
                     <XIcon className='size-4' />
                   </button>
@@ -100,25 +102,25 @@ export function WatchDetailPanel({
               <div className='aspect-video bg-zinc-950 flex items-center justify-center border-b border-border'>
                 {/* text-muted-foreground on zinc-950: 6.2:1 */}
                 <span className='font-mono text-[10px] text-muted-foreground uppercase tracking-widest'>
-                  No photos
+                  {t('noPhotos')}
                 </span>
               </div>
             )}
 
             <div className='divide-y divide-border'>
               <Row
-                label='Condition'
+                label={t('watchDetailsCondition')}
                 value={capitalize(watch.condition_bought?.replace('_', ' '))}
               />
-              <Row label='Paid' value={fmt(watch.bought_price)} />
-              <Row label='Parts' value={fmt(watch.parts_cost)} />
+              <Row label={t('colPaid')} value={fmt(watch.bought_price)} />
+              <Row label={t('colParts')} value={fmt(watch.parts_cost)} />
               <Row
-                label='Total Invested'
+                label={t('watchDetailsTotalInvested')}
                 value={fmt(watch.bought_price + (watch.parts_cost ?? 0))}
               />
-              <Row label='Sold For' value={fmt(watch.sold_price)} />
+              <Row label={t('colSoldFor')} value={fmt(watch.sold_price)} />
               <Row
-                label='Profit'
+                label={t('colProfit')}
                 value={
                   p !== null ? (
                     <span className={cn(p >= 0 ? 'text-forest' : 'text-wax')}>
@@ -130,7 +132,7 @@ export function WatchDetailPanel({
                 }
               />
               <Row
-                label='ROI'
+                label={t('colRoi')}
                 value={
                   r !== null ? (
                     <span
@@ -145,9 +147,9 @@ export function WatchDetailPanel({
                   )
                 }
               />
-              <Row label='Hours' value={`${watch.hours_spent ?? 0}h`} />
+              <Row label={t('watchDetailsHours')} value={`${watch.hours_spent ?? 0}${t('unitH')}`} />
               <Row
-                label='Acquired'
+                label={t('watchDetailsAcquired')}
                 value={
                   watch.bought_date
                     ? format(watch.bought_date, 'MMM d, yyyy')
@@ -156,7 +158,7 @@ export function WatchDetailPanel({
               />
               {watch.sold_date && (
                 <Row
-                  label='Sold'
+                  label={t('watchDetailsSold')}
                   value={format(watch.sold_date, 'MMM d, yyyy')}
                 />
               )}
@@ -168,7 +170,7 @@ export function WatchDetailPanel({
                 params={{ watchId: watch.id }}
                 className='flex items-center justify-between text-xs font-mono text-primary hover:text-primary/80 no-underline group w-full'
               >
-                <span>Open full page</span>
+                <span>{t('watchOpenFullPage')}</span>
                 <ArrowRightIcon className='size-3 group-hover:translate-x-0.5 transition-transform' />
               </Link>
             </SheetFooter>

@@ -1,5 +1,6 @@
 import DOMPurify from 'dompurify';
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns/format';
 import type { UserProfile, RepairPost } from '#/types';
@@ -10,6 +11,7 @@ export const Route = createFileRoute('/post/$postId')({
 });
 
 function PublicPostDetailPage() {
+  const { t } = useTranslation();
   const ga4 = useGoogleAnalytics();
   const ctx = Route.useRouteContext() as { tenant?: UserProfile | null };
   const { postId } = Route.useParams();
@@ -42,7 +44,7 @@ function PublicPostDetailPage() {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
         <p className='font-mono text-sm text-muted-foreground'>
-          Page not found.
+          {t('pageNotFound')}
         </p>
       </div>
     );
@@ -54,6 +56,7 @@ function PublicPostDetailPage() {
     <div className='min-h-screen'>
       {/* Nav */}
       <header className='fixed top-0 inset-x-0 z-50 h-14 flex items-center gap-3 px-5 border-b border-border bg-background/90 backdrop-blur-md'>
+        {/* eslint-disable-next-line i18next/no-literal-string */}
         <span className='font-serif font-bold text-foreground'>Hairspring</span>
         <span className='text-border'>·</span>
         <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
@@ -69,25 +72,25 @@ function PublicPostDetailPage() {
             params={{ watchId: post.watch }}
             className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground no-underline'
           >
-            ← Back to watch
+            {t('backToWatch')}
           </Link>
         ) : (
           <Link
             to='/'
             className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground no-underline'
           >
-            ← Back to profile
+            {t('backToProfile')}
           </Link>
         )}
 
         {isLoading && (
           <div className='text-sm text-muted-foreground font-mono'>
-            Loading…
+            {t('loading')}
           </div>
         )}
 
         {!isLoading && !post && (
-          <div className='text-sm text-red-400 font-mono'>Post not found.</div>
+          <div className='text-sm text-red-400 font-mono'>{t('postNotFound')}</div>
         )}
 
         {post && (
@@ -150,6 +153,7 @@ function PublicPostDetailPage() {
               });
             }}
           >
+            {/* eslint-disable-next-line i18next/no-literal-string */}
             <span className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground'>
               Powered by Hairspring
             </span>

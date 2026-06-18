@@ -1,20 +1,21 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-export const defaultNS = 'ns1';
+import en from '@/lib/i18n/en.json';
+import de from '@/lib/i18n/de.json';
+import fr from '@/lib/i18n/fr.json';
 
-const resources = {
-  en: {
-    translation: { 'Welcome to React': 'Welcome to React and react-i18next' },
-  },
-  fr: {
-    translation: { 'Welcome to React': 'Bienvenue à React et react-i18next' },
-  },
+export const resources = {
+  en,
+  de,
+  fr,
 };
+
+const savedLng =
+  typeof window !== 'undefined' ? (localStorage.getItem('i18n-lang') ?? 'en') : 'en';
 
 i18n.use(initReactI18next).init({
   resources,
-  lng: 'en',
-  defaultNS,
+  lng: savedLng,
   interpolation: {
     escapeValue: false,
   },

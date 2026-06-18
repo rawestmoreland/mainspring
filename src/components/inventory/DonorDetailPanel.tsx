@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { XIcon } from 'lucide-react';
 
 import type { DonorMovement, InventoryItem } from '#/types';
@@ -22,6 +23,7 @@ type DonorDetailPanelProps = {
 };
 
 export function DonorDetailPanel({ donor, open, onClose }: DonorDetailPanelProps) {
+  const { t } = useTranslation();
   const { data: inventoryData } = useInventory();
   const createInventory = useCreateInventory();
   const updateInventory = useUpdateInventory();
@@ -95,7 +97,7 @@ export function DonorDetailPanel({ donor, open, onClose }: DonorDetailPanelProps
                 <SheetClose asChild>
                   <button
                     className='shrink-0 text-muted-foreground hover:text-foreground transition-colors bg-transparent border-none cursor-pointer p-0.5 mt-0.5'
-                    aria-label='Close panel'
+                    aria-label={t('closePanel')}
                   >
                     <XIcon className='size-4' />
                   </button>
@@ -105,10 +107,10 @@ export function DonorDetailPanel({ donor, open, onClose }: DonorDetailPanelProps
 
             <div className='px-4 py-4'>
               <p className='font-mono text-[10px] uppercase tracking-widest text-muted-foreground mb-1.5'>
-                Harvest Parts
+                {t('donorHarvestParts')}
               </p>
               <p className='font-mono text-[10px] text-muted-foreground mb-3'>
-                Tag harvested parts. You'll be asked whether to add them to inventory.
+                {t('donorHarvestPartsHint')}
               </p>
               <PartTagInput
                 value={donor.missing_parts ?? []}

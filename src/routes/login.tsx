@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -41,6 +42,7 @@ export const Route = createFileRoute('/login')({
 });
 
 function LoginPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
   const { from } = Route.useSearch();
@@ -69,7 +71,7 @@ function LoginPage() {
       posthog.capture('oauth_sign_in', { provider });
       navigate({ to: from ?? '/', replace: true });
     } catch {
-      toast.error('Google sign-in failed. Please try again.');
+      toast.error(t('loginGoogleFailed'));
     }
   };
 
@@ -83,11 +85,10 @@ function LoginPage() {
     <div className='min-h-screen bg-background flex items-center justify-center p-4'>
       <div className='w-full max-w-sm'>
         <div className='mb-8 text-center'>
-          <h1 className='font-serif text-2xl font-bold text-primary mb-1'>
-            Hairspring
-          </h1>
+          {/* eslint-disable-next-line i18next/no-literal-string */}
+          <h1 className='font-serif text-2xl font-bold text-primary mb-1'>Hairspring</h1>
           <p className='font-mono text-xs text-muted-foreground tracking-widest uppercase'>
-            Sign in to your account
+            {t('loginSubtitle')}
           </p>
         </div>
 
@@ -108,7 +109,7 @@ function LoginPage() {
           </div>
           <div className='flex items-center my-4'>
             <div className='h-0.5 w-full border' />
-            <span className='px-4 text-sm'>OR</span>
+            <span className='px-4 text-sm'>{t('loginOr')}</span>
             <div className='h-0.5 w-full border' />
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className='space-y-4'>
@@ -118,7 +119,7 @@ function LoginPage() {
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <Label htmlFor='email'>Email</Label>
+                    <Label htmlFor='email'>{t('loginEmail')}</Label>
                     <Input
                       id='email'
                       type='email'
@@ -137,7 +138,7 @@ function LoginPage() {
                 control={control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <Label htmlFor='password'>Password</Label>
+                    <Label htmlFor='password'>{t('loginPassword')}</Label>
                     <Input
                       id='password'
                       type='password'
@@ -154,20 +155,20 @@ function LoginPage() {
 
             {error && (
               <p className='text-sm text-destructive'>
-                Invalid email or password.
+                {t('loginInvalidCredentials')}
               </p>
             )}
 
             <Button type='submit' className='w-full' disabled={isPending}>
-              {isPending ? 'Signing in…' : 'Sign in'}
+              {isPending ? t('loginSigningIn') : t('loginSignIn')}
             </Button>
           </form>
         </div>
 
         <p className='mt-6 text-center font-mono text-xs text-muted-foreground'>
-          No account?{' '}
+          {t('loginNoAccount')}{' '}
           <Link to='/signup' className='text-primary hover:underline'>
-            Create one
+            {t('loginCreateOne')}
           </Link>
         </p>
 
@@ -179,7 +180,7 @@ function LoginPage() {
                 className='font-mono text-xs text-muted-foreground'
                 onClick={() => setResetOpen(true)}
               >
-                Forgot your password?
+                {t('loginForgotPassword')}
               </button>
             </DialogTrigger>
             <DialogContent className='sm:max-w-sm'>
@@ -196,12 +197,10 @@ function LoginPage() {
                   try {
                     await UserApi.passwordReset(email);
                     posthog.capture('password_reset_requested');
-                    toast.success(
-                      'If an account exists for this email, you will receive instructions shortly',
-                    );
+                    toast.success(t('loginPasswordResetSuccess'));
                   } catch (error) {
                     posthog.captureException(error);
-                    toast.error('There was an error during the submission');
+                    toast.error(t('loginSubmitError'));
                   } finally {
                     setSubmitting(false);
                     setResetOpen(false);
@@ -209,25 +208,25 @@ function LoginPage() {
                 }}
               >
                 <DialogHeader>
-                  <DialogTitle>Password reset</DialogTitle>
+                  <DialogTitle>{t('loginPasswordReset')}</DialogTitle>
                   <DialogDescription>
-                    Please provide the email address for this account.
+                    {t('loginPasswordResetDesc')}
                   </DialogDescription>
                 </DialogHeader>
                 <FieldGroup>
                   <Field>
-                    <Label htmlFor='reset-email'>Email address</Label>
+                    <Label htmlFor='reset-email'>{t('loginEmailAddress')}</Label>
                     <Input
                       id='reset-email'
                       name='reset-email'
-                      placeholder='bob@example.com'
+                      placeholder={t('loginResetPlaceholder')}
                     />
                   </Field>
                 </FieldGroup>
                 <DialogFooter>
                   <DialogClose asChild>
                     <Button variant='outline' disabled={submitting}>
-                      Cancel
+                      {t('cancel')}
                     </Button>
                   </DialogClose>
                   <Button type='submit' disabled={submitting}>
@@ -236,7 +235,7 @@ function LoginPage() {
                         submitting ? 'block animate-spin mr-2' : 'hidden'
                       }
                     />
-                    {submitting ? 'Submitting' : 'Submit'}
+                    {submitting ? t('loginResetSubmitting') : t('loginResetSubmit')}
                   </Button>
                 </DialogFooter>
               </form>

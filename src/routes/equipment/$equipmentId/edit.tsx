@@ -1,10 +1,12 @@
 'use client';
 
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import type { Equipment } from '#/types';
 import { Btn } from '#/components/primitives/Button';
 import { numberField } from '#/lib/helpers';
@@ -22,27 +24,30 @@ export const Route = createFileRoute('/equipment/$equipmentId/edit')({
   component: EditEquipmentRoute,
 });
 
-const formSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, 'This is required')
-    .max(256, 'Must be fewer than 256 characters'),
-  cost: numberField({ min: 0, message: 'Cost must be 0 or more' }),
-  date_acquired: z.string().min(1, 'Date is required'),
-  supplier: z.string(),
-  notes: z.string(),
-});
+function makeFormSchema(t: TFunction) {
+  return z.object({
+    name: z
+      .string()
+      .trim()
+      .min(1, t('validationRequired'))
+      .max(256, t('validationMaxLength', { max: 256 })),
+    cost: numberField({ min: 0, message: t('validationCostMin') }),
+    date_acquired: z.string().min(1, t('validationDateRequired')),
+    supplier: z.string(),
+    notes: z.string(),
+  });
+}
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<ReturnType<typeof makeFormSchema>>;
 
 function EditEquipmentRoute() {
+  const { t } = useTranslation();
   const { equipmentId } = Route.useParams();
   const { data: item, isLoading: isItemLoading } = useGetEquipmentById(equipmentId);
   const { data: user, isLoading: isUserLoading } = useUser();
 
   if (isItemLoading || isUserLoading) {
-    return <div className='text-sm text-muted-foreground font-mono'>Loading…</div>;
+    return <div className='text-sm text-muted-foreground font-mono'>{t('equipmentLoading')}</div>;
   }
 
   if (!item) {
@@ -52,21 +57,23 @@ function EditEquipmentRoute() {
           to='/equipment'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Equipment
+          {t('equipmentBackToEquipment')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>Item not found.</div>
+        <div className='text-sm text-red-400 font-mono'>{t('equipmentItemNotFound')}</div>
       </div>
     );
   }
 
   if (!user) {
-    return <div className='text-sm text-red-400 font-mono'>Unauthorized</div>;
+    return <div className='text-sm text-red-400 font-mono'>{t('equipmentUnauthorized')}</div>;
   }
 
   return <EditEquipmentForm item={item} />;
 }
 
 function EditEquipmentForm({ item }: { item: RecordModel }) {
+  const { t } = useTranslation();
+  const formSchema = useMemo(() => makeFormSchema(t), [t]);
   const navigate = useNavigate();
   const updateEquipment = useUpdateEquipment();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -109,10 +116,10 @@ function EditEquipmentForm({ item }: { item: RecordModel }) {
           to='/equipment'
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          ← Back to Equipment
+          {t('equipmentBackToEquipment')}
         </Link>
         <h1 className='mt-3 text-2xl font-serif font-semibold text-foreground'>
-          Edit Tool
+          {t('equipmentEditTool')}
         </h1>
         <p className='mt-1 text-xs font-mono text-muted-foreground tracking-wide'>
           {item.name as string}
@@ -135,13 +142,13 @@ function EditEquipmentForm({ item }: { item: RecordModel }) {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='name'>Name</FieldLabel>
+                <FieldLabel htmlFor='name'>{t('colName')}</FieldLabel>
                 <Input
                   {...field}
                   id='name'
                   autoFocus
                   aria-invalid={fieldState.invalid}
-                  placeholder='Bergeon 30080 case opener'
+                  placeholder={t('placeholderToolName')}
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -156,7 +163,7 @@ function EditEquipmentForm({ item }: { item: RecordModel }) {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='cost'>Cost</FieldLabel>
+                <FieldLabel htmlFor='cost'>{t('colCost')}</FieldLabel>
                 <Input
                   {...field}
                   id='cost'
@@ -182,7 +189,7 @@ function EditEquipmentForm({ item }: { item: RecordModel }) {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='date_acquired'>Date Acquired</FieldLabel>
+                <FieldLabel htmlFor='date_acquired'>{t('equipmentDateAcquired')}</FieldLabel>
                 <Input
                   {...field}
                   id='date_acquired'
@@ -201,12 +208,12 @@ function EditEquipmentForm({ item }: { item: RecordModel }) {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='supplier'>Supplier</FieldLabel>
+                <FieldLabel htmlFor='supplier'>{t('fieldSupplier')}</FieldLabel>
                 <Input
                   {...field}
                   id='supplier'
                   aria-invalid={fieldState.invalid}
-                  placeholder='e.g. Esslinger &amp; Co.'
+                  placeholder={t('placeholderEquipmentSupplier')}
                   autoComplete='off'
                 />
                 {fieldState.invalid && (
@@ -223,13 +230,13 @@ function EditEquipmentForm({ item }: { item: RecordModel }) {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='notes'>Notes</FieldLabel>
+                <FieldLabel htmlFor='notes'>{t('fieldNotes')}</FieldLabel>
                 <textarea
                   {...field}
                   id='notes'
                   rows={4}
                   aria-invalid={fieldState.invalid}
-                  placeholder='Anything worth remembering…'
+                  placeholder={t('placeholderNotes')}
                   className='w-full min-w-0 resize-y rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30'
                 />
                 {fieldState.invalid && (
@@ -245,14 +252,14 @@ function EditEquipmentForm({ item }: { item: RecordModel }) {
             type='submit'
             disabled={isSubmitting || updateEquipment.isPending}
           >
-            {updateEquipment.isPending ? 'Saving…' : 'Save changes'}
+            {updateEquipment.isPending ? t('equipmentSaving') : t('equipmentSaveChanges')}
           </Btn>
           <Link to='/equipment' className='inline-block'>
             <button
               type='button'
               className='rounded font-semibold tracking-wide transition-opacity hover:opacity-90 cursor-pointer bg-transparent text-muted-foreground border border-border hover:text-foreground hover:border-ring px-4 py-2 text-xs'
             >
-              Cancel
+              {t('cancel')}
             </button>
           </Link>
         </div>

@@ -1,3 +1,4 @@
+/* eslint-disable i18next/no-literal-string */
 import { createFileRoute, Link } from '@tanstack/react-router';
 
 export const Route = createFileRoute('/privacy-policy')({
