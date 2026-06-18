@@ -45,13 +45,8 @@ type FormData = z.infer<typeof schema>;
 function ProfileSettingsPage() {
   const { t } = useTranslation();
   const { user, profile, isLoading } = useAuth();
-  const {
-    subscriptionId,
-    lsCustomerId,
-    subscriptionStatus,
-    renewsAt,
-    endsAt,
-  } = useSubscription();
+  const { subscriptionId, lsCustomerId, subscriptionStatus, renewsAt, endsAt } =
+    useSubscription();
 
   const queryClient = useQueryClient();
 
@@ -152,7 +147,9 @@ function ProfileSettingsPage() {
               control={control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <Label htmlFor='display_name'>{t('profileDisplayName')}</Label>
+                  <Label htmlFor='display_name'>
+                    {t('profileDisplayName')}
+                  </Label>
                   <Input id='display_name' {...field} />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -174,7 +171,11 @@ function ProfileSettingsPage() {
                       maxLength={500}
                       placeholder='A few words about you…'
                     />
-                    <span className='text-xs text-muted-foreground'>{t('profileBioCharCount', { count: bioWatch?.length ?? 0 })}</span>
+                    <span className='text-xs text-muted-foreground'>
+                      {t('profileBioCharCount', {
+                        count: bioWatch?.length ?? 0,
+                      })}
+                    </span>
                   </div>
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -208,15 +209,22 @@ function ProfileSettingsPage() {
                       className='font-mono text-sm'
                     />
                     <span className='font-mono text-[11px] text-muted-foreground whitespace-nowrap'>
-                      {subdomainStatus === 'checking' && t('profileSubdomainChecking')}
+                      {subdomainStatus === 'checking' &&
+                        t('profileSubdomainChecking')}
                       {subdomainStatus === 'available' && (
-                        <span className='text-green-400'>{t('profileSubdomainAvailable')}</span>
+                        <span className='text-green-400'>
+                          {t('profileSubdomainAvailable')}
+                        </span>
                       )}
                       {subdomainStatus === 'taken' && (
-                        <span className='text-red-400'>{t('profileSubdomainTaken')}</span>
+                        <span className='text-red-400'>
+                          {t('profileSubdomainTaken')}
+                        </span>
                       )}
                       {subdomainStatus === 'invalid' && (
-                        <span className='text-amber-400'>{t('profileSubdomainInvalid')}</span>
+                        <span className='text-amber-400'>
+                          {t('profileSubdomainInvalid')}
+                        </span>
                       )}
                     </span>
                   </div>
@@ -256,7 +264,9 @@ function ProfileSettingsPage() {
                 )}
               />
               <div>
-                <Label className='cursor-pointer'>{t('profilePublicProfile')}</Label>
+                <Label className='cursor-pointer'>
+                  {t('profilePublicProfile')}
+                </Label>
                 <p className='font-mono text-[10px] text-muted-foreground'>
                   {isPublic
                     ? t('profilePublicEnabled', { subdomain: subdomainValue })
@@ -289,7 +299,9 @@ function ProfileSettingsPage() {
                 )}
               />
               <div>
-                <Label className='cursor-pointer'>{t('profileGalleryView')}</Label>
+                <Label className='cursor-pointer'>
+                  {t('profileGalleryView')}
+                </Label>
                 <p className='font-mono text-[10px] text-muted-foreground'>
                   {t('profileGalleryViewHint')}
                 </p>

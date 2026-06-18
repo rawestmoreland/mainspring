@@ -5,7 +5,7 @@ import { useAuth } from './auth';
 export const useSubscription = (): {
   isPro: boolean;
   subscriptionId?: string;
-  subscriptionStatus?: SubscriptionStatus;
+  subscriptionStatus: SubscriptionStatus;
   renewsAt?: string;
   endsAt?: string;
   lsCustomerId?: string;
@@ -13,7 +13,7 @@ export const useSubscription = (): {
   const { subscription } = useAuth();
 
   const subscriptionStatus =
-    subscription?.subscription_status as SubscriptionStatus;
+    subscription?.subscription_status ?? ('free' as SubscriptionStatus);
   const renewsAt = subscription?.renews_at;
   const endsAt = subscription?.ends_at;
 
