@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { StatusPicker } from '#/components/watches/StatusPicker';
 import { Skeleton } from '#/components/ui/skeleton';
+import { useAuth } from '#/hooks/auth';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
@@ -57,6 +58,7 @@ function RouteComponent() {
   const { watchId } = Route.useParams();
   const { data: watch, isLoading } = useGetWatchById(watchId);
   const { data: user } = useUser();
+  const { profile } = useAuth();
   const { data: posts } = useGetPostsByWatch(watchId);
   const postCount = posts?.length ?? 0;
   const deletePhoto = useDeleteWatchPhoto(watchId);
@@ -81,7 +83,9 @@ function RouteComponent() {
           const m = Math.floor((totalSessionSeconds % 3600) / 60);
           return h > 0 && m > 0
             ? `${h}${t('unitH')} ${m}${t('unitM')}`
-            : h > 0 ? `${h}${t('unitH')}` : `${m}${t('unitM')}`;
+            : h > 0
+              ? `${h}${t('unitH')}`
+              : `${m}${t('unitM')}`;
         })()
       : '—';
 
@@ -110,7 +114,9 @@ function RouteComponent() {
         >
           {t('watchesBackToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>{t('equipmentItemNotFound')}</div>
+        <div className='text-sm text-red-400 font-mono'>
+          {t('equipmentItemNotFound')}
+        </div>
       </div>
     );
   }
@@ -325,7 +331,9 @@ function RouteComponent() {
                     <div className='mt-4 flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6'>
                       <LockIcon className='w-4 h-4 text-amber-400' />
                       <p className='font-mono text-xs text-muted-foreground'>
-                        {t('watchPhotoLimitReached', { limit: FREE_PHOTO_LIMIT })}
+                        {t('watchPhotoLimitReached', {
+                          limit: FREE_PHOTO_LIMIT,
+                        })}
                       </p>
                       <UpgradeButton pbUserId={user.id} />
                     </div>
@@ -388,11 +396,7 @@ function RouteComponent() {
                         size='icon'
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (
-                            confirm(
-                              t('watchDeletePhotoConfirm'),
-                            )
-                          ) {
+                          if (confirm(t('watchDeletePhotoConfirm'))) {
                             deletePhoto.mutate(activePhoto.id);
                           }
                         }}
@@ -480,7 +484,9 @@ function RouteComponent() {
                         <div className='flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-border py-6 mt-3'>
                           <LockIcon className='w-4 h-4 text-amber-400' />
                           <p className='font-mono text-xs text-muted-foreground'>
-                            {t('watchPhotoLimitReached', { limit: FREE_PHOTO_LIMIT })}
+                            {t('watchPhotoLimitReached', {
+                              limit: FREE_PHOTO_LIMIT,
+                            })}
                           </p>
                           <UpgradeButton pbUserId={user.id} />
                         </div>
@@ -501,21 +507,42 @@ function RouteComponent() {
               [
                 [
                   t('watchKpiInvested'),
-                  fmt(watch.bought_price + (watch.parts_cost ?? 0)),
+                  fmt({
+                    n: watch.bought_price + (watch.parts_cost ?? 0),
+                    symbol: profile?.currency?.symbol ?? '',
+                  }),
                   null,
                 ],
-                [t('watchKpiSalePrice'), fmt(watch.sold_price), null],
+                [
+                  t('watchKpiSalePrice'),
+                  fmt({
+                    n: watch.sold_price,
+                    symbol: profile?.currency?.symbol ?? '',
+                  }),
+                  null,
+                ],
                 [
                   t('watchKpiProfit'),
-                  p !== null ? fmt(p) : '—',
-                  // eslint-disable-next-line i18next/no-literal-string
-                  p !== null ? (p >= 0 ? 'text-green-400' : 'text-red-400') : null,
+                  p !== null
+                    ? fmt({
+                        n: p,
+                        symbol: profile?.currency?.symbol ?? '',
+                      })
+                    : '—',
+                  p !== null
+                    ? p >= 0
+                      ? 'text-green-400'
+                      : 'text-red-400'
+                    : null,
                 ],
                 [
                   t('watchKpiRoi'),
                   r !== null ? fmtPct(r) : '—',
-                  // eslint-disable-next-line i18next/no-literal-string
-                  r !== null ? (parseFloat(r) >= 0 ? 'text-green-400' : 'text-red-400') : null,
+                  r !== null
+                    ? parseFloat(r) >= 0
+                      ? 'text-green-400'
+                      : 'text-red-400'
+                    : null,
                 ],
               ] as [string, string, string | null][]
             ).map(([label, value, colorClass]) => (
@@ -563,8 +590,20 @@ function RouteComponent() {
                       capitalize(watch.condition_bought?.replace('_', ' ')) ??
                         '—',
                     ],
-                    [t('watchDetailsPurchase'), fmt(watch.bought_price)],
-                    [t('watchDetailsPartsCost'), fmt(watch.parts_cost)],
+                    [
+                      t('watchDetailsPurchase'),
+                      fmt({
+                        n: watch.bought_price,
+                        symbol: profile?.currency?.symbol ?? '',
+                      }),
+                    ],
+                    [
+                      t('watchDetailsPartsCost'),
+                      fmt({
+                        n: watch.parts_cost,
+                        symbol: profile?.currency?.symbol ?? '',
+                      }),
+                    ],
                   ] as [string, string][]
                 ).map(([k, v]) => (
                   <div key={k} className='flex flex-col px-3 py-2'>
@@ -584,12 +623,19 @@ function RouteComponent() {
                     [
                       t('watchDetailsAcquired'),
                       // eslint-disable-next-line i18next/no-literal-string
-                      watch.bought_date ? format(watch.bought_date, 'MMM d, yyyy') : '—',
+                      watch.bought_date
+                        ? format(watch.bought_date, 'MMM d, yyyy')
+                        : '—',
                     ],
                     [
                       t('watchDetailsSold'),
                       // eslint-disable-next-line i18next/no-literal-string
-                      watch.sold_date ? format(new Date(watch.sold_date as string), 'MMM d, yyyy') : '—',
+                      watch.sold_date
+                        ? format(
+                            new Date(watch.sold_date as string),
+                            'MMM d, yyyy',
+                          )
+                        : '—',
                     ],
                   ] as [string, string][]
                 ).map(([k, v]) => (
@@ -717,7 +763,12 @@ function RouteComponent() {
                             </span>
                             <span className='text-[11px] font-mono text-muted-foreground shrink-0 ml-3'>
                               {/* eslint-disable-next-line i18next/no-literal-string */}
-                              {post.session_date ? format(new Date(post.session_date), 'MMM d, yyyy') : '—'}
+                              {post.session_date
+                                ? format(
+                                    new Date(post.session_date),
+                                    'MMM d, yyyy',
+                                  )
+                                : '—'}
                             </span>
                           </Link>
                         </li>
@@ -821,7 +872,9 @@ function RouteComponent() {
                             params={{ watchId }}
                             className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
                           >
-                            {t('watchFullLog', { count: timegrapherReadings.length })}
+                            {t('watchFullLog', {
+                              count: timegrapherReadings.length,
+                            })}
                           </Link>
                         </div>
                       </div>
@@ -884,19 +937,23 @@ function RouteComponent() {
                                 {part.qty_used}
                               </td>
                               <td className='px-3.5 py-2.5 text-right text-muted-foreground'>
-                                {fmt(unitCost)}
+                                {fmt({
+                                  n: unitCost,
+                                  symbol: profile?.currency?.symbol ?? '',
+                                })}
                               </td>
                               <td className='px-3.5 py-2.5 text-right text-foreground'>
-                                {fmt(total)}
+                                {fmt({
+                                  n: total,
+                                  symbol: profile?.currency?.symbol ?? '',
+                                })}
                               </td>
                               {user && !isFrozen && (
                                 <td className='px-3.5 py-2.5 text-right'>
                                   <button
                                     onClick={() => {
                                       if (
-                                        confirm(
-                                          t('watchRemovePartConfirm'),
-                                        )
+                                        confirm(t('watchRemovePartConfirm'))
                                       ) {
                                         deletePartUsed.mutate(part.id);
                                       }
@@ -921,7 +978,10 @@ function RouteComponent() {
                             {t('watchColTotal')}
                           </td>
                           <td className='px-3.5 py-2 text-right font-semibold text-foreground'>
-                            {fmt(watch.parts_cost)}
+                            {fmt({
+                              n: watch.parts_cost,
+                              symbol: profile?.currency?.symbol ?? '',
+                            })}
                           </td>
                           {user && <td />}
                         </tr>
@@ -939,7 +999,10 @@ function RouteComponent() {
                       </span>
                       {!isPro && (
                         // eslint-disable-next-line i18next/no-literal-string
-                        <span className='inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'><LockIcon className='w-2.5 h-2.5' />Pro</span>
+                        <span className='inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'>
+                          <LockIcon className='w-2.5 h-2.5' />
+                          Pro
+                        </span>
                       )}
                     </div>
                     {isPro && (
@@ -948,7 +1011,9 @@ function RouteComponent() {
                         params={{ watchId }}
                         className='text-xs font-mono text-primary hover:text-primary/80 no-underline'
                       >
-                        {t('watchShoppingViewAll', { count: partsShoppingItems.length })}
+                        {t('watchShoppingViewAll', {
+                          count: partsShoppingItems.length,
+                        })}
                       </Link>
                     )}
                   </div>
@@ -958,11 +1023,13 @@ function RouteComponent() {
                         className='divide-y divide-border blur-sm select-none pointer-events-none'
                         aria-hidden
                       >
-                        {([
-                          [t('categoryMainspring'), t('watchShoppingNeeded')],
-                          [t('categoryCrystal'), t('watchShoppingOrdered')],
-                          [t('categoryCrown'), t('watchShoppingInHand')],
-                        ] as [string, string][]).map(([k, v]) => (
+                        {(
+                          [
+                            [t('categoryMainspring'), t('watchShoppingNeeded')],
+                            [t('categoryCrystal'), t('watchShoppingOrdered')],
+                            [t('categoryCrown'), t('watchShoppingInHand')],
+                          ] as [string, string][]
+                        ).map(([k, v]) => (
                           <div
                             key={String(k)}
                             className='flex justify-between items-center px-4 py-2.5'
@@ -999,26 +1066,28 @@ function RouteComponent() {
                     </div>
                   ) : (
                     <div className='divide-y divide-border'>
-                      {([
+                      {(
                         [
-                          t('watchShoppingNeeded'),
-                          partsShoppingItems.filter(
-                            (i) => i.status === 'needed',
-                          ).length,
-                        ],
-                        [
-                          t('watchShoppingOrdered'),
-                          partsShoppingItems.filter(
-                            (i) => i.status === 'ordered',
-                          ).length,
-                        ],
-                        [
-                          t('watchShoppingInHand'),
-                          partsShoppingItems.filter(
-                            (i) => i.status === 'in_hand',
-                          ).length,
-                        ],
-                      ] as [string, number][]).map(([k, v]) => (
+                          [
+                            t('watchShoppingNeeded'),
+                            partsShoppingItems.filter(
+                              (i) => i.status === 'needed',
+                            ).length,
+                          ],
+                          [
+                            t('watchShoppingOrdered'),
+                            partsShoppingItems.filter(
+                              (i) => i.status === 'ordered',
+                            ).length,
+                          ],
+                          [
+                            t('watchShoppingInHand'),
+                            partsShoppingItems.filter(
+                              (i) => i.status === 'in_hand',
+                            ).length,
+                          ],
+                        ] as [string, number][]
+                      ).map(([k, v]) => (
                         <div
                           key={String(k)}
                           className='flex justify-between items-center px-4 py-2.5 hover:bg-white/2 transition-colors'
@@ -1084,7 +1153,7 @@ function RouteComponent() {
                   </div>
                 ) : (
                   <div>
-                    {!!watch.notes ? (
+                    {watch.notes ? (
                       <div
                         className='prose text-sm max-w-none'
                         dangerouslySetInnerHTML={{
@@ -1119,11 +1188,7 @@ function RouteComponent() {
               disabled={deleteWatch.isPending}
               onClick={async (e) => {
                 e.preventDefault();
-                if (
-                  confirm(
-                    t('watchDeleteConfirm'),
-                  )
-                ) {
+                if (confirm(t('watchDeleteConfirm'))) {
                   await deleteWatch.mutateAsync(watch.id);
                   navigate({ to: '/dashboard' });
                 }

@@ -13,6 +13,7 @@ import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { InventorySkeleton } from '#/components/skeletons';
 import { DonorDetailPanel } from '#/components/inventory/DonorDetailPanel';
 import { LocalStorageKeys } from '#/lib/constants';
+import { useAuth } from '#/hooks/auth';
 
 const getInitialFilter = () => {
   if (typeof window === 'undefined') return false;
@@ -26,6 +27,7 @@ export const Route = createFileRoute('/inventory/')({
 
 function InventoryPage() {
   const { t } = useTranslation();
+  const { profile } = useAuth();
   const [filterZeroQty, setFilterZeroQty] = useState(false);
   const { data: inventory, isPending: isInventoryPending } = useInventory();
   const deleteInventoryItem = useDeleteInventory();
@@ -59,11 +61,17 @@ function InventoryPage() {
     <>
       <div className='grid grid-cols-3 gap-4 mb-7'>
         <KpiCard label={t('inventoryTotalSkus')} value={inventory.length} />
-        <KpiCard label={t('inventoryDonorMovements')} value={donorMovements.length} />
+        <KpiCard
+          label={t('inventoryDonorMovements')}
+          value={donorMovements.length}
+        />
         <KpiCard
           highlight
           label={t('inventoryPartsValue')}
-          value={fmt(totalValue)}
+          value={fmt({
+            n: totalValue,
+            symbol: profile?.currency?.symbol ?? '',
+          })}
           valueClass='text-primary'
         />
       </div>
@@ -112,7 +120,9 @@ function InventoryPage() {
                 }}
                 size='sm'
               >
-                {filterZeroQty ? t('inventoryShowAll') : t('inventoryHideZeroQty')}
+                {filterZeroQty
+                  ? t('inventoryShowAll')
+                  : t('inventoryHideZeroQty')}
               </Button>
             </div>
             {user && (
@@ -148,10 +158,18 @@ function InventoryPage() {
                   </Td>
                   <Td className='font-mono text-xs'>{i.qty}</Td>
                   <Td className='font-mono text-xs text-muted-foreground'>
-                    {fmt(i.unit_cost, 2)}
+                    {fmt({
+                      n: i.unit_cost,
+                      d: 2,
+                      symbol: profile?.currency?.symbol ?? '',
+                    })}
                   </Td>
                   <Td className='font-mono text-xs'>
-                    {fmt(i.qty * i.unit_cost, 2)}
+                    {fmt({
+                      n: i.qty * i.unit_cost,
+                      d: 2,
+                      symbol: profile?.currency?.symbol ?? '',
+                    })}
                   </Td>
                   <Td className='w-8 text-right'>
                     {user && (

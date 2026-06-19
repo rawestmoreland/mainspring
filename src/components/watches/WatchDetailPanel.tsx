@@ -17,6 +17,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from '#/components/ui/sheet';
+import { useAuth } from '#/hooks/auth';
+import { useMemo } from 'react';
 
 type WatchDetailPanelProps = {
   watch: Watch | null;
@@ -44,10 +46,17 @@ export function WatchDetailPanel({
 }: WatchDetailPanelProps) {
   const { t } = useTranslation();
   const { data: user } = useUser();
+  const { profile } = useAuth();
 
   const p = watch ? profit(watch) : null;
   const r = watch ? roi(watch) : null;
   const panelImage = watch?.featured_image_url ?? watch?.photos?.[0]?.image;
+
+  const currencySymbol = useMemo(() => {
+    if (!profile) return '';
+
+    return profile.currency.symbol ?? '';
+  }, [profile]);
 
   return (
     <Sheet
@@ -59,7 +68,7 @@ export function WatchDetailPanel({
       <SheetContent
         side='right'
         showCloseButton={false}
-        className='w-[340px] sm:max-w-[340px] p-0 gap-0 overflow-y-auto'
+        className='w-85 sm:max-w-85 p-0 gap-0 overflow-y-auto'
       >
         {watch && (
           <>
@@ -112,19 +121,31 @@ export function WatchDetailPanel({
                 label={t('watchDetailsCondition')}
                 value={capitalize(watch.condition_bought?.replace('_', ' '))}
               />
-              <Row label={t('colPaid')} value={fmt(watch.bought_price)} />
-              <Row label={t('colParts')} value={fmt(watch.parts_cost)} />
+              <Row
+                label={t('colPaid')}
+                value={fmt({ n: watch.bought_price, symbol: currencySymbol })}
+              />
+              <Row
+                label={t('colParts')}
+                value={fmt({ n: watch.parts_cost, symbol: currencySymbol })}
+              />
               <Row
                 label={t('watchDetailsTotalInvested')}
-                value={fmt(watch.bought_price + (watch.parts_cost ?? 0))}
+                value={fmt({
+                  n: watch.bought_price + (watch.parts_cost ?? 0),
+                  symbol: currencySymbol,
+                })}
               />
-              <Row label={t('colSoldFor')} value={fmt(watch.sold_price)} />
+              <Row
+                label={t('colSoldFor')}
+                value={fmt({ n: watch.sold_price, symbol: currencySymbol })}
+              />
               <Row
                 label={t('colProfit')}
                 value={
                   p !== null ? (
                     <span className={cn(p >= 0 ? 'text-forest' : 'text-wax')}>
-                      {fmt(p)}
+                      {fmt({ n: p, symbol: currencySymbol })}
                     </span>
                   ) : (
                     '—'
@@ -147,7 +168,10 @@ export function WatchDetailPanel({
                   )
                 }
               />
-              <Row label={t('watchDetailsHours')} value={`${watch.hours_spent ?? 0}${t('unitH')}`} />
+              <Row
+                label={t('watchDetailsHours')}
+                value={`${watch.hours_spent ?? 0}${t('unitH')}`}
+              />
               <Row
                 label={t('watchDetailsAcquired')}
                 value={

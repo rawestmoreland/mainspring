@@ -36,11 +36,8 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { cn, fmt } from '#/lib/helpers';
-import type {
-  WishlistItem,
-  WishlistPriority,
-  WishlistStatus,
-} from '#/types';
+import type { WishlistItem, WishlistPriority, WishlistStatus } from '#/types';
+import { useAuth } from '#/hooks/auth';
 
 export const Route = createFileRoute('/wishlist')({
   component: WishlistPage,
@@ -125,14 +122,18 @@ function WishlistStatusPicker({ item }: { item: WishlistItem }) {
 }
 
 function priorityClass(priority: WishlistPriority): string {
-  if (priority === 'high') return 'bg-red-500/15 text-red-400 border-red-500/30';
-  if (priority === 'medium') return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+  if (priority === 'high')
+    return 'bg-red-500/15 text-red-400 border-red-500/30';
+  if (priority === 'medium')
+    return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
   return 'bg-zinc-500/15 text-zinc-400 border-zinc-500/30';
 }
 
 function statusClass(status: WishlistStatus): string {
-  if (status === 'wanted') return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
-  if (status === 'watching') return 'bg-blue-500/15 text-blue-400 border-blue-500/30';
+  if (status === 'wanted')
+    return 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+  if (status === 'watching')
+    return 'bg-blue-500/15 text-blue-400 border-blue-500/30';
   return 'bg-green-500/15 text-green-400 border-green-500/30';
 }
 
@@ -169,7 +170,9 @@ function AddWatchForm({
       make: data.make,
       model: data.model,
       reference: data.reference || undefined,
-      target_price: data.target_price ? parseFloat(data.target_price) : undefined,
+      target_price: data.target_price
+        ? parseFloat(data.target_price)
+        : undefined,
       priority: data.priority,
       notes: data.notes || undefined,
       status: 'wanted',
@@ -211,7 +214,9 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='model'>{t('wishlistLabelModel')}</FieldLabel>
+                <FieldLabel htmlFor='model'>
+                  {t('wishlistLabelModel')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='model'
@@ -232,7 +237,9 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='reference'>{t('wishlistLabelReference')}</FieldLabel>
+                <FieldLabel htmlFor='reference'>
+                  {t('wishlistLabelReference')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='reference'
@@ -253,7 +260,9 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='target_price'>{t('wishlistLabelTargetPrice')}</FieldLabel>
+                <FieldLabel htmlFor='target_price'>
+                  {t('wishlistLabelTargetPrice')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='target_price'
@@ -278,7 +287,9 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='priority'>{t('wishlistPriorityLabel')}</FieldLabel>
+                <FieldLabel htmlFor='priority'>
+                  {t('wishlistPriorityLabel')}
+                </FieldLabel>
                 <Select
                   name={field.name}
                   value={field.value}
@@ -288,9 +299,15 @@ function AddWatchForm({
                     <SelectValue placeholder={t('wishlistPriorityLabel')} />
                   </SelectTrigger>
                   <SelectContent position='popper'>
-                    <SelectItem value='high'>{t('wishlistPriorityHigh')}</SelectItem>
-                    <SelectItem value='medium'>{t('wishlistPriorityMedium')}</SelectItem>
-                    <SelectItem value='low'>{t('wishlistPriorityLow')}</SelectItem>
+                    <SelectItem value='high'>
+                      {t('wishlistPriorityHigh')}
+                    </SelectItem>
+                    <SelectItem value='medium'>
+                      {t('wishlistPriorityMedium')}
+                    </SelectItem>
+                    <SelectItem value='low'>
+                      {t('wishlistPriorityLow')}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 {fieldState.invalid && (
@@ -306,7 +323,9 @@ function AddWatchForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='notes'>{t('wishlistLabelNotes')}</FieldLabel>
+                <FieldLabel htmlFor='notes'>
+                  {t('wishlistLabelNotes')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='notes'
@@ -346,6 +365,7 @@ function WishlistPage() {
   const { t } = useTranslation();
   const statusLabels = getStatusLabels(t);
   const priorityLabels = getPriorityLabels(t);
+  const { profile } = useAuth();
   const { data: items = [], isLoading } = useWishlist();
   const { data: user } = useUser();
   const { isPro } = useSubscription();
@@ -384,7 +404,9 @@ function WishlistPage() {
 
   if (isLoading) {
     return (
-      <div className='text-sm font-mono text-muted-foreground'>{t('loading')}</div>
+      <div className='text-sm font-mono text-muted-foreground'>
+        {t('loading')}
+      </div>
     );
   }
 
@@ -420,12 +442,28 @@ function WishlistPage() {
       </div>
 
       <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-        <KpiCard highlight label={t('wishlistStatusWanted')} value={wanted} sub={t('wishlistKpiSubWanted')} />
-        <KpiCard label={t('wishlistStatusWatching')} value={watching} sub={t('wishlistKpiSubWatching')} />
-        <KpiCard label={t('wishlistStatusAcquired')} value={acquired} sub={t('wishlistKpiSubAcquired')} />
+        <KpiCard
+          highlight
+          label={t('wishlistStatusWanted')}
+          value={wanted}
+          sub={t('wishlistKpiSubWanted')}
+        />
+        <KpiCard
+          label={t('wishlistStatusWatching')}
+          value={watching}
+          sub={t('wishlistKpiSubWatching')}
+        />
+        <KpiCard
+          label={t('wishlistStatusAcquired')}
+          value={acquired}
+          sub={t('wishlistKpiSubAcquired')}
+        />
         <KpiCard
           label={t('wishlistKpiTargetSpend')}
-          value={fmt(totalTarget)}
+          value={fmt({
+            n: totalTarget,
+            symbol: profile?.currency?.symbol ?? '',
+          })}
           sub={t('wishlistKpiSubTargetSpend')}
         />
       </div>
@@ -468,7 +506,9 @@ function WishlistPage() {
 
       <div>
         <SectionLabel>
-          {filter === 'all' ? t('wishlistAllWatches') : statusLabels[filter as WishlistStatus]}
+          {filter === 'all'
+            ? t('wishlistAllWatches')
+            : statusLabels[filter as WishlistStatus]}
           {' · '}
           {t('wishlistWatchCount', { count: displayed.length })}
         </SectionLabel>
@@ -488,7 +528,9 @@ function WishlistPage() {
                   )}
                 </>
               ) : (
-                t('wishlistNoItems', { status: statusLabels[filter as WishlistStatus].toLowerCase() })
+                t('wishlistNoItems', {
+                  status: statusLabels[filter as WishlistStatus].toLowerCase(),
+                })
               )}
             </div>
           ) : (
@@ -525,7 +567,12 @@ function WishlistPage() {
                       </span>
                     </Td>
                     <Td className='font-mono text-[11px] text-foreground'>
-                      {item.target_price != null ? fmt(item.target_price) : '—'}
+                      {item.target_price != null
+                        ? fmt({
+                            n: item.target_price,
+                            symbol: profile?.currency?.symbol ?? '',
+                          })
+                        : '—'}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground max-w-48 truncate'>
                       {item.notes ?? '—'}

@@ -26,7 +26,6 @@
     "watchLedger": "Registre de Montres",
     "addWatch": "Ajouter une montre",
     "freeAccountLimit": "Les comptes gratuits sont limités à {{limit}} projets actifs.",
-    "upgradeToPro": "Passer à Pro",
     "noWatches": "Aucune montre pour l'instant.",
     "addFirstWatch": "Ajouter votre première montre",
     "addFirstOne": "Ajouter votre premier",
@@ -583,6 +582,7 @@
     "billingModify": "Modifier l'abonnement",
     "billingNoSubscription": "Aucun abonnement actif trouvé.",
     "billingHistory": "Voir l'historique de facturation",
+    "profileUpdateSuccess": "Le profil a été mis à jour avec succès",
 
     "uploadZoneAddPhotos": "Ajouter des photos",
     "uploadZonePhotoLimitReached": "Limite de photos atteinte",

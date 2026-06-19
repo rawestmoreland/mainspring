@@ -26,7 +26,6 @@
     "watchLedger": "Watch Ledger",
     "addWatch": "Add Watch",
     "freeAccountLimit": "Free accounts are limited to {{limit}} active projects.",
-    "upgradeToPro": "Upgrade to Pro",
     "noWatches": "No watches yet.",
     "addFirstWatch": "Add your first watch",
     "addFirstOne": "Add your first one",
@@ -583,6 +582,7 @@
     "billingModify": "Modify Subscription",
     "billingNoSubscription": "No active subscription found.",
     "billingHistory": "View Billing History",
+    "profileUpdateSuccess": "Profile updated successfully",
 
     "uploadZoneAddPhotos": "Add Photos",
     "uploadZonePhotoLimitReached": "Photo limit reached",

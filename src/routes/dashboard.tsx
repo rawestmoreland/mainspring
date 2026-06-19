@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { cn, fmt, fmtPct, profit, roi } from '#/lib/helpers';
 import { KpiCard } from '#/components/primitives/KpiCard';
@@ -22,6 +22,7 @@ import {
 import { FREE_PROJECT_LIMIT } from '#/lib/constants';
 import { useSubscription } from '#/hooks/subscription';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '#/hooks/auth';
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -39,11 +40,19 @@ function Dashboard() {
     });
   }, [navigate]);
 
+  const { profile } = useAuth();
+
   const { data: watches, isPending: isWatchesPending } = useWatches();
   const { data: equipment, isPending: isEquipmentPending } = useEquipment();
   const { data: inventory, isPending: isInventoryPending } = useInventory();
   const { data: user, isPending: isUserPending } = useUser();
   const { isPro } = useSubscription();
+
+  const currencySymbol = useMemo(() => {
+    if (!profile) return '';
+
+    return profile?.currency?.symbol ?? '';
+  }, [profile]);
 
   if (
     isWatchesPending ||
@@ -84,13 +93,13 @@ function Dashboard() {
         <KpiCard
           highlight
           label={t('kpiTotalProfit')}
-          value={fmt(totalProfit)}
+          value={fmt({ n: totalProfit, symbol: currencySymbol })}
           valueClass={totalProfit >= 0 ? 'text-forest' : 'text-wax'}
           sub={t('kpiTotalProfitSub', { count: sold.length })}
         />
         <KpiCard
           label={t('kpiCapitalDeployed')}
-          value={fmt(totalInvested)}
+          value={fmt({ n: totalInvested, symbol: currencySymbol })}
           sub={t('kpiCapitalDeployedSub', { count: watches?.length ?? 0 })}
         />
         <KpiCard
@@ -206,18 +215,22 @@ function Dashboard() {
                     <Td>
                       <StatusPicker watch={w} disabled={w.is_frozen} />
                     </Td>
-                    <Td className='font-mono text-xs'>{fmt(w.bought_price)}</Td>
-                    <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
-                      {fmt(w.parts_cost)}
+                    <Td className='font-mono text-xs'>
+                      {fmt({ n: w.bought_price, symbol: currencySymbol })}
                     </Td>
-                    <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
+                    <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
+                      {fmt({ n: w.parts_cost, symbol: currencySymbol })}
+                    </Td>
+                    <Td className='font-mono text-xs'>
+                      {fmt({ n: w.sold_price, symbol: currencySymbol })}
+                    </Td>
                     <Td
                       className={cn(
                         'font-mono text-xs',
                         p === null ? '' : p >= 0 ? 'text-forest' : 'text-wax',
                       )}
                     >
-                      {fmt(p)}
+                      {fmt({ n: p, symbol: currencySymbol })}
                     </Td>
                     <Td
                       className={cn(
@@ -231,8 +244,9 @@ function Dashboard() {
                     >
                       {fmtPct(r)}
                     </Td>
-                    {/* eslint-disable-next-line i18next/no-literal-string */}
-                    <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>{w.hours_spent}h</Td>
+                    <Td className='hidden sm:table-cell font-mono text-xs text-muted-foreground'>
+                      {`${w.hours_spent}${t('unitH')}`}
+                    </Td>
                   </TableRow>
                 );
               })
@@ -263,7 +277,9 @@ function Dashboard() {
             <SectionLabel>{t('partsInventory')}</SectionLabel>
             <div className='flex items-center gap-2'>
               <span className='font-mono text-[10px] text-muted-foreground'>
-                {t('inventoryValue', { value: fmt(inventoryValue) })}
+                {t('inventoryValue', {
+                  value: fmt({ n: inventoryValue, symbol: currencySymbol }),
+                })}
               </span>
               {user && !!inventory?.length && (
                 <Button variant='outline' asChild>
@@ -298,7 +314,7 @@ function Dashboard() {
                       {i.qty}
                     </Td>
                     <Td className='font-mono text-xs'>
-                      {fmt(i.qty * i.unit_cost)}
+                      {fmt({ n: i.qty * i.unit_cost, symbol: currencySymbol })}
                     </Td>
                   </TableRow>
                 ))
@@ -347,7 +363,9 @@ function Dashboard() {
                 equipment?.map((e) => (
                   <TableRow key={e.id}>
                     <Td className='text-xs'>{e.name}</Td>
-                    <Td className='font-mono text-xs'>{fmt(e.cost)}</Td>
+                    <Td className='font-mono text-xs'>
+                      {fmt({ n: e.cost, symbol: currencySymbol })}
+                    </Td>
                   </TableRow>
                 ))
               ) : (
@@ -370,9 +388,11 @@ function Dashboard() {
             {!!equipCost && (
               <tfoot>
                 <tr className='border-t-2 border-border'>
-                  <Td className='font-medium text-foreground text-xs'>{t('total')}</Td>
+                  <Td className='font-medium text-foreground text-xs'>
+                    {t('total')}
+                  </Td>
                   <Td className='font-mono text-xs text-brass font-semibold'>
-                    {fmt(equipCost)}
+                    {fmt({ n: equipCost, symbol: currencySymbol })}
                   </Td>
                 </tr>
               </tfoot>

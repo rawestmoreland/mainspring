@@ -162,6 +162,7 @@ export type UserProfile = {
   gallery_view?: boolean;
   created: string;
   updated: string;
+  currency: { code: string; symbol: string };
 };
 
 export type RepairPost = {

@@ -23,6 +23,7 @@ import { useSubscription } from '#/hooks/subscription';
 import { FREE_PROJECT_LIMIT, LocalStorageKeys } from '#/lib/constants';
 import type { WatchStatus } from '#/types';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '#/hooks/auth';
 
 export const Route = createFileRoute('/watches/')({
   component: WatchesPage,
@@ -40,6 +41,7 @@ function WatchesPage() {
     ['listed', t('statusListed')],
     ['sold', t('statusSold')],
   ];
+  const { profile } = useAuth();
   const { data: watches, isPending } = useWatches();
   const { data: user, isPending: isUserPending } = useUser();
   const { isPro } = useSubscription();
@@ -269,12 +271,23 @@ function WatchesPage() {
                         {w.condition_bought.replace('_', ' ')}
                       </Td>
                       <Td className='font-mono text-xs'>
-                        {fmt(w.bought_price)}
+                        {fmt({
+                          n: w.bought_price,
+                          symbol: profile?.currency?.symbol ?? '',
+                        })}
                       </Td>
                       <Td className='font-mono text-xs text-muted-foreground'>
-                        {fmt(w.parts_cost)}
+                        {fmt({
+                          n: w.parts_cost,
+                          symbol: profile?.currency?.symbol ?? '',
+                        })}
                       </Td>
-                      <Td className='font-mono text-xs'>{fmt(w.sold_price)}</Td>
+                      <Td className='font-mono text-xs'>
+                        {fmt({
+                          n: w.sold_price,
+                          symbol: profile?.currency?.symbol ?? '',
+                        })}
+                      </Td>
                       <Td>
                         <CostBar watch={w} />
                       </Td>
@@ -288,7 +301,10 @@ function WatchesPage() {
                               : 'text-red-400',
                         )}
                       >
-                        {fmt(p)}
+                        {fmt({
+                          n: p,
+                          symbol: profile?.currency?.symbol ?? '',
+                        })}
                       </Td>
                       <Td className='font-mono text-xs text-muted-foreground'>
                         {/* eslint-disable-next-line i18next/no-literal-string */}

@@ -11,12 +11,27 @@ import type { UserProfile } from '#/types';
 import { Button } from '#/components/ui/button';
 import { Input } from '#/components/ui/input';
 import { Label } from '#/components/ui/label';
-import { Field, FieldError, FieldGroup } from '#/components/ui/field';
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+} from '#/components/ui/field';
 import { Textarea } from '#/components/ui/textarea';
 import { getCustomerPortalUrl, getSignedUrl } from '#/server/ls-url';
 import { useSubscription } from '#/hooks/subscription';
 import { Separator } from '#/components/ui/separator';
 import { canModifySubscription } from '#/lib/helpers';
+import { currencies } from '#/lib/constants';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '#/components/ui/select';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/settings/profile')({
   component: ProfileSettingsPage,
@@ -39,8 +54,9 @@ const schema = z.object({
     .optional(),
   is_public: z.boolean(),
   gallery_view: z.boolean(),
+  currency: z.string(),
 });
-type FormData = z.infer<typeof schema>;
+type ProfileFormData = z.infer<typeof schema>;
 
 function ProfileSettingsPage() {
   const { t } = useTranslation();
@@ -59,22 +75,27 @@ function ProfileSettingsPage() {
     isPending,
     error,
   } = useMutation({
-    mutationFn: async (data: FormData) => {
+    mutationFn: async (data: ProfileFormData) => {
       if (!profile?.id) return;
+
+      const currencyMatch = currencies.find((c) => c.code === data.currency);
+
       await pb.collection('user_profiles').update(profile.id, {
         display_name: data.display_name,
         bio: data.bio ?? '',
         subdomain: data.subdomain ?? '',
         is_public: data.is_public,
         gallery_view: data.gallery_view,
+        currency: currencyMatch,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
+      toast.success(t('profileUpdateSuccess'));
     },
   });
 
-  const { control, handleSubmit, watch, setValue } = useForm<FormData>({
+  const { control, handleSubmit, watch, setValue } = useForm<ProfileFormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       display_name: profile?.display_name ?? '',
@@ -82,6 +103,7 @@ function ProfileSettingsPage() {
       subdomain: profile?.subdomain ?? '',
       is_public: profile?.is_public ?? false,
       gallery_view: profile?.gallery_view ?? false,
+      currency: profile?.currency?.code ?? 'USD',
     },
   });
 
@@ -93,6 +115,7 @@ function ProfileSettingsPage() {
       setValue('subdomain', profile.subdomain ?? '');
       setValue('is_public', profile.is_public);
       setValue('gallery_view', profile.gallery_view ?? false);
+      setValue('currency', profile?.currency?.code ?? 'USD');
     }
   }, [profile, setValue]);
 
@@ -237,6 +260,48 @@ function ProfileSettingsPage() {
                 </Field>
               )}
             />
+
+            <div className='flex items-center gap-3'>
+              <FieldGroup>
+                <Controller
+                  name='currency'
+                  control={control}
+                  render={({ field, fieldState }) => (
+                    <Field>
+                      <FieldContent>
+                        <FieldDescription>Currency</FieldDescription>
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </FieldContent>
+                      <Select
+                        name={field.name}
+                        value={field.value}
+                        defaultValue='USD'
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger
+                          id='profile-currency'
+                          aria-invalid={fieldState.invalid}
+                          className='min-w-30'
+                        >
+                          <SelectValue
+                            placeholder={profile?.currency?.code ?? 'Select'}
+                          />
+                        </SelectTrigger>
+                        <SelectContent position='item-aligned'>
+                          {currencies.map((c) => (
+                            <SelectItem key={c.code} value={c.code}>
+                              {c.code}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+            </div>
 
             <div className='flex items-center gap-3'>
               <Controller

@@ -16,11 +16,19 @@ export function roi(w: Watch): string | null {
   return ((p / (w.bought_price + w.parts_cost)) * 100).toFixed(1);
 }
 
-export function fmt(n: number | null | undefined, d = 0): string {
+export function fmt({
+  n,
+  d = 0,
+  symbol = '',
+}: {
+  n: number | null | undefined;
+  d?: number;
+  symbol: string;
+}): string {
   if (n === null || n === undefined) return '—';
-  if (n === 0) return '$0';
+  if (n === 0) return `${symbol}0`;
   return (
-    '$' +
+    symbol +
     Number(n).toLocaleString('en-US', {
       minimumFractionDigits: d,
       maximumFractionDigits: d,

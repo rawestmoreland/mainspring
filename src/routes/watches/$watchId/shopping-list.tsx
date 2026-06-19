@@ -37,7 +37,12 @@ import {
 } from '#/components/ui/dialog';
 import { Input } from '#/components/ui/input';
 import { cn, fmt } from '#/lib/helpers';
-import type { InventoryCategory, PartsShoppingStatus, WatchPartsShoppingItem } from '#/types';
+import type {
+  InventoryCategory,
+  PartsShoppingStatus,
+  WatchPartsShoppingItem,
+} from '#/types';
+import { useAuth } from '#/hooks/auth';
 
 export const Route = createFileRoute('/watches/$watchId/shopping-list')({
   component: ShoppingListPage,
@@ -72,8 +77,10 @@ function getStatusLabels(t: TFunction): Record<PartsShoppingStatus, string> {
 }
 
 function statusClass(status: PartsShoppingStatus): string {
-  if (status === 'needed') return 'bg-amber-500/15 text-[#6d4512] border-amber-500/30';
-  if (status === 'ordered') return 'bg-blue-500/15 text-[#2c4a6b] border-blue-500/30';
+  if (status === 'needed')
+    return 'bg-amber-500/15 text-[#6d4512] border-amber-500/30';
+  if (status === 'ordered')
+    return 'bg-blue-500/15 text-[#2c4a6b] border-blue-500/30';
   return 'bg-green-500/15 text-[#3a5a3a] border-green-500/30';
 }
 
@@ -178,7 +185,9 @@ function AddItemForm({
       watch: watchId,
       name: data.name,
       category: (data.category as InventoryCategory) || undefined,
-      target_price: data.target_price ? parseFloat(data.target_price) : undefined,
+      target_price: data.target_price
+        ? parseFloat(data.target_price)
+        : undefined,
       notes: data.notes || undefined,
       status: 'needed',
     });
@@ -198,7 +207,9 @@ function AddItemForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='name'>{t('shoppingListPartName')}</FieldLabel>
+                <FieldLabel htmlFor='name'>
+                  {t('shoppingListPartName')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='name'
@@ -251,7 +262,9 @@ function AddItemForm({
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='target_price'>{t('shoppingListTargetPriceCol')}</FieldLabel>
+                <FieldLabel htmlFor='target_price'>
+                  {t('shoppingListTargetPriceCol')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='target_price'
@@ -283,9 +296,7 @@ function AddItemForm({
                 aria-invalid={fieldState.invalid}
                 className={inputCls}
               />
-              {fieldState.invalid && (
-                <FieldError errors={[fieldState.error]} />
-              )}
+              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         />
@@ -296,7 +307,9 @@ function AddItemForm({
           disabled={createItem.isPending}
           className='inline-flex items-center rounded-md bg-primary px-4 py-2 text-xs font-mono text-primary-foreground hover:opacity-90 disabled:opacity-50 transition-opacity'
         >
-          {createItem.isPending ? t('shoppingListAddingItem') : t('shoppingListAddItem')}
+          {createItem.isPending
+            ? t('shoppingListAddingItem')
+            : t('shoppingListAddItem')}
         </button>
         <button
           type='button'
@@ -317,6 +330,7 @@ function ShoppingListPage() {
   const { data: watch, isLoading: watchLoading } = useGetWatchById(watchId);
   const { data: items = [], isLoading: itemsLoading } =
     useGetPartsShoppingList(watchId);
+  const { profile } = useAuth();
   const { data: user } = useUser();
   const { isPro } = useSubscription();
   const deleteItem = useDeletePartsShoppingItem(watchId);
@@ -325,7 +339,9 @@ function ShoppingListPage() {
 
   if (watchLoading || itemsLoading) {
     return (
-      <div className='text-sm font-mono text-muted-foreground'>{t('loading')}</div>
+      <div className='text-sm font-mono text-muted-foreground'>
+        {t('loading')}
+      </div>
     );
   }
 
@@ -338,7 +354,9 @@ function ShoppingListPage() {
         >
           {t('backToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>{t('watchNotFound')}</div>
+        <div className='text-sm text-red-400 font-mono'>
+          {t('watchNotFound')}
+        </div>
       </div>
     );
   }
@@ -411,12 +429,28 @@ function ShoppingListPage() {
       </div>
 
       <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
-        <KpiCard highlight label={t('watchShoppingNeeded')} value={needed} sub={t('shoppingListToSource')} />
-        <KpiCard label={t('watchShoppingOrdered')} value={ordered} sub={t('shoppingListInTransit')} />
-        <KpiCard label={t('watchShoppingInHand')} value={inHand} sub={t('shoppingListReceived')} />
+        <KpiCard
+          highlight
+          label={t('watchShoppingNeeded')}
+          value={needed}
+          sub={t('shoppingListToSource')}
+        />
+        <KpiCard
+          label={t('watchShoppingOrdered')}
+          value={ordered}
+          sub={t('shoppingListInTransit')}
+        />
+        <KpiCard
+          label={t('watchShoppingInHand')}
+          value={inHand}
+          sub={t('shoppingListReceived')}
+        />
         <KpiCard
           label={t('shoppingListTargetValue')}
-          value={fmt(totalTargetValue)}
+          value={fmt({
+            n: totalTargetValue,
+            symbol: profile?.currency?.symbol ?? '',
+          })}
           sub={t('shoppingListEstimatedCost')}
         />
       </div>
@@ -471,12 +505,15 @@ function ShoppingListPage() {
                       {item.name}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
-                      {item.category
-                        ? categoryLabels[item.category]
-                        : '—'}
+                      {item.category ? categoryLabels[item.category] : '—'}
                     </Td>
                     <Td className='font-mono text-[11px] text-foreground'>
-                      {item.target_price != null ? fmt(item.target_price) : '—'}
+                      {item.target_price != null
+                        ? fmt({
+                            n: item.target_price,
+                            symbol: profile?.currency?.symbol ?? '',
+                          })
+                        : '—'}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground max-w-48 truncate'>
                       {item.notes ?? '—'}

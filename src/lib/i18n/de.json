@@ -26,7 +26,6 @@
     "watchLedger": "Uhrenbuch",
     "addWatch": "Uhr hinzufügen",
     "freeAccountLimit": "Kostenlose Konten sind auf {{limit}} aktive Projekte beschränkt.",
-    "upgradeToPro": "Auf Pro upgraden",
     "noWatches": "Noch keine Uhren.",
     "addFirstWatch": "Erste Uhr hinzufügen",
     "addFirstOne": "Ersten hinzufügen",
@@ -583,6 +582,7 @@
     "billingModify": "Abonnement ändern",
     "billingNoSubscription": "Kein aktives Abonnement gefunden.",
     "billingHistory": "Abrechnungsverlauf anzeigen",
+    "profileUpdateSuccess": "Profil erfolgreich aktualisiert",
 
     "uploadZoneAddPhotos": "Fotos hinzufügen",
     "uploadZonePhotoLimitReached": "Fotolimit erreicht",
