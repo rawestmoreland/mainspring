@@ -201,6 +201,14 @@ func main() {
 				profile.Set("user", e.Record.Id)
 				profile.Set("email", e.Record.Email())
 				profile.Set("display_name", displayName)
+
+				currencyMap := map[string]any{
+					"code": "USD",
+					"symbol": "$",
+				}
+
+				profile.Set("currency", currencyMap)
+				
 				if err := app.Save(profile); err != nil {
 					return fmt.Errorf("failed to create user profile: %w", err)
 				}
