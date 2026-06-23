@@ -73,6 +73,7 @@ function getStatusLabels(t: TFunction): Record<PartsShoppingStatus, string> {
     needed: t('watchShoppingNeeded'),
     ordered: t('watchShoppingOrdered'),
     in_hand: t('watchShoppingInHand'),
+    installed: t('watchShoppingInstalled'),
   };
 }
 
@@ -81,10 +82,17 @@ function statusClass(status: PartsShoppingStatus): string {
     return 'bg-amber-500/15 text-[#6d4512] border-amber-500/30';
   if (status === 'ordered')
     return 'bg-blue-500/15 text-[#2c4a6b] border-blue-500/30';
+  if (status === 'installed')
+    return 'bg-violet-500/15 text-[#4a2d6b] border-violet-500/30';
   return 'bg-green-500/15 text-[#3a5a3a] border-green-500/30';
 }
 
-const PARTS_STATUSES: PartsShoppingStatus[] = ['needed', 'ordered', 'in_hand'];
+const PARTS_STATUSES: PartsShoppingStatus[] = [
+  'needed',
+  'ordered',
+  'in_hand',
+  'installed',
+];
 
 function PartsStatusPicker({
   item,
@@ -392,6 +400,7 @@ function ShoppingListPage() {
   const needed = items.filter((i) => i.status === 'needed').length;
   const ordered = items.filter((i) => i.status === 'ordered').length;
   const inHand = items.filter((i) => i.status === 'in_hand').length;
+  // const installed = items.filter((i) => i.status === 'installed').length;
   const totalTargetValue = items.reduce(
     (sum, i) => sum + (i.target_price ?? 0),
     0,

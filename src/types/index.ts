@@ -229,7 +229,11 @@ export type CreateTimegrapherReading = Omit<
   'id' | 'created' | 'updated' | 'ai_analysis'
 >;
 
-export type PartsShoppingStatus = 'needed' | 'ordered' | 'in_hand';
+export type PartsShoppingStatus =
+  | 'needed'
+  | 'ordered'
+  | 'in_hand'
+  | 'installed';
 
 export type WatchPartsShoppingItem = {
   id: string;
