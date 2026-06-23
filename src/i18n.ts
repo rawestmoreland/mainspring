@@ -10,8 +10,14 @@ export const resources = {
   fr,
 };
 
-const savedLng =
-  typeof window !== 'undefined' ? (localStorage.getItem('i18n-lang') ?? 'en') : 'en';
+function detectInitialLang(): string {
+  if (typeof window === 'undefined') return 'en';
+  const m = /^\/(en|de|fr|ch)(?:\/|$)/.exec(window.location.pathname);
+  if (m) return m[1] === 'ch' ? 'de' : m[1];
+  return localStorage.getItem('i18n-lang') ?? 'en';
+}
+
+const savedLng = detectInitialLang();
 
 i18n.use(initReactI18next).init({
   resources,

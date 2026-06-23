@@ -8,6 +8,7 @@ import { useSearch } from '@tanstack/react-router';
 
 export function useAuth() {
   const authRecord = pb.authStore.record;
+  const isValid = pb.authStore.isValid;
   const search: { checkout_success: boolean } = useSearch({ strict: false });
 
   const { data, isLoading } = useQuery<{
@@ -46,6 +47,7 @@ export function useAuth() {
 
   return {
     user: data?.user ?? authRecord ?? null,
+    hasValidSession: isValid,
     profile: data?.profile ?? null,
     subscription: data?.subscription ?? null,
     isLoading,

@@ -44,7 +44,7 @@ export const Route = createFileRoute('/login')({
 function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, hasValidSession } = useAuth();
   const { from } = Route.useSearch();
   const { mutateAsync: login, isPending, error } = useLogin();
   const { mutateAsync: oauthLogin, isPending: oauthPending } = useOauth2Login();
@@ -76,17 +76,19 @@ function LoginPage() {
   };
 
   useEffect(() => {
-    if (!isLoading && user) {
+    if (!isLoading && hasValidSession) {
       navigate({ to: from ?? '/dashboard', replace: true });
     }
-  }, [isLoading, user]);
+  }, [isLoading, user, hasValidSession, from, navigate]);
 
   return (
     <div className='min-h-screen bg-background flex items-center justify-center p-4'>
       <div className='w-full max-w-sm'>
         <div className='mb-8 text-center'>
           {/* eslint-disable-next-line i18next/no-literal-string */}
-          <h1 className='font-serif text-2xl font-bold text-primary mb-1'>Hairspring</h1>
+          <h1 className='font-serif text-2xl font-bold text-primary mb-1'>
+            Hairspring
+          </h1>
           <p className='font-mono text-xs text-muted-foreground tracking-widest uppercase'>
             {t('loginSubtitle')}
           </p>
@@ -215,7 +217,9 @@ function LoginPage() {
                 </DialogHeader>
                 <FieldGroup>
                   <Field>
-                    <Label htmlFor='reset-email'>{t('loginEmailAddress')}</Label>
+                    <Label htmlFor='reset-email'>
+                      {t('loginEmailAddress')}
+                    </Label>
                     <Input
                       id='reset-email'
                       name='reset-email'
@@ -235,7 +239,9 @@ function LoginPage() {
                         submitting ? 'block animate-spin mr-2' : 'hidden'
                       }
                     />
-                    {submitting ? t('loginResetSubmitting') : t('loginResetSubmit')}
+                    {submitting
+                      ? t('loginResetSubmitting')
+                      : t('loginResetSubmit')}
                   </Button>
                 </DialogFooter>
               </form>

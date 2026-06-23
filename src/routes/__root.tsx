@@ -43,6 +43,10 @@ const PUBLIC_PATHS = new Set([
   '/signup',
   '/privacy-policy',
   '/terms-of-service',
+  '/en',
+  '/de',
+  '/fr',
+  '/ch',
 ]);
 
 // Paths that belong on the apex marketing domain. Everything else redirects to app.hairspring.app.
@@ -51,7 +55,21 @@ const MARKETING_PATHS = new Set([
   '/about',
   '/privacy-policy',
   '/terms-of-service',
+  '/en',
+  '/de',
+  '/fr',
+  '/ch',
 ]);
+
+const LOCALE_LANDING_PATHS = new Set(['/', '/en', '/de', '/fr', '/ch']);
+
+const LANG_ALIASES: Record<string, string> = { ch: 'de' };
+
+function langFromPathname(pathname: string): string {
+  const m = /^\/(en|de|fr|ch)(?:\/|$)/.exec(pathname);
+  if (!m) return 'en';
+  return LANG_ALIASES[m[1]] ?? m[1];
+}
 
 function isPublicPath(pathname: string): boolean {
   return (
@@ -154,7 +172,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
     let landingPageFlag: string | boolean | undefined;
 
-    if (location.pathname === '/') {
+    if (LOCALE_LANDING_PATHS.has(location.pathname)) {
       try {
         landingPageFlag = await resolveLandingPageFlag();
       } catch {
@@ -208,6 +226,7 @@ function RootComponent() {
     };
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isPublicRoute = isPublicPath(pathname);
+  const lang = langFromPathname(pathname);
 
   useEffect(() => {
     window.rdt?.('track', 'PageVisit');
@@ -215,7 +234,7 @@ function RootComponent() {
 
   if (subdomainNotFound) {
     return (
-      <RootDocument landingPageFlag={landingPageFlag}>
+      <RootDocument landingPageFlag={landingPageFlag} lang={lang}>
         <NotFoundPage />
       </RootDocument>
     );
@@ -225,7 +244,7 @@ function RootComponent() {
     // Public subdomain: render without sidebar/auth shell.
     // PublicProfile owns its own layout entirely.
     return (
-      <RootDocument landingPageFlag={landingPageFlag}>
+      <RootDocument landingPageFlag={landingPageFlag} lang={lang}>
         <QueryClientProvider client={queryClient}>
           <Outlet />
         </QueryClientProvider>
@@ -235,7 +254,7 @@ function RootComponent() {
 
   if (isPublicRoute) {
     return (
-      <RootDocument landingPageFlag={landingPageFlag}>
+      <RootDocument landingPageFlag={landingPageFlag} lang={lang}>
         <QueryClientProvider client={queryClient}>
           <Outlet />
         </QueryClientProvider>
@@ -244,7 +263,7 @@ function RootComponent() {
   }
 
   return (
-    <RootDocument landingPageFlag={landingPageFlag}>
+    <RootDocument landingPageFlag={landingPageFlag} lang={lang}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AppShell>
@@ -268,9 +287,11 @@ function RootComponent() {
 function RootDocument({
   children,
   landingPageFlag,
+  lang = 'en',
 }: {
   children: ReactNode;
   landingPageFlag?: string | boolean;
+  lang?: string;
 }) {
   const gaId = import.meta.env.VITE_PUBLIC_GA4_MEASUREMENT_ID;
   useEffect(() => {
@@ -279,7 +300,7 @@ function RootDocument({
     }
   }, []);
   return (
-    <html lang='en' className='light'>
+    <html lang={lang} className='light'>
       <head>
         <HeadContent />
         {/* Reddit Pixel — DO NOT MODIFY UNLESS TO REPLACE A USER IDENTIFIER */}
