@@ -7,6 +7,7 @@ import { Th, Td, TableRow, TableWrap } from '#/components/table';
 import { useEquipment } from '#/hooks/equipment';
 import { format } from 'date-fns';
 import { useUser } from '#/hooks/user';
+import { useAuth } from '#/hooks/auth';
 import { Button } from '#/components/ui/button';
 import { PencilIcon, PlusIcon } from 'lucide-react';
 import { EquipmentSkeleton } from '#/components/skeletons';
@@ -20,6 +21,8 @@ function EquipmentPage() {
   const { data: equipment, isPending } = useEquipment();
 
   const { data: user, isPending: isUserPending } = useUser();
+  const { profile } = useAuth();
+  const currencySymbol = profile?.currency?.symbol ?? '';
 
   if (isPending || isUserPending) {
     return <EquipmentSkeleton />;
@@ -28,7 +31,7 @@ function EquipmentPage() {
     return <div>{t('equipmentNotFound')}</div>;
   }
 
-  const total = equipment.reduce((s, e) => s + e.cost, 0);
+  const total = equipment.reduce((s, e) => s + (e.cost ?? 0), 0);
 
   return (
     <>
@@ -37,7 +40,7 @@ function EquipmentPage() {
         <KpiCard
           highlight
           label={t('equipmentTotalInvested')}
-          value={fmt(total)}
+          value={fmt({ n: total, symbol: currencySymbol })}
           valueClass='text-primary'
           sub={t('equipmentCapexSub')}
         />
@@ -72,7 +75,9 @@ function EquipmentPage() {
                 {/* eslint-disable-next-line i18next/no-literal-string */}
                 {format(e.date_acquired, 'MM/dd/yyyy')}
               </Td>
-              <Td className='font-mono text-xs'>{fmt(e.cost)}</Td>
+              <Td className='font-mono text-xs'>
+                {fmt({ n: e.cost, symbol: currencySymbol })}
+              </Td>
               <Td className='w-8 text-right'>
                 {user && (
                   <Link
@@ -94,7 +99,7 @@ function EquipmentPage() {
               {t('total')}
             </td>
             <td className='px-3.5 py-2.5 font-mono text-xs text-primary font-semibold'>
-              {fmt(total)}
+              {fmt({ n: total, symbol: currencySymbol })}
             </td>
           </tr>
         </tbody>
