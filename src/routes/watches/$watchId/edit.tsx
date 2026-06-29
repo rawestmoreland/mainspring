@@ -42,6 +42,7 @@ const WATCH_STATUSES: readonly WatchStatus[] = [
   'sold',
   'paused',
   'kept',
+  'archived',
 ] as const;
 
 const WATCH_CONDITIONS: readonly WatchCondition[] = [
@@ -59,6 +60,7 @@ const STATUS_LABELS = {
   sold: 'statusSold',
   paused: 'statusPaused',
   kept: 'statusKept',
+  archived: 'statusArchived',
 } as const satisfies Record<WatchStatus, string>;
 
 const CONDITION_LABELS = {
@@ -163,7 +165,9 @@ function EditWatchRoute() {
 
   if (isWatchLoading || isUserLoading) {
     return (
-      <div className='text-sm text-muted-foreground font-mono'>{t('equipmentLoading')}</div>
+      <div className='text-sm text-muted-foreground font-mono'>
+        {t('equipmentLoading')}
+      </div>
     );
   }
 
@@ -176,13 +180,19 @@ function EditWatchRoute() {
         >
           {t('watchesBackToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>{t('equipmentItemNotFound')}</div>
+        <div className='text-sm text-red-400 font-mono'>
+          {t('equipmentItemNotFound')}
+        </div>
       </div>
     );
   }
 
   if (!user) {
-    return <div className='text-sm text-red-400 font-mono'>{t('equipmentUnauthorized')}</div>;
+    return (
+      <div className='text-sm text-red-400 font-mono'>
+        {t('equipmentUnauthorized')}
+      </div>
+    );
   }
 
   const onSubmit = handleSubmit(async (raw) => {
@@ -297,7 +307,9 @@ function EditWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='reference'>{t('fieldReference')}</FieldLabel>
+                <FieldLabel htmlFor='reference'>
+                  {t('fieldReference')}
+                </FieldLabel>
                 <Input
                   {...field}
                   value={field.value ?? ''}
@@ -416,7 +428,9 @@ function EditWatchRoute() {
             control={control}
             render={({ field: { onChange, ...field }, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='bought_price'>{t('fieldBoughtPrice')}</FieldLabel>
+                <FieldLabel htmlFor='bought_price'>
+                  {t('fieldBoughtPrice')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='bought_price'
@@ -464,7 +478,9 @@ function EditWatchRoute() {
             control={control}
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor='bought_date'>{t('fieldBoughtDate')}</FieldLabel>
+                <FieldLabel htmlFor='bought_date'>
+                  {t('fieldBoughtDate')}
+                </FieldLabel>
                 <Input
                   {...field}
                   id='bought_date'
@@ -536,7 +552,9 @@ function EditWatchRoute() {
 
         <section>
           <Field>
-            <FieldLabel htmlFor='featured_image'>{t('fieldFeaturedImage')}</FieldLabel>
+            <FieldLabel htmlFor='featured_image'>
+              {t('fieldFeaturedImage')}
+            </FieldLabel>
             <div className='flex items-center gap-4'>
               <input
                 ref={featuredInputRef}
@@ -571,7 +589,9 @@ function EditWatchRoute() {
                   onClick={() => featuredInputRef.current?.click()}
                   className='text-xs font-mono text-amber-400 hover:text-amber-300 text-left'
                 >
-                  {featuredPreviewUrl ? t('featuredImageChange') : t('featuredImageUpload')}
+                  {featuredPreviewUrl
+                    ? t('featuredImageChange')
+                    : t('featuredImageUpload')}
                 </button>
                 {featuredImageFile ? (
                   <>
@@ -631,7 +651,9 @@ function EditWatchRoute() {
             type='submit'
             disabled={isSubmitting || updateWatch.isPending}
           >
-            {updateWatch.isPending ? t('equipmentSaving') : t('equipmentSaveChanges')}
+            {updateWatch.isPending
+              ? t('equipmentSaving')
+              : t('equipmentSaveChanges')}
           </Button>
           <Button asChild variant='outline'>
             <Link to='/watches/$watchId' params={{ watchId }}>

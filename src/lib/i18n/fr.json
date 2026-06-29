@@ -57,6 +57,7 @@
     "statusListed": "Mis en vente",
     "statusKept": "Conservé",
     "statusEmpty": "Vide",
+    "statusArchived": "Archivé",
     "frozen": "congelé",
 
     "partsInventory": "Inventaire de pièces",

@@ -57,6 +57,7 @@
     "statusListed": "Inseriert",
     "statusKept": "Behalten",
     "statusEmpty": "Leer",
+    "statusArchived": "Archiviert",
     "frozen": "Gefroren",
 
     "partsInventory": "Teilelager",

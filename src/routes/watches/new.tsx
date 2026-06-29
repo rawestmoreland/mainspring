@@ -64,6 +64,7 @@ const STATUS_LABELS = {
   sold: 'statusSold',
   paused: 'statusPaused',
   kept: 'statusKept',
+  archived: 'statusArchived',
 } as const satisfies Record<WatchStatus, string>;
 
 const CONDITION_LABELS = {

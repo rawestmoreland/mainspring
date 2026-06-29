@@ -1,6 +1,20 @@
 import { useEffect, useState } from 'react';
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { Info, LayoutGrid, List, LockIcon, PlusIcon } from 'lucide-react';
+import {
+  Archive,
+  BadgeCheck,
+  Heart,
+  Info,
+  LayoutGrid,
+  LayoutList,
+  List,
+  LockIcon,
+  Pause,
+  PlusIcon,
+  Tag,
+  Wrench,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 
 import { cn, fmt, profit } from '#/lib/helpers';
 import { Th, Td, TableRow, TableWrap } from '#/components/table';
@@ -31,15 +45,18 @@ export const Route = createFileRoute('/watches/')({
 
 type FilterValue = 'all' | WatchStatus;
 type ViewMode = 'board' | 'table';
+type FilterEntry = [FilterValue, string, LucideIcon];
 
 function WatchesPage() {
   const { t } = useTranslation();
-  const FILTERS: [FilterValue, string][] = [
-    ['all', t('filterAll')],
-    ['in_progress', t('statusInProgress')],
-    ['paused', t('statusPaused')],
-    ['listed', t('statusListed')],
-    ['sold', t('statusSold')],
+  const FILTERS: FilterEntry[] = [
+    ['all', t('filterAll'), LayoutList],
+    ['in_progress', t('statusInProgress'), Wrench],
+    ['paused', t('statusPaused'), Pause],
+    ['listed', t('statusListed'), Tag],
+    ['sold', t('statusSold'), BadgeCheck],
+    ['kept', t('statusKept'), Heart],
+    ['archived', t('statusArchived'), Archive],
   ];
   const { profile } = useAuth();
   const { data: watches, isPending } = useWatches();
@@ -68,7 +85,7 @@ function WatchesPage() {
   const atProjectLimit = !isPro && activeCount >= FREE_PROJECT_LIMIT;
   const filtered =
     filter === 'all'
-      ? allWatches
+      ? allWatches.filter((w) => w.status !== 'archived')
       : allWatches.filter((w) => w.status === filter);
 
   const selectedWatch = selectedWatchId
@@ -90,19 +107,44 @@ function WatchesPage() {
         {/* Toolbar */}
         <div className='flex items-center gap-0.5 mb-5'>
           {viewMode === 'table' &&
-            FILTERS.map(([v, l]) => (
-              <button
-                key={v}
-                onClick={() => setFilter(v)}
-                className={cn(
-                  'px-3.5 py-1.5 text-xs font-mono rounded tracking-wide transition-all cursor-pointer border-none',
-                  filter === v
-                    ? 'text-primary bg-primary/10'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60 bg-transparent',
-                )}
-              >
-                {l}
-              </button>
+            FILTERS.map(([v, l, Icon]) => (
+              <>
+                <TooltipProvider key={`${v}-sm`}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={() => setFilter(v)}
+                        className={cn(
+                          'flex lg:hidden text-xs font-mono rounded cursor-pointer border-none',
+                          filter === v
+                            ? 'text-primary bg-primary/10'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted/60 bg-transparent',
+                        )}
+                        size='icon'
+                        aria-label={l}
+                      >
+                        <Icon className='size-3.5' aria-hidden='true' />
+                        <span className='sr-only'>{l}</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side='bottom' className='font-mono text-xs'>
+                      {l}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <Button
+                  key={`${v}-lg`}
+                  onClick={() => setFilter(v)}
+                  className={cn(
+                    'hidden lg:block px-3.5 py-1.5 text-xs font-mono rounded tracking-wide transition-all cursor-pointer border-none',
+                    filter === v
+                      ? 'text-primary bg-primary/10'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60 bg-transparent',
+                  )}
+                >
+                  {l}
+                </Button>
+              </>
             ))}
           <div className='ml-auto flex items-center gap-2'>
             <div className='flex items-center rounded-md border border-border bg-muted/30 p-0.5'>
@@ -144,7 +186,9 @@ function WatchesPage() {
                       <Button asChild disabled={atProjectLimit}>
                         <Link to='/watches/new'>
                           <PlusIcon className='size-3' />
-                          {t('addWatch')}
+                          <span className='hidden lg:block'>
+                            {t('addWatch')}
+                          </span>
                         </Link>
                       </Button>
                     </span>
