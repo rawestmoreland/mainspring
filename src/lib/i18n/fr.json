@@ -5,6 +5,9 @@
     "cancel": "annuler",
     "navigation": "Navigation",
     "settings": "Paramètres",
+    "delete": "Supprimer",
+
+    "pro": "Pro",
 
     "appSubtitle": "Montre-bracelet Flip Tracker",
 
@@ -262,12 +265,15 @@
     "watchRemovePartConfirm": "Retirer cette pièce du journal ?",
     "watchDeleteConfirm": "Êtes-vous sûr de vouloir supprimer cette montre ? Toutes les photos associées et l'utilisation des pièces seront également supprimées.",
     "watchDeleteAction": "Supprimer cette montre",
+    "watchDeleteType": "Tapez \"SUPPRIMER\" pour supprimer cette montre",
     "watchUploadFailed": "Échec du téléchargement. Veuillez réessayer.",
     "watchSaveFailed": "Échec de l'enregistrement. Veuillez réessayer.",
     "watchShoppingNeeded": "Nécessaire",
     "watchShoppingOrdered": "Commandé",
     "watchShoppingInHand": "En main",
     "watchShoppingInstalled": "Installé",
+    "watchDeleteWarning": "Cette action est irréversible !",
+    "watchDeleteQuestion": "Êtes-vous sûr de vouloir supprimer cette montre ?",
 
     "colYear": "Année",
     "colCondition": "Condition",

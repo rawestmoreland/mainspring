@@ -5,6 +5,9 @@
     "cancel": "Cancel",
     "navigation": "Navigation",
     "settings": "Settings",
+    "delete": "Delete",
+
+    "pro": "Pro",
 
     "appSubtitle": "Watch Flip Tracker",
 
@@ -262,12 +265,15 @@
     "watchRemovePartConfirm": "Remove this part from the log?",
     "watchDeleteConfirm": "Are you sure you want to delete this watch? All associated photos, and part usage will also be deleted.",
     "watchDeleteAction": "Delete this watch",
+    "watchDeleteType": "Type \"DELETE\" to delete this watch",
     "watchUploadFailed": "Upload failed. Please try again.",
     "watchSaveFailed": "Save failed. Please try again.",
     "watchShoppingNeeded": "Needed",
     "watchShoppingOrdered": "Ordered",
     "watchShoppingInHand": "In Hand",
     "watchShoppingInstalled": "Installed",
+    "watchDeleteWarning": "This action is irreversible!",
+    "watchDeleteQuestion": "Are you sure you want to delete this watch?",
 
     "colYear": "Year",
     "colCondition": "Condition",

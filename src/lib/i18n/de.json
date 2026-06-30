@@ -5,6 +5,9 @@
     "cancel": "Abbrechen",
     "navigation": "Navigation",
     "settings": "Einstellungen",
+    "delete": "Löschen",
+
+    "pro": "Pro",
 
     "appSubtitle": "Armbanduhr Flip Tracker",
 
@@ -262,12 +265,15 @@
     "watchRemovePartConfirm": "Dieses Teil aus dem Protokoll entfernen?",
     "watchDeleteConfirm": "Möchten Sie diese Uhr wirklich löschen? Alle zugehörigen Fotos und Teileverwendungen werden ebenfalls gelöscht.",
     "watchDeleteAction": "Diese Uhr löschen",
+    "watchDeleteType": "Geben Sie \"LÖSCHEN\" ein, um diese Uhr zu löschen",
     "watchUploadFailed": "Upload fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "watchSaveFailed": "Speichern fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "watchShoppingNeeded": "Benötigt",
     "watchShoppingOrdered": "Bestellt",
     "watchShoppingInHand": "Vorhanden",
     "watchShoppingInstalled": "Eingebaut",
+    "watchDeleteWarning": "Diese Aktion ist unwiderruflich!",
+    "watchDeleteQuestion": "Möchten Sie diese Uhr wirklich löschen?",
 
     "colYear": "Jahr",
     "colCondition": "Zustand",

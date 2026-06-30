@@ -45,6 +45,18 @@ import {
 import { StatusPicker } from '#/components/watches/StatusPicker';
 import { Skeleton } from '#/components/ui/skeleton';
 import { useAuth } from '#/hooks/auth';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '#/components/ui/dialog';
+import { Label } from '#/components/ui/label';
+import { Input } from '#/components/ui/input';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
@@ -54,6 +66,7 @@ type Tab = 'log' | 'timegrapher' | 'parts' | 'notes';
 
 function RouteComponent() {
   const { t } = useTranslation();
+  const [confirmText, setConfirmText] = useState('');
   const navigate = useNavigate();
   const { watchId } = Route.useParams();
   const { data: watch, isLoading } = useGetWatchById(watchId);
@@ -71,6 +84,13 @@ function RouteComponent() {
   const { data: partsShoppingItems = [] } = useGetPartsShoppingList(watchId);
   const { data: completedSessions = [] } = useCompletedWorkSessions(watchId);
   const { isPro } = useSubscription();
+
+  const performDelete = async () => {
+    if (confirmText === t('delete').toLocaleUpperCase()) {
+      await deleteWatch.mutateAsync(watchId);
+      navigate({ to: '/dashboard' });
+    }
+  };
 
   const totalSessionSeconds = completedSessions.reduce(
     (sum, s) => sum + (s.final_duration_seconds ?? 0),
@@ -622,19 +642,12 @@ function RouteComponent() {
                     [t('watchDetailsHours'), totalSessionHours],
                     [
                       t('watchDetailsAcquired'),
-                      // eslint-disable-next-line i18next/no-literal-string
-                      watch.bought_date
-                        ? format(watch.bought_date, 'MMM d, yyyy')
-                        : '—',
+                      watch.bought_date ? format(watch.bought_date, 'PP') : '—',
                     ],
                     [
                       t('watchDetailsSold'),
-                      // eslint-disable-next-line i18next/no-literal-string
                       watch.sold_date
-                        ? format(
-                            new Date(watch.sold_date as string),
-                            'MMM d, yyyy',
-                          )
+                        ? format(new Date(watch.sold_date as string), 'PP')
                         : '—',
                     ],
                   ] as [string, string][]
@@ -762,12 +775,8 @@ function RouteComponent() {
                               {post.title}
                             </span>
                             <span className='text-[11px] font-mono text-muted-foreground shrink-0 ml-3'>
-                              {/* eslint-disable-next-line i18next/no-literal-string */}
                               {post.session_date
-                                ? format(
-                                    new Date(post.session_date),
-                                    'MMM d, yyyy',
-                                  )
+                                ? format(new Date(post.session_date), 'PP')
                                 : '—'}
                             </span>
                           </Link>
@@ -998,10 +1007,9 @@ function RouteComponent() {
                         {t('watchShoppingList')}
                       </span>
                       {!isPro && (
-                        // eslint-disable-next-line i18next/no-literal-string
                         <span className='inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-amber-400'>
                           <LockIcon className='w-2.5 h-2.5' />
-                          Pro
+                          {t('pro')}
                         </span>
                       )}
                     </div>
@@ -1184,21 +1192,44 @@ function RouteComponent() {
 
           {/* Delete watch */}
           <section className='flex justify-end'>
-            <Button
-              disabled={deleteWatch.isPending}
-              onClick={async (e) => {
-                e.preventDefault();
-                if (confirm(t('watchDeleteConfirm'))) {
-                  await deleteWatch.mutateAsync(watch.id);
-                  navigate({ to: '/dashboard' });
-                }
-              }}
-              size='sm'
-              variant='link'
-            >
-              <Trash2Icon />
-              {t('watchDeleteAction')}
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  disabled={deleteWatch.isPending}
+                  size='sm'
+                  variant='link'
+                >
+                  <Trash2Icon />
+                  {t('watchDeleteAction')}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className='sm:max-w-sm'>
+                <DialogHeader>
+                  <DialogTitle className='font-bold text-lg'>
+                    {t('watchDeleteQuestion')}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {t('watchDeleteWarning')}
+                  </DialogDescription>
+                </DialogHeader>
+                <Label className='text-sm'>{t('watchDeleteType')}</Label>
+                <Input
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                />
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant='outline'>{t('cancel')}</Button>
+                  </DialogClose>
+                  <Button
+                    disabled={confirmText !== t('delete').toLocaleUpperCase()}
+                    onClick={performDelete}
+                  >
+                    {t('delete')}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </section>
         </div>
       </div>
