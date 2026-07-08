@@ -19,11 +19,11 @@ export function roi(w: Watch): string | null {
 export function fmt({
   n,
   d = 0,
-  symbol = '',
+  symbol = '$',
 }: {
   n: number | null | undefined;
   d?: number;
-  symbol: string;
+  symbol?: string;
 }): string {
   if (n === null || n === undefined) return '—';
   if (n === 0) return `${symbol}0`;

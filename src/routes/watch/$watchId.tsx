@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
@@ -20,6 +20,7 @@ import type {
 } from '#/types';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
 import { Skeleton } from '#/components/ui/skeleton';
+import { useAuth } from '#/hooks/auth';
 
 export const Route = createFileRoute('/watch/$watchId')({
   component: PublicWatchDetailPage,
@@ -164,6 +165,14 @@ function PublicWatchDetailPage() {
     enabled: !!ctx.tenant,
   });
 
+  const { profile } = useAuth();
+
+  const currencySymbol = useMemo(() => {
+    if (!profile) return '';
+
+    return profile?.currency?.symbol ?? '';
+  }, [profile]);
+
   if (!ctx.tenant) {
     return (
       <div className='min-h-screen bg-background flex items-center justify-center'>
@@ -237,7 +246,9 @@ function PublicWatchDetailPage() {
         {isLoading && <SkeletonLoader />}
 
         {!isLoading && !watch && (
-          <div className='text-sm text-red-400 font-mono'>{t('watchNotFound')}</div>
+          <div className='text-sm text-red-400 font-mono'>
+            {t('watchNotFound')}
+          </div>
         )}
 
         {watch && (
@@ -373,13 +384,25 @@ function PublicWatchDetailPage() {
                         capitalize(watch.condition_bought?.replace('_', ' ')) ??
                           '—',
                       ],
-                      [t('purchasePrice'), fmt(watch.bought_price)],
-                      [t('watchDetailsPartsCost'), fmt(watch.parts_cost)],
+                      [
+                        t('purchasePrice'),
+                        fmt({ n: watch.bought_price, symbol: currencySymbol }),
+                      ],
+                      [
+                        t('watchDetailsPartsCost'),
+                        fmt({ n: watch.parts_cost, symbol: currencySymbol }),
+                      ],
                       [
                         t('watchDetailsTotalInvested'),
-                        fmt(watch.bought_price + (watch.parts_cost ?? 0)),
+                        fmt({
+                          n: watch.bought_price + (watch.parts_cost ?? 0),
+                          symbol: currencySymbol,
+                        }),
                       ],
-                      [t('salePrice'), fmt(watch.sold_price)],
+                      [
+                        t('salePrice'),
+                        fmt({ n: watch.sold_price, symbol: currencySymbol }),
+                      ],
                       [
                         t('colProfit'),
                         p !== null ? (
@@ -388,7 +411,7 @@ function PublicWatchDetailPage() {
                               p >= 0 ? 'text-green-400' : 'text-red-400'
                             }
                           >
-                            {fmt(p)}
+                            {fmt({ n: p, symbol: currencySymbol })}
                           </span>
                         ) : (
                           '—'
@@ -418,14 +441,12 @@ function PublicWatchDetailPage() {
                       [
                         t('watchDetailsAcquired'),
                         watch.bought_date
-                          ? format(watch.bought_date, 'MMM d, yyyy')
+                          ? format(watch.bought_date, 'PPP')
                           : '—',
                       ],
                       [
                         t('watchDetailsSold'),
-                        watch.sold_date
-                          ? format(watch.sold_date, 'MMM d, yyyy')
-                          : '—',
+                        watch.sold_date ? format(watch.sold_date, 'PPP') : '—',
                       ],
                     ] as [string, React.ReactNode][]
                   ).map(([k, v]) => (
@@ -468,10 +489,7 @@ function PublicWatchDetailPage() {
                             </span>
                             <span className='text-[11px] font-mono text-muted-foreground shrink-0 ml-3'>
                               {post.session_date
-                                ? format(
-                                    new Date(post.session_date),
-                                    'MMM d, yyyy',
-                                  )
+                                ? format(new Date(post.session_date), 'PPP')
                                 : '—'}
                             </span>
                           </Link>
