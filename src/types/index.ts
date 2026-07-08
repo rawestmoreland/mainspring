@@ -83,6 +83,7 @@ export type Watch = {
     watch_photos_via_watch?: WatchPhoto[];
     parts_used_via_watch?: PartUsed[];
   };
+  time_elapsed_seconds?: number;
   updated: string;
 };
 

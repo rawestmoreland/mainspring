@@ -591,6 +591,7 @@
     "billingNoSubscription": "Kein aktives Abonnement gefunden.",
     "billingHistory": "Abrechnungsverlauf anzeigen",
     "profileUpdateSuccess": "Profil erfolgreich aktualisiert",
+    "profileTimeSpent": "Zeitaufwand",
 
     "uploadZoneAddPhotos": "Fotos hinzufügen",
     "uploadZonePhotoLimitReached": "Fotolimit erreicht",

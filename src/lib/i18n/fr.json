@@ -591,6 +591,7 @@
     "billingNoSubscription": "Aucun abonnement actif trouvé.",
     "billingHistory": "Voir l'historique de facturation",
     "profileUpdateSuccess": "Le profil a été mis à jour avec succès",
+    "profileTimeSpent": "Temps passé",
 
     "uploadZoneAddPhotos": "Ajouter des photos",
     "uploadZonePhotoLimitReached": "Limite de photos atteinte",

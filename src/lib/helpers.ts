@@ -16,6 +16,14 @@ export function roi(w: Watch): string | null {
   return ((p / (w.bought_price + w.parts_cost)) * 100).toFixed(1);
 }
 
+export function formatHrs(s: number | undefined): number {
+  if (!s) return 0;
+
+  const hours = Math.floor(s / 3600);
+
+  return hours;
+}
+
 export function fmt({
   n,
   d = 0,

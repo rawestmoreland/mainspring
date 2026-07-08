@@ -9,7 +9,7 @@ import { StagePill } from '#/components/primitives/StagePill';
 import { StageTag } from '#/components/primitives/StageTag';
 import { Lightbox } from '#/components/watches/Lightbox';
 import { STAGE_META } from '#/lib/mocks/meta';
-import { fmt, fmtPct, profit, roi, cn } from '#/lib/helpers';
+import { fmt, fmtPct, profit, roi, cn, formatHrs } from '#/lib/helpers';
 import type {
   UserProfile,
   Watch,
@@ -86,10 +86,14 @@ type RawPartUsed = {
   qty_used: number;
   expand?: { inventory_item?: { unit_cost: number } };
 };
+type RawWorkSession = {
+  total_elapsed_seconds?: number;
+};
 type RawWatchRecord = {
   expand?: {
     watch_photos_via_watch?: RawPhoto[];
     parts_used_via_watch?: RawPartUsed[];
+    work_sessions_via_watch?: RawWorkSession[];
   };
 } & Record<string, unknown>;
 
@@ -113,7 +117,7 @@ function PublicWatchDetailPage() {
     queryKey: ['public', 'watch', watchId],
     queryFn: async () => {
       const res = await fetch(
-        `${pbUrl}/api/collections/watches/records/${watchId}?expand=watch_photos_via_watch,parts_used_via_watch.inventory_item`,
+        `${pbUrl}/api/collections/watches/records/${watchId}?expand=watch_photos_via_watch,parts_used_via_watch.inventory_item,work_sessions_via_watch`,
       );
       if (!res.ok) return null;
       const r = (await res.json()) as RawWatchRecord;
@@ -133,10 +137,17 @@ function PublicWatchDetailPage() {
           sum + (p.qty_used ?? 0) * (p.expand?.inventory_item?.unit_cost ?? 0),
         0,
       );
-      return { ...r, photos, parts_cost } as Watch;
+      const time_elapsed_seconds = (
+        r.expand?.work_sessions_via_watch ?? []
+      ).reduce((sum: number, s: RawWorkSession) => {
+        return sum + (s.total_elapsed_seconds ?? 0);
+      }, 0);
+      return { ...r, photos, parts_cost, time_elapsed_seconds } as Watch;
     },
     enabled: !!ctx.tenant,
   });
+
+  console.log(watch);
 
   const { data: posts } = useQuery<RepairPost[]>({
     queryKey: ['public', 'watch-posts', watchId],
@@ -429,9 +440,8 @@ function PublicWatchDetailPage() {
                         ),
                       ],
                       [
-                        t('hoursSpent'),
-                        // eslint-disable-next-line i18next/no-literal-string
-                        `${watch.hours_spent ?? 0} hrs`,
+                        t('profileTimeSpent'),
+                        `${formatHrs(watch.time_elapsed_seconds)} ${t('colHrs')}`,
                       ],
                       [
                         t('watchDetailsAcquired'),
