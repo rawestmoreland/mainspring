@@ -33,7 +33,11 @@ export const Route = createFileRoute('/')({
     if (!tenant) {
       const lang = await getAcceptLanguage();
       const resolved = SUPPORTED_LANGS.has(lang) ? lang : 'en';
-      throw redirect({ to: '/$lang', params: { lang: resolved }, replace: true });
+      throw redirect({
+        to: '/$lang',
+        params: { lang: resolved },
+        replace: true,
+      });
     }
   },
   component: IndexPage,
@@ -44,7 +48,6 @@ function IndexPage() {
   if (ctx.tenant) return <PublicProfile tenant={ctx.tenant} />;
   return <LandingPage />;
 }
-
 
 // ─── Public profile (subdomain visitors) ────────────────────────────────────
 

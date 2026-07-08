@@ -20,7 +20,6 @@ import type {
 } from '#/types';
 import { useGoogleAnalytics } from 'tanstack-router-ga4';
 import { Skeleton } from '#/components/ui/skeleton';
-import { useAuth } from '#/hooks/auth';
 
 export const Route = createFileRoute('/watch/$watchId')({
   component: PublicWatchDetailPage,
@@ -165,13 +164,9 @@ function PublicWatchDetailPage() {
     enabled: !!ctx.tenant,
   });
 
-  const { profile } = useAuth();
-
   const currencySymbol = useMemo(() => {
-    if (!profile) return '';
-
-    return profile?.currency?.symbol ?? '';
-  }, [profile]);
+    return ctx.tenant?.currency?.symbol;
+  }, [ctx.tenant]);
 
   if (!ctx.tenant) {
     return (
