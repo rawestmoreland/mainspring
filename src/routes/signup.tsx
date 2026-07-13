@@ -71,25 +71,27 @@ function SignupPage() {
   const emailWatch = watch('email');
 
   useEffect(() => {
-    if (!!emailWatch) {
+    if (emailWatch) {
       setValue('display_name', emailWatch.split('@')[0], { shouldDirty: true });
     } else {
       setValue('display_name', '', { shouldDirty: true });
     }
-  }, [emailWatch]);
+  }, [emailWatch, setValue]);
 
   useEffect(() => {
     if (!isLoading && !!user) {
       navigate({ to: '/dashboard', replace: true });
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, navigate]);
 
   return (
     <div className='min-h-screen bg-background flex items-center justify-center p-4'>
       <div className='w-full max-w-sm'>
         <div className='mb-8 text-center'>
           {/* eslint-disable-next-line i18next/no-literal-string */}
-          <h1 className='font-serif text-2xl font-bold text-primary mb-5'>Create an account</h1>
+          <h1 className='font-serif text-2xl font-bold text-primary mb-5'>
+            Create an account
+          </h1>
           {/* <p className='font-mono text-xs text-muted-foreground tracking-widest uppercase'>
             Hairspring is opening to the public soon. Join the waitlist to be
             notified when you can officially create an account. New accounts get{' '}
