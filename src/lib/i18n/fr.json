@@ -107,6 +107,8 @@
     "subtitleShoppingList": "LISTE D'ACHATS DE PIÈCES",
     "subtitleTimeTracker": "SUIVI DU TEMPS",
 
+    "watchIdTooltip": "Lors de la commande de pièces, indiquez le numéro d'identification de votre montre comme référence de commande.",
+
     "fieldCategory": "Catégorie",
     "fieldCaliber": "Calibre",
     "fieldManufacturer": "Fabricant",

@@ -41,6 +41,7 @@ import {
   PencilIcon,
   CameraIcon,
   TimerIcon,
+  CopyIcon,
 } from 'lucide-react';
 import { StatusPicker } from '#/components/watches/StatusPicker';
 import { Skeleton } from '#/components/ui/skeleton';
@@ -57,6 +58,12 @@ import {
 } from '#/components/ui/dialog';
 import { Label } from '#/components/ui/label';
 import { Input } from '#/components/ui/input';
+import { toast } from 'sonner';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '#/components/ui/tooltip';
 
 export const Route = createFileRoute('/watches/$watchId/')({
   component: RouteComponent,
@@ -227,7 +234,7 @@ function RouteComponent() {
 
       {/* Header */}
       <div className='flex flex-wrap items-start justify-between gap-3'>
-        <div className='flex items-start gap-3'>
+        <div className='flex items-center gap-3'>
           {/* Featured image avatar */}
           {user && (
             <div className='relative group/avatar shrink-0 mt-0.5'>
@@ -242,7 +249,7 @@ function RouteComponent() {
                 type='button'
                 onClick={() => !isFrozen && featuredInputRef.current?.click()}
                 disabled={uploadFeaturedImage.isPending || isFrozen}
-                className='relative w-12 h-12 rounded-lg overflow-hidden border border-border bg-zinc-900 cursor-pointer p-0 block disabled:opacity-50'
+                className='relative w-20 h-20 rounded-lg overflow-hidden border border-border bg-zinc-900 cursor-pointer p-0 block disabled:opacity-50'
                 aria-label={
                   watch.featured_image_url
                     ? t('featuredImageChange')
@@ -271,10 +278,33 @@ function RouteComponent() {
               )}
             </div>
           )}
-          <div>
+          <div className='justify-between flex flex-col h-full'>
             <h1 className='text-2xl font-serif font-semibold text-foreground'>
               {watch.make} {watch.model}
             </h1>
+            <div className='item-center flex gap-1'>
+              <div>
+                <span className='text-xs font-mono'>{watch.id}</span>
+              </div>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Button
+                    variant='ghost'
+                    size='icon-xs'
+                    onClick={() => {
+                      navigator.clipboard.writeText(watch.id).then(() => {
+                        toast.success('Watch ID copied to clipboard');
+                      });
+                    }}
+                  >
+                    <CopyIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className='text-center'>{t('watchIdTooltip')}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <div className='mt-1 flex flex-wrap items-center gap-2 text-[11px] font-mono text-muted-foreground'>
               <span>{watch.reference}</span>
               <span className='text-muted-foreground/60'>·</span>

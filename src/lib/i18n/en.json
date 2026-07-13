@@ -96,6 +96,8 @@
     "equipmentSaving": "Saving…",
     "equipmentSaveChanges": "Save changes",
 
+    "watchIdTooltip": "Use your watch ID as the job reference when ordering parts.",
+
     "subtitleDashboard": "PROFIT & LOSS OVERVIEW",
     "subtitleWatches": "ALL WATCH RECORDS",
     "subtitleInventory": "SPARE PARTS STOCK",

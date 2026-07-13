@@ -107,6 +107,8 @@
     "subtitleShoppingList": "TEILE-EINKAUFSLISTE",
     "subtitleTimeTracker": "ZEITERFASSUNG",
 
+    "watchIdTooltip": "Geben Sie bei der Bestellung von Ersatzteilen Ihre Uhren-ID als Auftragsnummer an.",
+
     "fieldCategory": "Kategorie",
     "fieldCaliber": "Kaliber",
     "fieldManufacturer": "Hersteller",
