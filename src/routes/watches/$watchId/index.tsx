@@ -280,7 +280,7 @@ function RouteComponent() {
           )}
           <div className='justify-between flex flex-col h-full'>
             <h1 className='text-2xl font-serif font-semibold text-foreground'>
-              {watch.make} {watch.model}
+              {watch.make} {watch.model ?? ''}
             </h1>
             <div className='item-center flex gap-1'>
               <div>

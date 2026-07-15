@@ -952,7 +952,7 @@ function TimegrapherPage() {
       <div className='flex flex-wrap items-start justify-between gap-3'>
         <div>
           <h1 className='text-2xl font-serif font-semibold text-foreground'>
-            {watch.make} {watch.model}
+            {watch.make} {watch.model ?? ''}
           </h1>
           <div className='mt-1 flex flex-wrap items-center gap-2 text-[11px] font-mono text-muted-foreground'>
             <span>{watch.reference}</span>
@@ -960,7 +960,8 @@ function TimegrapherPage() {
               <>
                 <span className='text-muted-foreground/40'>·</span>
                 <span>
-                  {t('timegrapherLiftAngleShort')} {latest.lift_angle}{t('unitDeg')}
+                  {t('timegrapherLiftAngleShort')} {latest.lift_angle}
+                  {t('unitDeg')}
                 </span>
               </>
             )}
@@ -1160,7 +1161,8 @@ function TimegrapherPage() {
                         {statusLabels[r.status]}
                       </Td>
                       <Td className='font-mono text-[11px] text-muted-foreground'>
-                        {r.lift_angle}{t('unitDeg')}
+                        {r.lift_angle}
+                        {t('unitDeg')}
                       </Td>
                       {rates.map((rate, i) => (
                         <Td
@@ -1247,7 +1249,8 @@ function TimegrapherPage() {
                       {statusLabels[r.status]}
                     </Td>
                     <Td className='font-mono text-[11px] text-muted-foreground'>
-                      {r.lift_angle}{t('unitDeg')}
+                      {r.lift_angle}
+                      {t('unitDeg')}
                     </Td>
                     <Td
                       className={cn(

@@ -38,12 +38,17 @@ function GalleryPage() {
   const uploadPhotos = useUploadWatchPhotos(watchId);
 
   const [stageFilter, setStageFilter] = useState<WatchStage | 'all'>('all');
+  const [prevFilter, setPrevFilter] = useState(stageFilter);
   const [featuredIdx, setFeaturedIdx] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
   const handleUpload = (pending: PendingPhoto[]) => {
     uploadPhotos.mutate(
-      pending.map((p) => ({ file: p.file, stage: p.stage, caption: p.caption })),
+      pending.map((p) => ({
+        file: p.file,
+        stage: p.stage,
+        caption: p.caption,
+      })),
     );
   };
 
@@ -55,9 +60,10 @@ function GalleryPage() {
       : allPhotos.filter((p) => p.stage === stageFilter);
   const featured = filtered[featuredIdx] ?? null;
 
-  useEffect(() => {
+  if (stageFilter !== prevFilter) {
+    setPrevFilter(stageFilter);
     setFeaturedIdx(0);
-  }, [stageFilter]);
+  }
 
   const prev = useCallback(() => {
     setFeaturedIdx((i) => (i - 1 + filtered.length) % filtered.length);
@@ -79,7 +85,9 @@ function GalleryPage() {
 
   if (isLoading) {
     return (
-      <div className='text-sm text-muted-foreground font-mono'>{t('loading')}</div>
+      <div className='text-sm text-muted-foreground font-mono'>
+        {t('loading')}
+      </div>
     );
   }
 
@@ -92,7 +100,9 @@ function GalleryPage() {
         >
           {t('backToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>{t('watchNotFound')}</div>
+        <div className='text-sm text-red-400 font-mono'>
+          {t('watchNotFound')}
+        </div>
       </div>
     );
   }
@@ -108,11 +118,11 @@ function GalleryPage() {
         >
           ←{' '}
           <span className='text-foreground/80'>
-            {watch.make} {watch.model}
+            {watch.make} {watch.model ?? ''}
           </span>
         </Link>
-        {user && (
-          canUpload ? (
+        {user &&
+          (canUpload ? (
             <UploadZone
               onUpload={handleUpload}
               currentCount={!isPro ? allPhotos.length : undefined}
@@ -126,8 +136,7 @@ function GalleryPage() {
               </span>
               <UpgradeButton pbUserId={user.id} />
             </div>
-          )
-        )}
+          ))}
       </div>
 
       {uploadPhotos.isError && (
@@ -166,7 +175,16 @@ function GalleryPage() {
                       : 'border-border bg-transparent text-muted-foreground hover:text-foreground hover:border-zinc-600'
                   }`}
                 >
-                  {s === 'all' ? t('stageAll') : ({ before: t('stageBefore'), during: t('stageDuring'), after: t('stageAfter'), listing: t('stageListing') } as Record<WatchStage, string>)[s]}
+                  {s === 'all'
+                    ? t('stageAll')
+                    : (
+                        {
+                          before: t('stageBefore'),
+                          during: t('stageDuring'),
+                          after: t('stageAfter'),
+                          listing: t('stageListing'),
+                        } as Record<WatchStage, string>
+                      )[s]}
                   <span className='ml-1.5 opacity-60'>{count}</span>
                 </button>
               );

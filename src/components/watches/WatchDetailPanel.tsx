@@ -76,7 +76,7 @@ export function WatchDetailPanel({
               <div className='flex items-start justify-between gap-3'>
                 <div className='min-w-0 flex-1'>
                   <SheetTitle className='font-serif font-semibold text-foreground text-base leading-tight'>
-                    {watch.make} {watch.model}
+                    {watch.make} {watch.model ?? ''}
                   </SheetTitle>
                   <p className='font-mono text-[10px] text-muted-foreground mt-0.5'>
                     {watch.reference} · {watch.year}

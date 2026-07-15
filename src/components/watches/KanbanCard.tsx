@@ -85,7 +85,7 @@ export function KanbanCard({
         </div>
       )}
       <div className='font-medium text-sm text-foreground leading-tight'>
-        {watch.make} {watch.model}
+        {watch.make} {watch.model ?? ''}
       </div>
       <div className='font-mono text-[10px] text-muted-foreground mt-0.5 truncate'>
         {watch.reference} · {watch.year}

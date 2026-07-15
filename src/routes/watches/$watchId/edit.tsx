@@ -246,7 +246,7 @@ function EditWatchRoute() {
           {t('watchDetailsEdit')}
         </h1>
         <p className='mt-1 text-xs font-mono text-muted-foreground tracking-wide'>
-          {watch.make} {watch.model}
+          {watch.make} {watch.model ?? ''}
         </p>
       </div>
 

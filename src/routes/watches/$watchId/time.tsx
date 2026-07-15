@@ -189,6 +189,7 @@ function TimePage() {
 
   useEffect(() => {
     if (!activeSession) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setElapsed(0);
       return;
     }
@@ -200,12 +201,7 @@ function TimePage() {
       setElapsed(computeElapsed(activeSession));
     }, 1000);
     return () => clearInterval(id);
-  }, [
-    activeSession?.id,
-    activeSession?.status,
-    activeSession?.started_at,
-    activeSession?.total_elapsed_seconds,
-  ]);
+  }, [activeSession]);
 
   const totalSeconds = completedSessions.reduce(
     (sum, s) => sum + (s.final_duration_seconds ?? 0),
@@ -220,7 +216,9 @@ function TimePage() {
 
   if (watchLoading || sessionLoading) {
     return (
-      <div className='text-sm font-mono text-muted-foreground'>{t('equipmentLoading')}</div>
+      <div className='text-sm font-mono text-muted-foreground'>
+        {t('equipmentLoading')}
+      </div>
     );
   }
 
@@ -233,7 +231,9 @@ function TimePage() {
         >
           {t('watchesBackToWatches')}
         </Link>
-        <div className='text-sm text-red-400 font-mono'>{t('equipmentItemNotFound')}</div>
+        <div className='text-sm text-red-400 font-mono'>
+          {t('equipmentItemNotFound')}
+        </div>
       </div>
     );
   }
@@ -251,7 +251,7 @@ function TimePage() {
       <div className='flex flex-wrap items-start justify-between gap-3'>
         <div>
           <h1 className='text-2xl font-serif font-semibold text-foreground'>
-            {watch.make} {watch.model}
+            {watch.make} {watch.model ?? ''}
           </h1>
           <div className='mt-1 flex flex-wrap items-center gap-2 text-[11px] font-mono text-muted-foreground'>
             {watch.reference && <span>{watch.reference}</span>}
@@ -276,7 +276,9 @@ function TimePage() {
             <KpiCard
               highlight
               label={t('timeTotalTime')}
-              value={totalWithActive > 0 ? fmtDuration(totalWithActive, t) : '—'}
+              value={
+                totalWithActive > 0 ? fmtDuration(totalWithActive, t) : '—'
+              }
               sub={t('timeSessionsLogged', { count: completedSessions.length })}
             />
           </div>

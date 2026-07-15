@@ -41,7 +41,7 @@ function RepairLogPage() {
           params={{ watchId }}
           className='inline-flex items-center gap-1 text-xs font-mono text-muted-foreground hover:text-foreground'
         >
-          {watch ? `← ${watch.make} ${watch.model}` : t('backToWatch')}
+          {watch ? `← ${watch.make} ${watch.model ?? ''}` : t('backToWatch')}
         </Link>
       </div>
 
@@ -53,7 +53,8 @@ function RepairLogPage() {
           </h1>
           {watch && (
             <p className='mt-1 text-xs font-mono text-muted-foreground'>
-              {watch.make} {watch.model} · {watch.reference}
+              {watch.make} {watch.model}{' '}
+              {`${!watch.make && !watch.model ? '' : '·'}`} {watch.reference}
             </p>
           )}
         </div>
@@ -70,7 +71,9 @@ function RepairLogPage() {
 
       {/* Post list */}
       {isLoading ? (
-        <div className='text-sm font-mono text-muted-foreground'>{t('loading')}</div>
+        <div className='text-sm font-mono text-muted-foreground'>
+          {t('loading')}
+        </div>
       ) : !posts || posts.length === 0 ? (
         <div className='text-center py-12 text-xs font-mono text-muted-foreground border border-dashed border-border rounded-md space-y-2'>
           <p>{t('repairLogEmpty')}</p>
@@ -112,7 +115,9 @@ function RepairLogPage() {
                     )}
                     {post.images.length > 0 && (
                       <p className='mt-1.5 text-[11px] font-mono text-muted-foreground/70'>
-                        {t('repairLogImageCount', { count: post.images.length })}
+                        {t('repairLogImageCount', {
+                          count: post.images.length,
+                        })}
                       </p>
                     )}
                   </Link>

@@ -262,7 +262,7 @@ function PublicWatchDetailPage() {
             {/* Header */}
             <div>
               <h1 className='text-2xl font-serif font-semibold text-foreground'>
-                {watch.make} {watch.model}
+                {watch.make} {watch.model ?? ''}
               </h1>
               <div className='mt-1 flex flex-wrap items-center gap-2 text-[11px] font-mono text-muted-foreground'>
                 {watch.reference && <span>{watch.reference}</span>}
