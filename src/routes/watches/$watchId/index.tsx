@@ -306,8 +306,12 @@ function RouteComponent() {
               </Tooltip>
             </div>
             <div className='mt-1 flex flex-wrap items-center gap-2 text-[11px] font-mono text-muted-foreground'>
-              <span>{watch.reference}</span>
-              <span className='text-muted-foreground/60'>·</span>
+              {watch.reference && (
+                <div className='flex gap-2'>
+                  <span>{watch.reference}</span>
+                  <span className='text-muted-foreground/60'>·</span>
+                </div>
+              )}
               <span>{watch.year}</span>
               <span className='text-muted-foreground/60'>·</span>
               {user ? (
