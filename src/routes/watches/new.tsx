@@ -78,7 +78,7 @@ const CONDITION_LABELS = {
 function makeFormSchema(t: TFunction) {
   return z.object({
     make: z.string().trim().min(1, t('validationMakeRequired')),
-    model: z.string().trim().min(1, t('validationModelRequired')),
+    model: z.string().trim().optional(),
     reference: z.string().trim().optional(),
     year: numberField({ min: 1, message: t('validationYearRequired') }).pipe(
       z.number().int(),
