@@ -14,10 +14,12 @@ export const InventoryApi = {
   getInventory: async (page: number = 1, limit: number = 100) => {
     const userId = pb.authStore.record?.id;
     if (!userId) return [];
-    const inventory = await pb.collection('inventory').getList(page, limit, {
-      filter: `user = "${userId}"`,
-      expand: SPECS_EXPAND,
-    });
+    const inventory = await pb
+      .collection('inventory')
+      .getList<Inventory>(page, limit, {
+        filter: `user = "${userId}"`,
+        expand: SPECS_EXPAND,
+      });
     return inventory.items;
   },
   createInventory: async (inventory: CreateInventory) => {
@@ -37,7 +39,7 @@ export const InventoryApi = {
   getInventoryById: async (id: string) => {
     const inventory = await pb
       .collection('inventory')
-      .getOne(id, { expand: SPECS_EXPAND });
+      .getOne<Inventory>(id, { expand: SPECS_EXPAND });
     return inventory;
   },
   createMainspringSpecs: async (specs: CreateMainspringSpecs) => {

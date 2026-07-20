@@ -196,6 +196,7 @@ function NewWatchRoute() {
       const created = await createWatch.mutateAsync({
         watch: {
           ...data,
+          model: data.model ?? '',
           user: user.id,
           reference: data.reference ?? '',
           featured_image: null,

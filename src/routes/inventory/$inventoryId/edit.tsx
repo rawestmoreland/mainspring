@@ -32,7 +32,6 @@ import {
   useCreateMovementPart,
 } from '#/hooks/movementParts';
 import { PartTagInput } from '#/components/inventory/PartTagInput';
-import type { RecordModel } from 'pocketbase';
 import {
   Field,
   FieldContent,
@@ -184,7 +183,7 @@ function EditInventoryRoute() {
   return <EditInventoryForm item={item} />;
 }
 
-function EditInventoryForm({ item }: { item: RecordModel }) {
+function EditInventoryForm({ item }: { item: Inventory }) {
   const { t } = useTranslation();
   const formSchema = useMemo(() => makeFormSchema(t), [t]);
   const navigate = useNavigate();

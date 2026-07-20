@@ -645,6 +645,14 @@
     "addPartNotesOptional": "(optional)",
     "addPartPlaceholderNotes": "e.g. replaced worn original",
 
+    "logUsageBtn": "Log part used",
+    "logUsageBtnDisabledStock": "No stock available",
+    "logUsageDialogTitle": "Log Usage — {{name}}",
+    "logUsageWatch": "Watch",
+    "logUsageSelectWatch": "Select a watch…",
+    "logUsageNoWatches": "No active watches yet",
+    "logUsageQtyExceedsStock": "Only {{qty}} in stock",
+
     "markdownPlaceholder": "Write your repair notes here… Markdown supported.",
     "markdownPreviewPlaceholder": "Preview will appear here.",
     "markdownSupportedHint": "Markdown supported · embed images with",

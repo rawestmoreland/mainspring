@@ -645,6 +645,14 @@
     "addPartNotesOptional": "(optionnel)",
     "addPartPlaceholderNotes": "ex. original usé remplacé",
 
+    "logUsageBtn": "Enregistrer l'utilisation",
+    "logUsageBtnDisabledStock": "Aucun stock disponible",
+    "logUsageDialogTitle": "Enregistrer l'utilisation — {{name}}",
+    "logUsageWatch": "Montre",
+    "logUsageSelectWatch": "Sélectionner une montre…",
+    "logUsageNoWatches": "Aucune montre active pour le moment",
+    "logUsageQtyExceedsStock": "Seulement {{qty}} en stock",
+
     "markdownPlaceholder": "Rédigez vos notes de réparation ici… Markdown pris en charge.",
     "markdownPreviewPlaceholder": "L'aperçu apparaîtra ici.",
     "markdownSupportedHint": "Markdown pris en charge · insérer des images avec",

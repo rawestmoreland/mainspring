@@ -25,6 +25,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
   const measurementId = import.meta.env.VITE_PUBLIC_GA4_MEASUREMENT_ID;
 
   useEffect(() => {
+    // eslint-disable-next-line prefer-const
     let intervalId: NodeJS.Timeout;
     if (!measurementId) return;
 
@@ -37,6 +38,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
             clearInterval(intervalId); // Stop polling once successfully retrieved
           }
         });
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         // Quietly catch errors if the underlying gtag script isn't injected yet
       }
@@ -81,6 +83,7 @@ export function UpgradeButton({ pbUserId }: { pbUserId: string }) {
     try {
       const url = await startProCheckout({
         data: {
+          language: 'en',
           userId: pbUserId,
           pathname: location.pathname,
           gaClientId: clientId ?? 'unknown',

@@ -645,6 +645,14 @@
     "addPartNotesOptional": "(optional)",
     "addPartPlaceholderNotes": "z.B. verschlissenes Original ersetzt",
 
+    "logUsageBtn": "Verwendung protokollieren",
+    "logUsageBtnDisabledStock": "Kein Bestand verfügbar",
+    "logUsageDialogTitle": "Verwendung protokollieren — {{name}}",
+    "logUsageWatch": "Uhr",
+    "logUsageSelectWatch": "Uhr auswählen…",
+    "logUsageNoWatches": "Noch keine aktiven Uhren",
+    "logUsageQtyExceedsStock": "Nur {{qty}} auf Lager",
+
     "markdownPlaceholder": "Reparaturnotizen hier eingeben… Markdown wird unterstützt.",
     "markdownPreviewPlaceholder": "Vorschau erscheint hier.",
     "markdownSupportedHint": "Markdown unterstützt · Bilder einbetten mit",

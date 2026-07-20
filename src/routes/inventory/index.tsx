@@ -12,6 +12,7 @@ import { Button } from '#/components/ui/button';
 import { PencilIcon, PlusIcon, Trash2Icon } from 'lucide-react';
 import { InventorySkeleton } from '#/components/skeletons';
 import { DonorDetailPanel } from '#/components/inventory/DonorDetailPanel';
+import { LogPartUsageDialog } from '#/components/inventory/LogPartUsageDialog';
 import { LocalStorageKeys } from '#/lib/constants';
 import { useAuth } from '#/hooks/auth';
 
@@ -145,6 +146,7 @@ function InventoryPage() {
                 <Th>{t('inventoryColTotalValue')}</Th>
                 <Th>{''}</Th>
                 <Th>{''}</Th>
+                <Th>{''}</Th>
               </tr>
             </thead>
             <tbody>
@@ -170,6 +172,9 @@ function InventoryPage() {
                       d: 2,
                       symbol: profile?.currency?.symbol ?? '',
                     })}
+                  </Td>
+                  <Td className='w-8 text-right'>
+                    {user && <LogPartUsageDialog item={i} />}
                   </Td>
                   <Td className='w-8 text-right'>
                     {user && (
@@ -203,7 +208,7 @@ function InventoryPage() {
               {inventory.length === 0 && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={8}
                     className='px-3.5 py-8 text-center text-muted-foreground font-mono text-xs'
                   >
                     {t('inventoryNoPartsYet')}
