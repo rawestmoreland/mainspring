@@ -1,24 +1,38 @@
-# ── Stage 1: Build ───────────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
+# Build stage
+FROM golang:1.25.0-alpine AS builder
 
-WORKDIR /app
+# Set working directory for the build
+WORKDIR /build
 
-COPY package*.json ./
-RUN npm ci
+# Install necessary build dependencies
+RUN apk add --no-cache gcc musl-dev
 
-COPY . .
+# Copy the Go project from ./base directory
+COPY ./pocketbase/base /build
 
-ARG VITE_POCKETBASE_URL=http://localhost:8080
-ARG VITE_ASSET_URL=http://localhost:8080/api/files/watch_photos
-ENV VITE_POCKETBASE_URL=$VITE_POCKETBASE_URL
-ENV VITE_ASSET_URL=$VITE_ASSET_URL
+# Download Go dependencies
+RUN go mod download
 
-RUN npm run build
+# Build the application
+RUN CGO_ENABLED=1 go build -ldflags="-s -w" -o pocketbase .
 
-# ── Stage 2: Serve ────────────────────────────────────────────────────────────
-FROM nginx:alpine
+# Final stage - similar to your original Dockerfile
+FROM alpine:latest
 
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Install necessary runtime dependencies
+RUN apk add --no-cache ca-certificates tzdata
 
-EXPOSE 80
+# Create app directory
+RUN mkdir -p /pb/pb_data /pb/pb_public /pb/pb_migrations
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /build/pocketbase /pb/
+
+# Set proper permissions
+RUN chmod +x /pb/pocketbase
+
+# Expose the port
+EXPOSE 8080
+
+# Start PocketBase
+CMD ["/pb/pocketbase", "serve", "--http=0.0.0.0:8080"]
