@@ -1,5 +1,14 @@
 import pb from '#/lib/pocketbase';
-import type { CreateInventory, Inventory } from '#/types';
+import type {
+  CreateCrystalSpecs,
+  CreateInventory,
+  CreateMainspringSpecs,
+  CrystalSpecs,
+  Inventory,
+  MainspringSpecs,
+} from '#/types';
+
+const SPECS_EXPAND = 'mainspring_specs_via_inventory,crystal_specs_via_inventory';
 
 export const InventoryApi = {
   getInventory: async (page: number = 1, limit: number = 100) => {
@@ -7,6 +16,7 @@ export const InventoryApi = {
     if (!userId) return [];
     const inventory = await pb.collection('inventory').getList(page, limit, {
       filter: `user = "${userId}"`,
+      expand: SPECS_EXPAND,
     });
     return inventory.items;
   },
@@ -25,7 +35,29 @@ export const InventoryApi = {
     return deletedInventory;
   },
   getInventoryById: async (id: string) => {
-    const inventory = await pb.collection('inventory').getOne(id);
+    const inventory = await pb
+      .collection('inventory')
+      .getOne(id, { expand: SPECS_EXPAND });
     return inventory;
+  },
+  createMainspringSpecs: async (specs: CreateMainspringSpecs) => {
+    const newSpecs = await pb.collection('mainspring_specs').create(specs);
+    return newSpecs;
+  },
+  updateMainspringSpecs: async (id: string, specs: MainspringSpecs) => {
+    const updatedSpecs = await pb
+      .collection('mainspring_specs')
+      .update(id, specs);
+    return updatedSpecs;
+  },
+  createCrystalSpecs: async (specs: CreateCrystalSpecs) => {
+    const newSpecs = await pb.collection('crystal_specs').create(specs);
+    return newSpecs;
+  },
+  updateCrystalSpecs: async (id: string, specs: CrystalSpecs) => {
+    const updatedSpecs = await pb
+      .collection('crystal_specs')
+      .update(id, specs);
+    return updatedSpecs;
   },
 };

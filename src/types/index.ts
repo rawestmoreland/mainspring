@@ -47,6 +47,49 @@ export type WatchPhoto = {
   sort_order?: number;
 };
 
+export const MainspringType = {
+  AUTOMATIC_BRIDLE: 'automatic_bridle',
+  MANUAL_REVERSE_EYE: 'manual_reverse_eye',
+} as const;
+export type MainspringType =
+  (typeof MainspringType)[keyof typeof MainspringType];
+
+export type MainspringSpecs = {
+  id: string;
+  inventory: string;
+  diameter_mm?: number;
+  height_mm?: number;
+  thickness_mm?: number;
+  length_mm?: number;
+  type?: MainspringType;
+};
+export type CreateMainspringSpecs = Omit<MainspringSpecs, 'id'>;
+
+export const CrystalMaterial = {
+  ACRYLIC: 'acrylic',
+  MINERAL: 'mineral',
+  SAPPHIRE: 'sapphire',
+} as const;
+export type CrystalMaterial =
+  (typeof CrystalMaterial)[keyof typeof CrystalMaterial];
+
+export const CrystalShape = {
+  FLAT: 'flat',
+  LOW_DOME: 'low_dome',
+  HIGH_DOME: 'high_dome',
+  STEPPED: 'stepped',
+} as const;
+export type CrystalShape = (typeof CrystalShape)[keyof typeof CrystalShape];
+
+export type CrystalSpecs = {
+  id: string;
+  inventory: string;
+  diameter_mm?: number;
+  material?: CrystalMaterial;
+  shape?: CrystalShape;
+};
+export type CreateCrystalSpecs = Omit<CrystalSpecs, 'id'>;
+
 export type PartUsed = {
   id: string;
   watch: string;
@@ -97,6 +140,10 @@ export type InventoryItem = {
   unit_cost: number;
   category: InventoryCategory;
   notes: string;
+  expand?: {
+    mainspring_specs_via_inventory?: MainspringSpecs;
+    crystal_specs_via_inventory?: CrystalSpecs;
+  };
 };
 
 export type CreateInventoryItem = Omit<InventoryItem, 'id'>;
@@ -148,6 +195,10 @@ export type Inventory = {
   notes?: string;
   is_donor?: boolean;
   missing_parts?: string[];
+  expand?: {
+    mainspring_specs_via_inventory?: MainspringSpecs;
+    crystal_specs_via_inventory?: CrystalSpecs;
+  };
 };
 
 export type CreateInventory = Omit<Inventory, 'id'>;

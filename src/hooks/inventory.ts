@@ -1,5 +1,12 @@
 import { InventoryApi } from '#/lib/api/inventory';
-import type { CreateInventoryItem, Inventory } from '#/types';
+import type {
+  CreateCrystalSpecs,
+  CreateInventoryItem,
+  CreateMainspringSpecs,
+  CrystalSpecs,
+  Inventory,
+  MainspringSpecs,
+} from '#/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './auth';
 import { useGoogleAnalytics } from 'node_modules/tanstack-router-ga4/dist/hooks/useGoogleAnalytics';
@@ -66,5 +73,61 @@ export const useGetInventoryById = (id: string) => {
     queryKey: ['inventory', { inventoryId: id }],
     queryFn: () => InventoryApi.getInventoryById(id),
     enabled: !!id,
+  });
+};
+
+export const useCreateMainspringSpecs = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (specs: CreateMainspringSpecs) =>
+      InventoryApi.createMainspringSpecs(specs),
+    onError: (error) => {
+      console.error(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+  });
+};
+
+export const useUpdateMainspringSpecs = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (specs: MainspringSpecs) =>
+      InventoryApi.updateMainspringSpecs(specs.id, specs),
+    onError: (error) => {
+      console.error(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+  });
+};
+
+export const useCreateCrystalSpecs = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (specs: CreateCrystalSpecs) =>
+      InventoryApi.createCrystalSpecs(specs),
+    onError: (error) => {
+      console.error(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
+  });
+};
+
+export const useUpdateCrystalSpecs = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (specs: CrystalSpecs) =>
+      InventoryApi.updateCrystalSpecs(specs.id, specs),
+    onError: (error) => {
+      console.error(error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+    },
   });
 };

@@ -8,12 +8,20 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { usePostHog } from '@posthog/react';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
-import { InventoryCategory, InventoryItem } from '#/types';
+import {
+  CrystalMaterial,
+  CrystalShape,
+  InventoryCategory,
+  InventoryItem,
+  MainspringType,
+} from '#/types';
 import { Btn } from '#/components/primitives/Button';
 import { numberField } from '#/lib/helpers';
 import { useUser } from '#/hooks/user';
 import {
+  useCreateCrystalSpecs,
   useCreateInventory,
+  useCreateMainspringSpecs,
   useInventory,
   useUpdateInventory,
 } from '#/hooks/inventory';
@@ -80,6 +88,42 @@ const INVENTORY_CATEGORIES: readonly InventoryCategory[] = [
   InventoryCategory.OTHER,
 ] as const;
 
+const MAINSPRING_TYPE_KEY_MAP = {
+  automatic_bridle: 'mainspringTypeAutomaticBridle',
+  manual_reverse_eye: 'mainspringTypeManualReverseEye',
+} as const satisfies Record<MainspringType, string>;
+
+const MAINSPRING_TYPES: readonly MainspringType[] = [
+  MainspringType.AUTOMATIC_BRIDLE,
+  MainspringType.MANUAL_REVERSE_EYE,
+] as const;
+
+const CRYSTAL_MATERIAL_KEY_MAP = {
+  acrylic: 'crystalMaterialAcrylic',
+  mineral: 'crystalMaterialMineral',
+  sapphire: 'crystalMaterialSapphire',
+} as const satisfies Record<CrystalMaterial, string>;
+
+const CRYSTAL_MATERIALS: readonly CrystalMaterial[] = [
+  CrystalMaterial.ACRYLIC,
+  CrystalMaterial.MINERAL,
+  CrystalMaterial.SAPPHIRE,
+] as const;
+
+const CRYSTAL_SHAPE_KEY_MAP = {
+  flat: 'crystalShapeFlat',
+  low_dome: 'crystalShapeLowDome',
+  high_dome: 'crystalShapeHighDome',
+  stepped: 'crystalShapeStepped',
+} as const satisfies Record<CrystalShape, string>;
+
+const CRYSTAL_SHAPES: readonly CrystalShape[] = [
+  CrystalShape.FLAT,
+  CrystalShape.LOW_DOME,
+  CrystalShape.HIGH_DOME,
+  CrystalShape.STEPPED,
+] as const;
+
 function makeFormSchema(t: TFunction) {
   return z
     .object({
@@ -94,6 +138,13 @@ function makeFormSchema(t: TFunction) {
       notes: z.string(),
       is_donor: z.boolean(),
       missing_parts: z.array(z.string()),
+      diameter_mm: z.number().min(0).optional(),
+      height_mm: z.number().min(0).optional(),
+      thickness_mm: z.number().min(0).optional(),
+      length_mm: z.number().min(0).optional(),
+      mainspring_type: z.enum(MAINSPRING_TYPES).optional(),
+      crystal_material: z.enum(CRYSTAL_MATERIALS).optional(),
+      crystal_shape: z.enum(CRYSTAL_SHAPES).optional(),
     })
     .superRefine((data, ctx) => {
       if (data.is_donor) {
@@ -131,6 +182,8 @@ function NewInventoryRoute() {
   const navigate = useNavigate();
   const posthog = usePostHog();
   const createInventory = useCreateInventory();
+  const createMainspringSpecs = useCreateMainspringSpecs();
+  const createCrystalSpecs = useCreateCrystalSpecs();
   const createDonorMovement = useCreateDonorMovement();
   const createMovementPart = useCreateMovementPart();
   const vocabulary = usePartVocabulary();
@@ -160,6 +213,13 @@ function NewInventoryRoute() {
       notes: '',
       is_donor: false,
       missing_parts: [],
+      diameter_mm: undefined,
+      height_mm: undefined,
+      thickness_mm: undefined,
+      length_mm: undefined,
+      mainspring_type: undefined,
+      crystal_material: undefined,
+      crystal_shape: undefined,
     }),
     [],
   );
@@ -206,9 +266,26 @@ function NewInventoryRoute() {
           navigate({ to: '/inventory' });
         }
       } else {
-        await createInventory.mutateAsync({
+        const newInventory = await createInventory.mutateAsync({
           inventory: { ...data, user: user.id },
         });
+        if (data.category === InventoryCategory.MAINSPRING) {
+          await createMainspringSpecs.mutateAsync({
+            inventory: newInventory.id,
+            diameter_mm: data.diameter_mm,
+            height_mm: data.height_mm,
+            thickness_mm: data.thickness_mm,
+            length_mm: data.length_mm,
+            type: data.mainspring_type,
+          });
+        } else if (data.category === InventoryCategory.CRYSTAL) {
+          await createCrystalSpecs.mutateAsync({
+            inventory: newInventory.id,
+            diameter_mm: data.diameter_mm,
+            material: data.crystal_material,
+            shape: data.crystal_shape,
+          });
+        }
         posthog.capture('inventory_item_created', {
           category: data.category,
           qty: data.qty,
@@ -494,6 +571,260 @@ function NewInventoryRoute() {
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}
+                  </Field>
+                )}
+              />
+            </section>
+          )}
+
+          {!isDonor && category === InventoryCategory.MAINSPRING && (
+            <section className='grid grid-cols-2 gap-4'>
+              <Controller
+                name='diameter_mm'
+                control={control}
+                render={({ field: { onChange, value, ...field }, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor='diameter_mm'>
+                      {t('fieldDiameterMm')}
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      value={value ?? ''}
+                      id='diameter_mm'
+                      type='number'
+                      inputMode='decimal'
+                      step='0.01'
+                      min={0}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete='off'
+                      onChange={(e) => onChange(e.target.valueAsNumber)}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name='height_mm'
+                control={control}
+                render={({ field: { onChange, value, ...field }, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor='height_mm'>
+                      {t('fieldHeightMm')}
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      value={value ?? ''}
+                      id='height_mm'
+                      type='number'
+                      inputMode='decimal'
+                      step='0.01'
+                      min={0}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete='off'
+                      onChange={(e) => onChange(e.target.valueAsNumber)}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name='thickness_mm'
+                control={control}
+                render={({ field: { onChange, value, ...field }, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor='thickness_mm'>
+                      {t('fieldThicknessMm')}
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      value={value ?? ''}
+                      id='thickness_mm'
+                      type='number'
+                      inputMode='decimal'
+                      step='0.01'
+                      min={0}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete='off'
+                      onChange={(e) => onChange(e.target.valueAsNumber)}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name='length_mm'
+                control={control}
+                render={({ field: { onChange, value, ...field }, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor='length_mm'>
+                      {t('fieldLengthMm')}
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      value={value ?? ''}
+                      id='length_mm'
+                      type='number'
+                      inputMode='decimal'
+                      step='0.01'
+                      min={0}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete='off'
+                      onChange={(e) => onChange(e.target.valueAsNumber)}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name='mainspring_type'
+                control={control}
+                render={({ fieldState, field }) => (
+                  <Field orientation='responsive' data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor='mainspring_type'>
+                        {t('fieldMainspringType')}
+                      </FieldLabel>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </FieldContent>
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id='mainspring_type'
+                        aria-invalid={fieldState.invalid}
+                        className='min-w-30'
+                      >
+                        <SelectValue placeholder={t('placeholderSelect')} />
+                      </SelectTrigger>
+                      <SelectContent position='item-aligned'>
+                        {MAINSPRING_TYPES.map((v) => (
+                          <SelectItem key={v} value={v}>
+                            {t(MAINSPRING_TYPE_KEY_MAP[v])}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
+              />
+            </section>
+          )}
+
+          {!isDonor && category === InventoryCategory.CRYSTAL && (
+            <section className='grid grid-cols-2 gap-4'>
+              <Controller
+                name='diameter_mm'
+                control={control}
+                render={({ field: { onChange, value, ...field }, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor='diameter_mm'>
+                      {t('fieldDiameterMm')}
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      value={value ?? ''}
+                      id='diameter_mm'
+                      type='number'
+                      inputMode='decimal'
+                      step='0.01'
+                      min={0}
+                      aria-invalid={fieldState.invalid}
+                      autoComplete='off'
+                      onChange={(e) => onChange(e.target.valueAsNumber)}
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name='crystal_material'
+                control={control}
+                render={({ fieldState, field }) => (
+                  <Field orientation='responsive' data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor='crystal_material'>
+                        {t('fieldCrystalMaterial')}
+                      </FieldLabel>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </FieldContent>
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id='crystal_material'
+                        aria-invalid={fieldState.invalid}
+                        className='min-w-30'
+                      >
+                        <SelectValue placeholder={t('placeholderSelect')} />
+                      </SelectTrigger>
+                      <SelectContent position='item-aligned'>
+                        {CRYSTAL_MATERIALS.map((v) => (
+                          <SelectItem key={v} value={v}>
+                            {t(CRYSTAL_MATERIAL_KEY_MAP[v])}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                )}
+              />
+
+              <Controller
+                name='crystal_shape'
+                control={control}
+                render={({ fieldState, field }) => (
+                  <Field orientation='responsive' data-invalid={fieldState.invalid}>
+                    <FieldContent>
+                      <FieldLabel htmlFor='crystal_shape'>
+                        {t('fieldCrystalShape')}
+                      </FieldLabel>
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </FieldContent>
+                    <Select
+                      name={field.name}
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger
+                        id='crystal_shape'
+                        aria-invalid={fieldState.invalid}
+                        className='min-w-30'
+                      >
+                        <SelectValue placeholder={t('placeholderSelect')} />
+                      </SelectTrigger>
+                      <SelectContent position='item-aligned'>
+                        {CRYSTAL_SHAPES.map((v) => (
+                          <SelectItem key={v} value={v}>
+                            {t(CRYSTAL_SHAPE_KEY_MAP[v])}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </Field>
                 )}
               />

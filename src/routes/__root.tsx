@@ -1,10 +1,11 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import {
   Outlet,
   createRootRouteWithContext,
   HeadContent,
   Scripts,
   redirect,
+  useNavigate,
   useRouterState,
 } from '@tanstack/react-router';
 import { createIsomorphicFn } from '@tanstack/react-start';
@@ -266,9 +267,11 @@ function RootComponent() {
     <RootDocument landingPageFlag={landingPageFlag} lang={lang}>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <AppShell>
-            <Outlet />
-          </AppShell>
+          <AuthGate pathname={pathname}>
+            <AppShell>
+              <Outlet />
+            </AppShell>
+          </AuthGate>
           <TanStackDevtools
             config={{ position: 'bottom-right' }}
             plugins={[
@@ -282,6 +285,39 @@ function RootComponent() {
       </QueryClientProvider>
     </RootDocument>
   );
+}
+
+// beforeLoad's client-only auth check (see above) never runs for a direct/full-page
+// load of a protected route, since TanStack Start reuses the SSR-resolved match on
+// hydration instead of re-running beforeLoad. This gate re-checks on mount and blocks
+// rendering the protected tree until a valid session is confirmed.
+function AuthGate({
+  children,
+  pathname,
+}: {
+  children: ReactNode;
+  pathname: string;
+}) {
+  const navigate = useNavigate();
+  const [authorized, setAuthorized] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    import('#/lib/pocketbase').then(({ default: pb }) => {
+      if (cancelled) return;
+      if (pb.authStore.isValid) {
+        setAuthorized(true);
+      } else {
+        navigate({ to: '/login', replace: true, search: { from: pathname } });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate, pathname]);
+
+  if (!authorized) return null;
+  return <>{children}</>;
 }
 
 function RootDocument({
